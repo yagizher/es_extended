@@ -11,17 +11,19 @@
 --   This copyright should appear in every part of the project code
 local utils = M("utils")
 
-self.lastSkin = nil
-self.playerLoaded = false
-self.cam = nil
-self.Menu = nil
+self.lastSkin       = nil
+self.playerLoaded   = false
+self.cam            = nil
+self.Menu           = nil
 self.isCameraActive = false
-
-self.firstSpawn = true
-self.zoomOffset = 0.0
-self.camOffset = 0.0
-self.heading = 90.0
-self.angle = 0.0
+self.firstSpawn     = true
+self.zoomOffset     = 1.5
+self.camOffsetX     = 0.0
+self.camOffsetY     = 1.2
+self.camOffsetZ     = 0.8
+self.camPointOffset = 0.2
+self.heading        = 90.0
+self.angle          = 0.0
 
 self.Init = function()
 	local translations =
@@ -215,24 +217,25 @@ end
 
 self.CreateSkinCam = function()
 	local playerPed = PlayerPedId()
+	
+	RenderScriptCams(false, false, 0, 1, 0)
+	DestroyCam(self.cam, false)
 
 	if not DoesCamExist(self.cam) then
 		self.cam = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
+		SetCamActive(self.cam, true)
+		RenderScriptCams(true,  false, 500,  true, true)
+		self.isCameraActive = true
+		SetEntityHeading(playerPed, 0.0)
+		SetCamRot(self.cam, 0.0, 0.0, 270.0, 2)
 	end
-
-	SetCamActive(self.cam, true)
-	RenderScriptCams(true, true, 500, true, true)
-
-	self.isCameraActive = true
-	SetCamRot(self.cam, 0.0, 0.0, 270.0, true)
-	SetEntityHeading(playerPed, 0.0)
 end
 
 self.DeleteSkinCam = function()
 	self.isCameraActive = false
 	SetCamActive(self.cam, false)
 	RenderScriptCams(false, true, 500, true, true)
-	cam = nil
+	self.cam = nil
 end
 
 self.OpenSaveableMenu = function(submitCb, cancelCb, restrict)

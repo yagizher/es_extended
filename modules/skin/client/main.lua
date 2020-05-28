@@ -62,10 +62,12 @@ Citizen.CreateThread(
 					y = coords.y + (self.zoomOffset * thetaToLook.y)
 				}
 
-				SetCamCoord(self.cam, pos.x, pos.y, coords.z + self.camOffset)
-				PointCamAtCoord(self.cam, posToLook.x, posToLook.y, coords.z + self.camOffset)
+				SetCamCoord(self.cam, pos.x+self.camOffsetX, pos.y + self.camOffsetY, coords.z+self.camOffsetZ)
+				PointCamAtCoord(self.cam, posToLook.x, posToLook.y, coords.z - self.camPointOffset)
 
-				utils.ui.showHelpNotification(_U('skin:use_rotate_view'))
+				-- NEED INPUT FROM NUI TO ROTATE CAMERA
+
+				-- utils.ui.showHelpNotification(_U('skin:use_rotate_view'))
 			else
 				Citizen.Wait(500)
 			end
@@ -73,30 +75,32 @@ Citizen.CreateThread(
 	end
 )
 
-Citizen.CreateThread(
-	function()
-		local angle = 90
+-- NEED INPUT FROM NUI TO ROTATE CAMERA
 
-		while true do
-			Citizen.Wait(0)
+-- Citizen.CreateThread(
+-- 	function()
+-- 		local angle = 90
 
-			if self.isCameraActive then
-				if IsControlPressed(0, 108) then
-					self.angle = angle - 1
-				elseif IsControlPressed(0, 109) then
-					self.angle = angle + 1
-				end
+-- 		while true do
+-- 			Citizen.Wait(0)
 
-				if self.angle > 360 then
-					self.angle = self.angle - 360
-				elseif angle < 0 then
-					self.angle = self.angle + 360
-				end
+-- 			if self.isCameraActive then
+-- 				if IsControlPressed(0, 108) then
+-- 					self.angle = angle - 1
+-- 				elseif IsControlPressed(0, 109) then
+-- 					self.angle = angle + 1
+-- 				end
 
-				self.heading = angle + 0.0
-			else
-				Citizen.Wait(500)
-			end
-		end
-	end
-)
+-- 				if self.angle > 360 then
+-- 					self.angle = self.angle - 360
+-- 				elseif angle < 0 then
+-- 					self.angle = self.angle + 360
+-- 				end
+
+-- 				self.heading = angle + 0.0
+-- 			else
+-- 				Citizen.Wait(500)
+-- 			end
+-- 		end
+-- 	end
+-- )
