@@ -12,83 +12,192 @@
 
 -- From => http://lua-users.org/wiki/InheritanceTutorial
 
-Extends = function(baseClass)
+M('table')
 
-  local newClass = {}
+local prototypes = {}
 
-  local classMt  = {
-    __index = newClass,
+Extends = setmetatable({}, {
+
+  __call = function(o, baseType)
+
+    local newType
+
+    if baseType == nil then
+
+      newType = {}
+
+    else
+
+      newType = setmetatable({super = baseType}, {__index = baseType})
+
+    end
+
+    local mt  = {__index = newType}
+
+    function newType:new(...)
+
+      local newInst = setmetatable({}, mt)
+
+      local override
+
+      if type(newInst.constructor) == 'function' then
+        override = newInst:constructor(...)
+      end
+
+      if override ~= nil then
+        return override
+      else
+        return newInst
+      end
+
+    end
+
+    -- Implementation of additional OO properties starts here --
+
+    -- Return the type of the instance
+    function newType:proto()
+      return newType
+    end
+
+    -- Return the parent type of the instance
+    function newType:prototype()
+      return baseType
+    end
+
+    -- Return true if the caller is an instance of theType
+    function newType:instanceOf(theType)
+
+      local isInstanceOf = false
+      local curType      = newType
+
+      while (curType ~= nil) and (not isInstanceOf) do
+        if curType == theType then
+          isInstanceOf = true
+        else
+          curType = curType:prototype()
+        end
+      end
+
+      return isInstanceOf
+
+    end
+
+    -- Return true if the caller is a type of theType
+    function newType:typeOf(theType)
+
+      local isTypeOf = false
+      local curType  = theType
+
+      while (curType ~= nil) and (not isTypeOf) do
+
+        local proto = curType:prototype()
+
+        if curType == newType then
+          isTypeOf = true
+        else
+          curType = curType:prototype()
+        end
+      end
+
+      return isTypeOf
+
+    end
+
+    -- Return true if the theType is a type of the caller
+    function newType:prototypeOf(theType)
+
+      local isPrototypeOf = false
+      local curType       = theType
+
+      while (curType ~= nil) and (not isPrototypeOf) do
+
+        local proto = theType:prototype()
+
+        if curType == theType then
+          isPrototypeOf = true
+        else
+          curType = curType:prototype()
+        end
+      end
+
+      return isPrototypeOf
+
+    end
+
+    -- Return prototype chain of caller (top parent is last element)
+    function newType:prototypes()
+      return prototypes[newType]
+    end
+
+    local cls   = newType
+    local chain = {}
+
+    while cls ~= nil do
+      cls = cls:prototype()
+      chain[#chain + 1] = cls
+    end
+
+    prototypes[newType] = chain
+
+    return newType
+
+  end
+
+})
+
+Extends.Accessor = function(baseType, name)
+
+  return {
+    get = Extends.Getter(baseType, name),
+    set = Extends.Setter(baseType, name)
   }
 
-  function newClass:create(...)
+end
 
-    local newInst = {}
+Extends.HasGetter = function(baseType, name)
 
-    setmetatable(newInst, classMt)
+  local firstCharUpper = name:gsub("^%l", string.upper)
+  local getter         = 'get' .. firstCharUpper
 
-    local override
+  return rawget(baseType, getter) ~= nil
 
-    if type(newClass.constructor) == 'function' then
-      override = newInst:constructor(...)
-    end
+end
 
-    if override ~= nil then
-      return override
-    else
-      return newInst
-    end
+Extends.Getter = function(baseType, name)
 
+  local firstCharUpper = name:gsub("^%l", string.upper)
+  local getter         = 'get' .. firstCharUpper
+
+  local get = function(self)
+    return self[name]
   end
 
-  if baseClass ~= nil then
+  rawset(baseType, getter, get)
 
-    setmetatable(newClass, {
+  return get
 
-      __index = function(t, k)
+end
 
-        if k == 'super' then
-          return baseClass
-        else
-          return baseClass[k]
-        end
+Extends.HasSetter = function(baseType, name)
 
-      end
+  local firstCharUpper = name:gsub("^%l", string.upper)
+  local setter         = 'set' .. firstCharUpper
 
-    })
+  return rawget(baseType, setter) ~= nil
 
+end
+
+Extends.Setter = function(baseType, name)
+
+  local firstCharUpper = name:gsub("^%l", string.upper)
+  local setter         = 'set' .. firstCharUpper
+
+  local set = function(self, val)
+    self[name] = val
   end
 
-  -- Implementation of additional OO properties starts here --
+  rawset(baseType, setter, set)
 
-  -- Return the class object of the instance
-  function newClass:type()
-    return newClass
-  end
-
-  -- Return the prototype the instance
-  function newClass:prototype()
-    return baseClass
-  end
-
-  -- Return true if the caller is an instance of theClass
-  function newClass:instanceOf(theClass)
-
-    local isInstanceOf = false
-
-    local curClass = newClass
-
-    while (curClass ~= nil) and (not isInstanceOf) do
-      if curClass == theClass then
-        isInstanceOf = true
-      else
-        curClass = curClass:prototype()
-      end
-    end
-
-    return isInstanceOf
-
-  end
-
-  return newClass
+  return set
 
 end

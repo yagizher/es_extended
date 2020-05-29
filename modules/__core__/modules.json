@@ -1,6 +1,7 @@
 [
   "account",
   "async",
+  "cache",
   "class",
   "command",
   "datastore",
@@ -13,7 +14,9 @@
   "inventory",
   "math",
   "migrate",
+  "persistent",
   "player",
+  "serializable",
   "string",
   "table",
   "ui.hud",

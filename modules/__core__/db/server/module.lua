@@ -84,6 +84,8 @@ function DBField:sql()
 
       if self.default == 'NULL' then
         sql = sql .. 'NULL'
+      elseif self.default == 'UUID()' then
+        sql = sql .. 'UUID()'
       else
         sql = sql .. '\'' .. self.default .. '\''
       end
@@ -148,7 +150,7 @@ local DBTable = Extends(nil)
 
 function DBTable:constructor(name, pk)
 
-  self.engine   = 'InnoDB'
+  self.engine = 'InnoDB'
 
   self.defaults = {
     {'CHARSET', 'utf8mb4'}
@@ -162,7 +164,7 @@ function DBTable:constructor(name, pk)
 end
 
 function DBTable:field(name, _type, length, default, extra)
-  self.fields[#self.fields + 1] = DBField:create(name, _type, length, default, extra)
+  self.fields[#self.fields + 1] = DBField:new(name, _type, length, default, extra)
 end
 
 function DBTable:row(data)
@@ -296,7 +298,7 @@ self.DBTable = DBTable
 self.InitTable = function(name, pk, fields, rows)
 
   rows      = rows or {}
-  local tbl = DBTable:create(name, pk)
+  local tbl = DBTable:new(name, pk)
 
   for i=1, #fields, 1 do
     local field = fields[i]
@@ -308,6 +310,10 @@ self.InitTable = function(name, pk, fields, rows)
   end
 
   self.Tables[name] = tbl
+
+  emit('esx:db:init:' .. name, function(data)
+    self.ExtendTable(name, data)
+  end)
 
 end
 

@@ -1,0 +1,49 @@
+-- Copyright (c) Jérémie N'gadi
+--
+-- All rights reserved.
+--
+-- Even if 'All rights reserved' is very clear :
+--
+--   You shall not use any piece of this software in a commercial product / service
+--   You shall not resell this software
+--   You shall not provide any facility to install this particular software in a commercial product / service
+--   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
+--   This copyright should appear in every part of the project code
+
+M('events')
+M('serializable')
+M('cache')
+
+Player = Extends(Serializable)
+
+function Player:constructor(data)
+
+  self.super:constructor()
+
+  if data.identityId == nil then
+    self:field('identityId')
+  end
+
+  for k,v in pairs(data) do
+    self:field(k, v)
+  end
+
+end
+
+PlayerCacheConsumer = Extends(CacheConsumer)
+
+function PlayerCacheConsumer:constructor()
+
+  self.super:constructor(function(key, cb)
+
+    request('esx:cache:player:get', function(exists, data)
+      cb(exists, exists and Player:new(data) or nil)
+    end, key)
+
+  end)
+
+end
+
+Cache.player = PlayerCacheConsumer:new()
+
+

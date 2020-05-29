@@ -93,7 +93,7 @@ function Menu:constructor(name, data, focus)
 
   end
 
-  self.frame = Frame:create('ui:menu:' .. self.name, 'nui://' .. __RESOURCE__ .. '/modules/__core__/ui.menu/data/html/index.html', true)
+  self.frame = Frame:new('ui:menu:' .. self.name, 'nui://' .. __RESOURCE__ .. '/modules/__core__/ui.menu/data/html/index.html', true)
 
   self.frame:on('message', function(msg)
 

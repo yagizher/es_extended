@@ -10,6 +10,8 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
+local utils = M('utils')
+
 if IsDuplicityVersion() then
 
   onClient('esx:request', function(name, id, ...)

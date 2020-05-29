@@ -135,7 +135,12 @@ function Inventory:get(name, full)
       error('item [' .. name .. '] is not defined in config')
     end
 
-    return self.items[name]
+    if self.items[name] == nil then
+      return 0
+    else
+      return self.items[name]
+    end
+
   else
     return self.items
   end
@@ -148,9 +153,7 @@ function Inventory:set(name, count)
     error('item [' .. name .. '] is not defined in config')
   end
 
-  if data == nil then
-    self.items = name
-  elseif count == 0 then
+  if count == 0 then
     self.items[name] = nil
   else
     self.items[name] = count
@@ -206,32 +209,4 @@ function Inventory:remove(name, count)
 
 end
 
-on('esx:db:ready', function()
-
-  local inventory = Inventory:create('test')
-
-  inventory:on('save', function()
-    print(inventory.name .. ' saved => ' .. inventory:get())
-  end)
-
-  inventory:on('add', function(amount)
-    print('add', amount)
-  end)
-
-  inventory:on('remove', function(amount)
-    print('remove', amount)
-  end)
-
-  inventory:on('ready', function()
-
-    inventory:set('something', 15)
-    inventory:set('something', 10)
-
-    inventory:save(function()
-      print('callbacks also')
-    end)
-
-  end)
-
-end)
 

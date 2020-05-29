@@ -10,26 +10,50 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
+M('events')
+M('serializable')
+M('cache')
+
 local utils = M("utils")
+
+local spawn = {x = -269.4, y = -955.3, z = 31.2, heading = 205.8}
+
+Identity = Extends(Serializable)
+
+function Identity:constructor(data)
+
+  self.super:constructor()
+
+  for k,v in pairs(data) do
+    self:field(k, v)
+  end
+
+end
+
+IdentityCacheConsumer = Extends(CacheConsumer)
+
+function IdentityCacheConsumer:constructor()
+
+  self.super:constructor(function(key, cb)
+
+    request('esx:cache:identity:get', function(exists, data)
+      cb(exists, exists and Identity:new(data) or nil)
+    end, key)
+
+  end)
+
+end
+
+Cache.identity = IdentityCacheConsumer:new()
 
 self.Menu = nil
 
-self.CheckIdentity = function()
-  request(
-    "esx:identity:check",
-    function(hasRegistered)
-      if not hasRegistered then
-        self.OpenMenu()
-      end
-    end
-  )
-end
+self.OpenMenu = function(cb)
 
-self.OpenMenu = function()
   utils.ui.showNotification(_U('identity_register'))
 
   self.Menu =
-    Menu:create(
+    Menu:new(
     "identity",
     {
       float = "center|middle",
@@ -61,15 +85,15 @@ self.OpenMenu = function()
     "item.click",
     function(item, index)
       if item.name == "submit" then
+
         local props = self.Menu:kvp()
 
-        print(json.encode(props))
-
-        if (props.firstName ~= "") and (props.lastName ~= "") and (props.dob ~= "") then
-          emitServer("esx:identity:register", props)
+        if (props.firstName ~= '') and (props.lastName ~= '') and (props.dob ~= '') then
 
           self.Menu:destroy()
           self.Menu = nil
+
+          request('esx:identity:register', cb, props)
 
           utils.ui.showNotification(_U('identity_welcome', props.firstName, props.lastName))
         else
@@ -78,4 +102,93 @@ self.OpenMenu = function()
       end
     end
   )
+end
+
+self.DoSpawn = function(data, cb)
+  exports.spawnmanager:spawnPlayer(data, cb)
+end
+
+self.Init = function(id)
+
+  if id == nil then
+    error('Identity is not defined')
+  end
+
+  Cache.identity:resolve(id, function(exists, identity)
+
+    if not exists then
+      error('Identity not found')
+    end
+
+    ESX.Player:field('identity', identity)
+
+    local playerPed = PlayerPedId()
+
+    if Config.EnablePvP then
+      SetCanAttackFriendly(playerPed, true, false)
+      NetworkSetFriendlyFireOption(true)
+    end
+
+    ESX.Ready = true
+
+    emitServer('esx:client:ready')
+    emit('esx:ready')
+
+  end)
+
+end
+
+self.EnsureIdentity = function()
+
+  local player     = ESX.Player
+  local identityId = player:getIdentityId()
+
+  if identityId == nil then
+
+    self.DoSpawn({
+
+      x        = spawn.x,
+      y        = spawn.y,
+      z        = spawn.z,
+      heading  = spawn.heading,
+      model    = 'mp_m_freemode_01',
+      skipFade = false
+
+    }, function()
+
+      self.OpenMenu(self.Init)
+
+    end)
+
+  else
+
+    Cache.identity:fetch(identityId, function(exists, identity)
+
+      if exists then
+
+        self.Init(identityId)
+
+      else
+
+        self.DoSpawn({
+
+          x        = spawn.x,
+          y        = spawn.y,
+          z        = spawn.z,
+          heading  = spawn.heading,
+          model    = 'mp_m_freemode_01',
+          skipFade = false
+
+        }, function()
+
+          self.OpenMenu(self.Init)
+
+        end)
+
+      end
+
+    end)
+
+  end
+
 end

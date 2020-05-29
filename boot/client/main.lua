@@ -14,20 +14,6 @@ local self = ESX.Modules['boot']
 
 local HUD = self.LoadModule('game.hud', true)
 
--- Join
-Citizen.CreateThread(function()
-
-  while true do
-		Citizen.Wait(0)
-
-		if NetworkIsPlayerActive(PlayerId()) then
-			emitServer('esx:onPlayerJoined')
-			break
-		end
-  end
-
-end)
-
 -- Pause menu disables HUD display
 if Config.EnableHud then
 

@@ -13,7 +13,7 @@
 local self = ESX.Modules['boot']
 
 -- Need a bit of core modules here
-self.LoadModule('events', true)
+M('events')
 
 on('esx:migrations:done', function()
 

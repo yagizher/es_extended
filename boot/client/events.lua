@@ -17,75 +17,6 @@ M('events')
 local Menu = M('ui.menu')
 local HUD  = M('game.hud')
 
-onServer('esx:playerLoaded', function(playerData)
-
-  ESX.PlayerLoaded = true
-  ESX.PlayerData   = playerData
-
-  local playerPed = PlayerPedId()
-
-  if Config.EnablePvP then
-    SetCanAttackFriendly(playerPed, true, false)
-    NetworkSetFriendlyFireOption(true)
-  end
-
-  if Config.EnableHud then
-
-    Citizen.CreateThread(function()
-
-      while (not HUD.Frame) or (not HUD.Frame.loaded) do
-        Citizen.Wait(0)
-      end
-
-      for k,v in ipairs(playerData.accounts) do
-        local accountTpl = '<div><img src="img/accounts/' .. v.name .. '.png"/>&nbsp;{{money}}</div>'
-        HUD.RegisterElement('account_' .. v.name, k, 0, accountTpl, {money = math.groupDigits(v.money)})
-      end
-
-      local jobTpl = '<div>{{job_label}} - {{grade_label}}</div>'
-
-      if playerData.job.grade_label == '' or playerData.job.grade_label == playerData.job.label then
-        jobTpl = '<div>{{job_label}}</div>'
-      end
-
-      HUD.RegisterElement('job', #playerData.accounts, 0, jobTpl, {
-        job_label = playerData.job.label,
-        grade_label = playerData.job.grade_label
-      })
-
-    end)
-
-  end
-
-  -- Bringing back spawnmanager, see commit of Smallo92 at https://github.com/extendedmode/extendedmode/commit/9979c204f1237091e94fdd46580c9e7ebc79bca7
-  exports.spawnmanager:spawnPlayer({
-
-    x        = playerData.coords.x,
-    y        = playerData.coords.y,
-    z        = playerData.coords.z,
-    heading  = playerData.coords.heading,
-    model    = 'mp_m_freemode_01',
-    skipFade = false
-
-  }, function()
-
-    if Config.EnableLoadScreen then
-      ShutdownLoadingScreen()
-      ShutdownLoadingScreenNui()
-    end
-
-    emitServer('esx:onPlayerSpawn')
-    emit('esx:onPlayerSpawn')
-    emit('esx:restoreLoadout')
-
-    ESX.Ready = true
-
-    emit('esx:ready')
-
-  end)
-
-end)
-
 onServer('esx:setMaxWeight', function(newMaxWeight) ESX.PlayerData.maxWeight = newMaxWeight end)
 
 on('esx:onPlayerSpawn', function() ESX.IsDead = false end)
@@ -287,7 +218,7 @@ onServer('esx:spawnVehicle', function(vehicleName)
 	end
 end)
 
-onServer('esx:createPickup', function(pickupId, label, playerId, type, name, components, tintIndex)
+onServer('esx:newPickup', function(pickupId, label, playerId, type, name, components, tintIndex)
 
 	local playerPed = GetPlayerPed(GetPlayerFromServerId(playerId))
 	local entityCoords, forwardVector = GetEntityCoords(playerPed), GetEntityForwardVector(playerPed)
@@ -338,7 +269,7 @@ onServer('esx:createPickup', function(pickupId, label, playerId, type, name, com
 end)
 
 
-onServer('esx:createMissingPickups', function(missingPickups)
+onServer('esx:newMissingPickups', function(missingPickups)
 	for pickupId,pickup in pairs(missingPickups) do
 		local pickupObject = nil
 

@@ -177,7 +177,7 @@ end
 --[[
 on('esx:db:ready', function()
 
-  local account = Account:create('test')
+  local account = Account:new('test')
 
   account:on('save', function()
     print(account.name .. ' saved => ' .. account:get())

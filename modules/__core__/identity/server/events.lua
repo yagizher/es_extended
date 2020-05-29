@@ -13,19 +13,53 @@
 
 M('player')
 
-onRequest('esx:identity:check', function(source, cb)
-  local player = xPlayer.fromId(source)
-  cb(player:getFirstName() and player:getLastName() and player:getDOB())
+onRequest('esx:identity:register', function(source, cb, data)
+
+  local player = Player.fromId(source)
+
+  Identity.ensure({
+
+    owner     = player.identifier,
+    firstName = data.firstName,
+    lastName  = data.lastName,
+    DOB       = data.dob,
+    isMale    = data.isMale
+
+  }, function(identity)
+
+    Identity.all[identity.id] = identity.id
+
+    player:setIdentityId(identity.id)
+    player:field('identity', identity)
+    player:save()
+
+    cb(identity.id)
+
+  end)
+
 end)
 
-onClient('esx:identity:register', function(data)
+onRequest('esx:cache:identity:get', function(source, cb, id)
 
-  local source = source
-  local player = xPlayer.fromId(source)
+  local identity = Identity.all[id]
 
-  player:setFirstName(data.firstName)
-  player:setLastName (data.lastName)
-  player:setDOB      (data.dob)
-  player:setIsMale   (data.isMale)
+  if identity then
+
+    cb(true, identity:serialize())
+
+  else
+
+    Identity.findOne('id', id, function(instance)
+
+      if instance == nil then
+        cb(false, nil)
+      else
+        Identity.all[id] = identity
+        cb(true, identity:serialize())
+      end
+
+    end)
+
+  end
 
 end)

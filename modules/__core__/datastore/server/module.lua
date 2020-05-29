@@ -168,7 +168,7 @@ end
 --[[
 on('esx:db:ready', function()
 
-  local ds = DataStore:create('test')
+  local ds = DataStore:new('test')
 
   ds:on('save', function()
     print(ds.name .. ' saved => ' .. json.encode(ds:get()))

@@ -16,8 +16,8 @@ M('class')
 self.handlers         = {}
 self.callbacks        = {}
 self.requestCallbacks = {}
-self.eventId          = 1
-self.requestId        = 1
+self.eventId          = 2
+self.requestId        = 2
 
 local getEventId = function()
 
