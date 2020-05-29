@@ -92,7 +92,7 @@ Persist = function(schema, pk)
 
   end
 
-  pType.find = function(k, v, cb)
+  pType.find = function(key, value, cb)
 
     local keys  = ''
     local count = 0
@@ -112,7 +112,7 @@ Persist = function(schema, pk)
 
     local sql = 'SELECT ' .. keys .. ' FROM `' .. schema .. '` WHERE `' .. fields[key].data.name .. '` = @value'
 
-    MySQL.Async.fetchAll(sql, {['@value'] = v}, function(rows)
+    MySQL.Async.fetchAll(sql, {['@value'] = value}, function(rows)
 
       cb(table.map(rows, function(e)
 
@@ -131,9 +131,9 @@ Persist = function(schema, pk)
 
   end
 
-  pType.ensure = function(data, cb)
+  pType.ensure = function(key, data, cb)
 
-    local id = data[pk]
+    local id = data[key]
 
     if id == nil then
 
@@ -145,7 +145,7 @@ Persist = function(schema, pk)
 
     else
 
-      pType.findOne(pk, id, function(instance)
+      pType.findOne(key, id, function(instance)
 
         if instance == nil then
 
@@ -227,24 +227,10 @@ Persist = function(schema, pk)
       if cb ~= nil then
 
         if self[pk] == nil then
-
-          local result = rows[2][1]
-          local id     = 0
-
-          for k,v in pairs(result) do
-            id = v
-            break
-          end
-
-          self[pk] = id
+          self[pk] = rows[2][1]['LAST_INSERT_ID()']
+        end
 
           cb(id)
-
-        else
-
-          cb(self[pk])
-
-        end
 
       end
 

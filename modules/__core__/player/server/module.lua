@@ -12,10 +12,11 @@
 
 M('persistent')
 
-Player = Persist('players', 'identifier')
+Player = Persist('players', 'id')
 
 Player.define({
-  {name = 'identifier', field = {name = 'identifier',  type = 'VARCHAR', length = 64,  default  = nil,   extra = 'NOT NULL'}},
+  {name = 'id',         field = {name = 'id',          type = 'INT',     length = nil, default = nil,    extra = 'NOT NULL AUTO_INCREMENT'}},
+  {name = 'identifier', field = {name = 'identifier',  type = 'VARCHAR', length = 64,  default = nil,    extra = 'NOT NULL'}},
   {name = 'name',       field = {name = 'name',        type = 'VARCHAR', length = 255, default = 'NULL', extra = nil}},
   {name = 'identityId', field = {name = 'identity_id', type = 'VARCHAR', length = 64,  default = 'NULL', extra = nil}},
 })
@@ -67,7 +68,7 @@ Player.onJoin = function()
 
       else
 
-        Player.ensure({
+        Player.ensure('identifier', {
           identifier = identifier,
           name       = name,
         }, function(player)

@@ -22,7 +22,7 @@ self.requestId        = 2
 local getEventId = function()
 
   if (self.eventId + 1) == 1000000 then
-    self.eventId = 1
+    self.eventId = 2
   else
     self.eventId = self.eventId + 1
   end
@@ -34,7 +34,7 @@ end
 local getRequestId = function()
 
   if (self.requestId + 1) == 1000000 then
-    self.requestId = 1
+    self.requestId = 2
   else
     self.requestId = self.requestId + 1
   end

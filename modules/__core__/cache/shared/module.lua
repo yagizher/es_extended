@@ -17,19 +17,21 @@ M('events')
 Cache         = {}
 CacheConsumer = Extends(EventEmitter)
 
-function CacheConsumer:constructor(provide)
-
-  print('CacheConsumer:constructor')
+function CacheConsumer:constructor()
 
   self.super:constructor()
 
   self.data = {}
 
-  self.doProvide = provide or function(key, cb)
+  if self.provide == nil then
 
-    ESX.SetTimeout(0, function()
-      cb(self:has(key), self:get(key))
-    end)
+    function self:provide(key, cb)
+
+      ESX.SetTimeout(0, function()
+        cb(self:has(key), self:get(key))
+      end)
+
+    end
 
   end
 
@@ -65,7 +67,7 @@ end
 
 function CacheConsumer:fetch(key, cb)
 
-  self.doProvide(key, function(exists, data)
+  self:provide(key, function(exists, data)
 
     if exists then
       self:set(key, data)

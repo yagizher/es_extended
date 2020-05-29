@@ -50,7 +50,7 @@ onRequest('esx:cache:player:get', function(source, cb, id)
 end)
 
 on('esx:player:load', function(player)
-  print(player:getName() .. ' ^2loaded')
+  print('^2loaded ^7' .. player.name .. ' (' .. player.source .. '|' .. player.identifier .. ')')
 end)
 
 on('esx:player:load:error', function(source, name)

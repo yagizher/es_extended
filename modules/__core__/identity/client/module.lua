@@ -13,10 +13,13 @@
 M('events')
 M('serializable')
 M('cache')
+M('ui.menu')
 
+local HUD   = M('game.hud')
 local utils = M("utils")
 
 local spawn = {x = -269.4, y = -955.3, z = 31.2, heading = 205.8}
+
 
 Identity = Extends(Serializable)
 
@@ -32,15 +35,11 @@ end
 
 IdentityCacheConsumer = Extends(CacheConsumer)
 
-function IdentityCacheConsumer:constructor()
+function IdentityCacheConsumer:provide(key, cb)
 
-  self.super:constructor(function(key, cb)
-
-    request('esx:cache:identity:get', function(exists, data)
-      cb(exists, exists and Identity:new(data) or nil)
-    end, key)
-
-  end)
+  request('esx:cache:identity:get', function(exists, data)
+    cb(exists, exists and Identity:new(data) or nil)
+  end, key)
 
 end
 
@@ -52,56 +51,52 @@ self.OpenMenu = function(cb)
 
   utils.ui.showNotification(_U('identity_register'))
 
-  self.Menu =
-    Menu:new(
-    "identity",
-    {
-      float = "center|middle",
-      title = "Create Character",
-      items = {
-        {name = "firstName", label = "First name", type = "text", placeholder = "John"},
-        {name = "lastName", label = "Last name", type = "text", placeholder = "Smith"},
-        {name = "dob", label = "Date of birth", type = "text", placeholder = "01/02/1234"},
-        {name = "isMale", label = "Male", type = "check", value = true},
-        {name = "submit", label = "Submit", type = "button"}
-      }
+  self.Menu = Menu:new("identity", {
+    float = "center|middle",
+    title = "Create Character",
+    items = {
+      {name = "firstName", label = "First name", type = "text", placeholder = "John"},
+      {name = "lastName", label = "Last name", type = "text", placeholder = "Smith"},
+      {name = "dob", label = "Date of birth", type = "text", placeholder = "01/02/1234"},
+      {name = "isMale", label = "Male", type = "check", value = true},
+      {name = "submit", label = "Submit", type = "button"}
     }
-  )
+  })
 
-  self.Menu:on(
-    "item.change",
-    function(item, prop, val, index)
-      if (item.name == "isMale") and (prop == "value") then
-        if val then
-          item.label = "Male"
-        else
-          item.label = "Female"
-        end
+  self.Menu:on("item.change", function(item, prop, val, index)
+
+    if (item.name == "isMale") and (prop == "value") then
+      if val then
+        item.label = "Male"
+      else
+        item.label = "Female"
       end
     end
-  )
 
-  self.Menu:on(
-    "item.click",
-    function(item, index)
-      if item.name == "submit" then
+  end)
 
-        local props = self.Menu:kvp()
+  self.Menu:on("item.click", function(item, index)
 
-        if (props.firstName ~= '') and (props.lastName ~= '') and (props.dob ~= '') then
+    if item.name == "submit" then
 
-          self.Menu:destroy()
-          self.Menu = nil
+      local props = self.Menu:kvp()
 
-          request('esx:identity:register', cb, props)
+      if (props.firstName ~= '') and (props.lastName ~= '') and (props.dob ~= '') then
 
-          utils.ui.showNotification(_U('identity_welcome', props.firstName, props.lastName))
-        else
-          utils.ui.showNotification(_U('identity_fill_in'))
-        end
+        self.Menu:destroy()
+        self.Menu = nil
+
+        request('esx:identity:register', cb, props)
+
+        utils.ui.showNotification(_U('identity_welcome', props.firstName, props.lastName))
+      else
+        utils.ui.showNotification(_U('identity_fill_in'))
       end
+
     end
-  )
+
+  end)
+
 end
 
 self.DoSpawn = function(data, cb)
@@ -127,6 +122,10 @@ self.Init = function(id)
     if Config.EnablePvP then
       SetCanAttackFriendly(playerPed, true, false)
       NetworkSetFriendlyFireOption(true)
+    end
+
+    if Config.EnableHUD then
+      self.LoadHUD()
     end
 
     ESX.Ready = true
@@ -190,5 +189,19 @@ self.EnsureIdentity = function()
     end)
 
   end
+
+end
+
+self.LoadHUD = function()
+
+  Citizen.CreateThread(function()
+
+    while (not HUD.Frame) or (not HUD.Frame.loaded) do
+      Citizen.Wait(0)
+    end
+
+    HUD.RegisterElement('display_name', 1, 0, '{{firstName}} {{lastName}}', ESX.Player.identity:serialize())
+
+  end)
 
 end

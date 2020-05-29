@@ -32,15 +32,11 @@ end
 
 PlayerCacheConsumer = Extends(CacheConsumer)
 
-function PlayerCacheConsumer:constructor()
+function PlayerCacheConsumer:provide(key, cb)
 
-  self.super:constructor(function(key, cb)
-
-    request('esx:cache:player:get', function(exists, data)
-      cb(exists, exists and Player:new(data) or nil)
-    end, key)
-
-  end)
+  request('esx:cache:player:get', function(exists, data)
+    cb(exists, exists and Player:new(data) or nil)
+  end, key)
 
 end
 

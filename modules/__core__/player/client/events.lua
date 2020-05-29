@@ -10,10 +10,6 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-local utils = M('utils')
-
-local Menu = M('ui.menu')
-local HUD  = M('game.hud')
 
 onServer('esx:player:load', function(sid)
 
@@ -22,8 +18,6 @@ onServer('esx:player:load', function(sid)
     if exists then
 
       ESX.Player = player
-
-      print(json.encode(player:serialize()))
 
       emit('esx:player:load:done')
 
