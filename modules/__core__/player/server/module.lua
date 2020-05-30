@@ -75,6 +75,8 @@ Player.onJoin = function()
 
           player:field('source', source)
 
+          player:on('change', print)
+
           Player.all[source] = player
 
           emit('esx:player:load', player)

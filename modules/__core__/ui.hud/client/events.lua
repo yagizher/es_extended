@@ -30,7 +30,7 @@ RegisterNUICallback('__chunk', function(data, cb)
 end)
 
 RegisterNUICallback('nui_ready', function(data, cb)
-  self.Ready = true
+  module.Ready = true
   emit('esx:nui:ready')
   cb('')
 end)
@@ -47,7 +47,7 @@ end)
 
 on('esx:frame:load', function(name)
 
-  local frame = self.Frames[name]
+  local frame = module.Frames[name]
 
   if frame == nil then
 
@@ -63,7 +63,7 @@ end)
 
 on('esx:frame:message', function(name, msg)
 
-  local frame = self.Frames[name]
+  local frame = module.Frames[name]
 
   if frame == nil then
 

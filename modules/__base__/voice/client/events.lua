@@ -16,17 +16,17 @@ Input.On('pressed', 1, 74, function(lastPressed)
 
   if Input.IsControlPressed(1, 21) then
 
-    self.voice.current = (self.voice.current + 1) % 3
+    module.voice.current = (module.voice.current + 1) % 3
 
-    if self.voice.current == 0 then
-      NetworkSetTalkerProximity(self.voice.default)
-      self.voice.level = _U('voice:normal')
-    elseif self.voice.current == 1 then
-      NetworkSetTalkerProximity(self.voice.shout)
-      self.voice.level = _U('voice:shout')
-    elseif self.voice.current == 2 then
-      NetworkSetTalkerProximity(self.voice.whisper)
-      self.voice.level = _U('voice:whisper')
+    if module.voice.current == 0 then
+      NetworkSetTalkerProximity(module.voice.default)
+      module.voice.level = _U('voice:normal')
+    elseif module.voice.current == 1 then
+      NetworkSetTalkerProximity(module.voice.shout)
+      module.voice.level = _U('voice:shout')
+    elseif module.voice.current == 2 then
+      NetworkSetTalkerProximity(module.voice.whisper)
+      module.voice.level = _U('voice:whisper')
     end
   end
 end)

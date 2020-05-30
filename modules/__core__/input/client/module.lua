@@ -13,14 +13,14 @@
 M('table')
 local Menu = M('ui.menu')
 
-self.RegisteredControls   = {}
-self.EnabledControls      = {}
-self.LastPressed          = {}
-self.LastDisabledPressed  = {}
-self.LastReleased         = {}
-self.LastDisabledReleased = {}
+module.RegisteredControls   = {}
+module.EnabledControls      = {}
+module.LastPressed          = {}
+module.LastDisabledPressed  = {}
+module.LastReleased         = {}
+module.LastDisabledReleased = {}
 
-self.Groups = {
+module.Groups = {
   MOVE                   = 0,
   LOOK                   = 1,
   WHEEL                  = 2,
@@ -55,7 +55,7 @@ self.Groups = {
   VEH_HYDRAULICS_CONTROL = 31,
 }
 
-self.Controls = {
+module.Controls = {
   NEXT_CAMERA                           = 0,
   LOOK_LR                               = 1,
   LOOK_UD                               = 2,
@@ -404,71 +404,71 @@ self.Controls = {
   INPUT_REPLAY_SNAPMATIC_PHOTO          = 345,
 }
 
-self.RegisterControl = function(group, id)
-  if table.indexOf(self.RegisteredControls[group], id) == -1 then
-    self.RegisteredControls[group][#self.RegisteredControls[group] + 1] = id
+module.RegisterControl = function(group, id)
+  if table.indexOf(module.RegisteredControls[group], id) == -1 then
+    module.RegisteredControls[group][#module.RegisteredControls[group] + 1] = id
   end
 end
 
-self.UnregisterControl = function(group, id)
-  if table.indexOf(self.RegisteredControls[group], id) ~= -1 then
-    table.remove(self.RegisteredControls[group], table.indexOf(self.RegisteredControls[group], id))
+module.UnregisterControl = function(group, id)
+  if table.indexOf(module.RegisteredControls[group], id) ~= -1 then
+    table.remove(module.RegisteredControls[group], table.indexOf(module.RegisteredControls[group], id))
   end
 end
 
-self.EnableControl = function(group, id)
-  self.EnabledControls[group][id] = self.EnabledControls[group][id] + 1
+module.EnableControl = function(group, id)
+  module.EnabledControls[group][id] = module.EnabledControls[group][id] + 1
 end
 
-self.DisableControl = function(group, id)
-  self.EnabledControls[group][id] = self.EnabledControls[group][id] - 1
+module.DisableControl = function(group, id)
+  module.EnabledControls[group][id] = module.EnabledControls[group][id] - 1
 end
 
-self.IsControlRegistered = function(group, id)
-  return table.indexOf(self.RegisteredControls[group], id) ~= -1
+module.IsControlRegistered = function(group, id)
+  return table.indexOf(module.RegisteredControls[group], id) ~= -1
 end
 
-self.IsControlPressed = function(group, id)
-  return self.IsControlEnabled(group, id) and (IsControlPressed(group, id))
+module.IsControlPressed = function(group, id)
+  return module.IsControlEnabled(group, id) and (IsControlPressed(group, id))
 end
 
-self.IsDisabledControlPressed = function(group, id)
-  return (not self.IsControlEnabled(group, id)) and (IsDisabledControlPressed(group, id))
+module.IsDisabledControlPressed = function(group, id)
+  return (not module.IsControlEnabled(group, id)) and (IsDisabledControlPressed(group, id))
 end
 
-self.IsControlEnabled = function(group, id)
-  return self.EnabledControls[group][id] >= 0
+module.IsControlEnabled = function(group, id)
+  return module.EnabledControls[group][id] >= 0
 end
 
-for k1, group in pairs(self.Groups) do
+for k1, group in pairs(module.Groups) do
 
-  self.RegisteredControls[group]   = {}
-  self.EnabledControls[group]      = {}
-  self.LastPressed[group]          = {}
-  self.LastDisabledPressed[group]  = {}
-  self.LastReleased[group]         = {}
-  self.LastDisabledReleased[group] = {}
+  module.RegisteredControls[group]   = {}
+  module.EnabledControls[group]      = {}
+  module.LastPressed[group]          = {}
+  module.LastDisabledPressed[group]  = {}
+  module.LastReleased[group]         = {}
+  module.LastDisabledReleased[group] = {}
 
-  for k2, id in pairs(self.Controls) do
-    self.EnabledControls[group][id]      = 0
-    self.LastPressed[group][id]          = -1
-    self.LastDisabledPressed[group][id]  = -1
-    self.LastReleased[group][id]         = -1
-    self.LastDisabledReleased[group][id] = -1
+  for k2, id in pairs(module.Controls) do
+    module.EnabledControls[group][id]      = 0
+    module.LastPressed[group][id]          = -1
+    module.LastDisabledPressed[group][id]  = -1
+    module.LastReleased[group][id]         = -1
+    module.LastDisabledReleased[group][id] = -1
   end
 
 end
 
-self.On = function(event, group, id, cb)
+module.On = function(event, group, id, cb)
 
   return on('esx:input:' .. event .. ':' .. group .. ':'  .. id, cb)
 
 end
 
-self.InitESX = function()
+module.InitESX = function()
 
-  self.RegisterControl(self.Groups.MOVE, self.Controls[Config.InventoryKey])
-  self.On('released', self.Groups.MOVE, self.Controls[Config.InventoryKey], function(lastPressed)
+  module.RegisterControl(module.Groups.MOVE, module.Controls[Config.InventoryKey])
+  module.On('released', module.Groups.MOVE, module.Controls[Config.InventoryKey], function(lastPressed)
 
     if (not ESX.IsDead) and (not Menu.IsOpen('default', 'es_extended', 'inventory')) then
       ESX.ShowInventory()

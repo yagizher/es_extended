@@ -12,27 +12,27 @@
 
 
 
-self.Config = run('data/config.lua', {vector3 = vector3})['Config']
+module.Config = run('data/config.lua', {vector3 = vector3})['Config']
 
-self.Jobs = {}
-self.RegisteredSocieties = {}
+module.Jobs = {}
+module.RegisteredSocieties = {}
 
-self.Init = function()
+module.Init = function()
 
   local translations = run('data/locales/' .. Config.Locale .. '.lua')['Translations']
   LoadLocale('society', Config.Locale, translations)
 
 end
 
-self.GetSociety = function(name)
-	for i=1, #self.RegisteredSocieties, 1 do
-		if self.RegisteredSocieties[i].name == name then
-			return self.RegisteredSocieties[i]
+module.GetSociety = function(name)
+	for i=1, #module.RegisteredSocieties, 1 do
+		if module.RegisteredSocieties[i].name == name then
+			return module.RegisteredSocieties[i]
 		end
 	end
 end
 
-self.isPlayerBoss = function(playerId, job)
+module.isPlayerBoss = function(playerId, job)
 	local xPlayer = xPlayer.fromId(playerId)
 
 	if xPlayer.job.name == job and xPlayer.job.grade_name == 'boss' then
@@ -43,10 +43,10 @@ self.isPlayerBoss = function(playerId, job)
 	end
 end
 
-self.WashMoneyCRON = function(d, h, m)
+module.WashMoneyCRON = function(d, h, m)
 	MySQL.Async.fetchAll('SELECT * FROM society_moneywash', {}, function(result)
 		for i=1, #result, 1 do
-			local society = self.GetSociety(result[i].society)
+			local society = module.GetSociety(result[i].society)
 			local xPlayer = xPlayer.fromIdentifier(result[i].identifier)
 
 			-- add society money

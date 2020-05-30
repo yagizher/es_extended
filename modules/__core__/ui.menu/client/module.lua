@@ -17,14 +17,13 @@ local HUD = M('ui.hud')
 
 Menu = Extends(nil)
 
-function Menu:constructor(name, data, focus)
+function Menu:constructor(get, set, name, data, focus)
 
-  self.name     = name
-  self.float    = data.float or 'top|left'
-  self.title    = data.title or 'Untitled ESX Menu'
-  self.items    = {}
-  self.frame    = nil
-  self.handlers = {}
+  local name     = set('name', name)
+  local float    = set('float', data.float or 'top|left')
+  local title    = set('title', data.title or 'Untitled ESX Menu')
+  local handlers = set('handlers', {})
+  local items    = set('items', {})
 
   if focus == nil then
     focus = true
@@ -74,7 +73,7 @@ function Menu:constructor(name, data, focus)
 
       end
 
-      self.items[i] = setmetatable({}, {
+      items[i] = setmetatable({}, {
 
         __index = function(t, k)
           return item[k]
@@ -82,7 +81,7 @@ function Menu:constructor(name, data, focus)
 
         __newindex = function(t, k, v)
           item[k] = v
-          self.frame:postMessage({action = 'set_item', index = i - 1, prop = k, val = v})
+          get('frame'):postMessage({action = 'set_item', index = i - 1, prop = k, val = v})
         end,
 
       })
@@ -93,9 +92,9 @@ function Menu:constructor(name, data, focus)
 
   end
 
-  self.frame = Frame:new('ui:menu:' .. self.name, 'nui://' .. __RESOURCE__ .. '/modules/__core__/ui.menu/data/html/index.html', true)
+  local frame = set('frame', Frame.new('ui:menu:' .. name, 'nui://' .. __RESOURCE__ .. '/modules/__core__/ui.menu/data/html/index.html', true))
 
-  self.frame:on('message', function(msg)
+  frame:on('message', function(msg)
 
     if msg.action == 'ready' then
       self:emit('internal:ready')
@@ -109,14 +108,14 @@ function Menu:constructor(name, data, focus)
 
   self:on('internal:ready', function()
 
-    self.frame:postMessage({action = 'set', data = {
-      float = self.float,
-      title = self.title,
+    frame:postMessage({action = 'set', data = {
+      float = float,
+      title = title,
       items = _items,
     }})
 
     if focus then
-      self.frame:focus(true)
+      frame:focus(true)
     end
 
     self:emit('ready')
@@ -133,12 +132,12 @@ function Menu:constructor(name, data, focus)
 
     _items[index][prop] = val
 
-    self:emit('item.change', self.items[index], prop, val, index)
+    self:emit('item.change', items[index], prop, val, index)
 
   end)
 
   self:on('internal:item.click', function(index)
-    self:emit('item.click', self.items[index], index)
+    self:emit('item.click', items[index], index)
   end)
 
 end

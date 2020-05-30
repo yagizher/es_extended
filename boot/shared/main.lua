@@ -10,18 +10,18 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-local self = ESX.Modules['boot']
+local module = ESX.Modules['boot']
 
-for i=1, #self.GroupNames, 1 do
+for i=1, #module.GroupNames, 1 do
 
-  local groupName = self.GroupNames[i]
-  local group     = self.Groups[groupName]
+  local groupName = module.GroupNames[i]
+  local group     = module.Groups[groupName]
 
   for j=1, #group, 1 do
 
     local name = group[j]
 
-    if self.ModuleHasEntryPoint(name, groupName) then
+    if module.ModuleHasEntryPoint(name, groupName) then
       M(name, groupName)
     end
 

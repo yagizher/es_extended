@@ -20,7 +20,7 @@ on('esx:db:ready', function()
 	local start
 	local manifest = LoadResourceFile(GetCurrentResourceName(), 'fxmanifest.lua')
 
-	self.Ensure('base')
+	module.Ensure('base')
 
   for i=1, #boot.GroupNames, 1 do
 
@@ -28,7 +28,7 @@ on('esx:db:ready', function()
 
     for i=1, #boot.EntriesOrders, 1 do
       local module = boot.EntriesOrders[i]
-      self.Ensure(module, group)
+      module.Ensure(module, group)
     end
   end
 

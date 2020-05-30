@@ -11,14 +11,14 @@
 --   This copyright should appear in every part of the project code
 local utils = M("utils")
 
-self.Init()
+module.Init()
 
 Citizen.CreateThread(
 	function()
 		while true do
 			Citizen.Wait(0)
 
-			if self.isCameraActive then
+			if module.isCameraActive then
 				DisableControlAction(2, 30, true)
 				DisableControlAction(2, 31, true)
 				DisableControlAction(2, 32, true)
@@ -31,18 +31,18 @@ Citizen.CreateThread(
 				local playerPed = PlayerPedId()
 				local coords = GetEntityCoords(playerPed)
 
-				local angle = self.heading * math.pi / 180.0
+				local angle = module.heading * math.pi / 180.0
 				local theta = {
 					x = math.cos(angle),
 					y = math.sin(angle)
 				}
 
 				local pos = {
-					x = coords.x + (self.zoomOffset * theta.x),
-					y = coords.y + (self.zoomOffset * theta.y)
+					x = coords.x + (module.zoomOffset * theta.x),
+					y = coords.y + (module.zoomOffset * theta.y)
 				}
 
-				local angleToLook = self.heading - 140.0
+				local angleToLook = module.heading - 140.0
 
 				if angleToLook > 360 then
 					angleToLook = angleToLook - 360
@@ -58,12 +58,12 @@ Citizen.CreateThread(
 				}
 
 				local posToLook = {
-					x = coords.x + (self.zoomOffset * thetaToLook.x),
-					y = coords.y + (self.zoomOffset * thetaToLook.y)
+					x = coords.x + (module.zoomOffset * thetaToLook.x),
+					y = coords.y + (module.zoomOffset * thetaToLook.y)
 				}
 
-				SetCamCoord(self.cam, pos.x+self.camOffsetX, pos.y + self.camOffsetY, coords.z+self.camOffsetZ)
-				PointCamAtCoord(self.cam, posToLook.x, posToLook.y, coords.z - self.camPointOffset)
+				SetCamCoord(module.cam, pos.x+module.camOffsetX, pos.y + module.camOffsetY, coords.z+module.camOffsetZ)
+				PointCamAtCoord(module.cam, posToLook.x, posToLook.y, coords.z - module.camPointOffset)
 
 				-- NEED INPUT FROM NUI TO ROTATE CAMERA
 
@@ -84,20 +84,20 @@ Citizen.CreateThread(
 -- 		while true do
 -- 			Citizen.Wait(0)
 
--- 			if self.isCameraActive then
+-- 			if module.isCameraActive then
 -- 				if IsControlPressed(0, 108) then
--- 					self.angle = angle - 1
+-- 					module.angle = angle - 1
 -- 				elseif IsControlPressed(0, 109) then
--- 					self.angle = angle + 1
+-- 					module.angle = angle + 1
 -- 				end
 
--- 				if self.angle > 360 then
--- 					self.angle = self.angle - 360
+-- 				if module.angle > 360 then
+-- 					module.angle = module.angle - 360
 -- 				elseif angle < 0 then
--- 					self.angle = self.angle + 360
+-- 					module.angle = module.angle + 360
 -- 				end
 
--- 				self.heading = angle + 0.0
+-- 				module.heading = angle + 0.0
 -- 			else
 -- 				Citizen.Wait(500)
 -- 			end

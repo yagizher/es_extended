@@ -26,35 +26,35 @@ on('esx:db:init', function(initTable, extendTable)
 end)
 on('esx_accessories:hasEnteredMarker', function(zone)
 
-  self.CurrentAction = 'shop_menu'
-  self.CurrentActionMsg = _U('accessories:press_access')
-  self.CurrentActionData = { accessory = zone }
+  module.CurrentAction = 'shop_menu'
+  module.CurrentActionMsg = _U('accessories:press_access')
+  module.CurrentActionData = { accessory = zone }
 end)
 on('esx_accessories:hasExitedMarker', function(zone)
 
   Menu.CloseAll()
 
-  self.CurrentAction = nil
+  module.CurrentAction = nil
 end)
 -- Key Controls
 Input.On('released', Input.Groups.MOVE, Input.Controls.PICKUP, function(lastPressed)
 
-  if self.CurrentAction and not ESX.IsDead then
+  if module.CurrentAction and not ESX.IsDead then
 
-    self.CurrentAction()
+    module.CurrentAction()
 
-    self.CurrentAction = nil
+    module.CurrentAction = nil
   end
 
 end)
 
-if self.Config.EnableControls then
+if module.Config.EnableControls then
 
   Input.On('released', Input.Groups.MOVE, Input.Controls.REPLAY_SHOWHOTKEY, function(lastPressed)
 
     if not ESX.IsDead then
 
-      self.OpenAccessoryMenu()
+      module.OpenAccessoryMenu()
     end
 
   end)

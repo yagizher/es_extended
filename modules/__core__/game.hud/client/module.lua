@@ -10,23 +10,23 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-self.Frame              = nil
-self.RegisteredElements = {}
+module.Frame              = nil
+module.RegisteredElements = {}
 
-self.SetDisplay = function(opacity)
+module.SetDisplay = function(opacity)
 
-	self.Frame:postMessage({
+	module.Frame:postMessage({
 		action  = 'setHUDDisplay',
 		opacity = opacity
   })
 
 end
 
-self.RegisterElement = function(name, index, priority, html, data)
+module.RegisterElement = function(name, index, priority, html, data)
 	local found = false
 
-	for i=1, #self.RegisteredElements, 1 do
-		if self.RegisteredElements[i] == name then
+	for i=1, #module.RegisteredElements, 1 do
+		if module.RegisteredElements[i] == name then
 			found = true
 			break
 		end
@@ -36,9 +36,9 @@ self.RegisterElement = function(name, index, priority, html, data)
 		return
 	end
 
-	table.insert(self.RegisteredElements, name)
+	table.insert(module.RegisteredElements, name)
 
-  self.Frame:postMessage({
+  module.Frame:postMessage({
 		action    = 'insertHUDElement',
 		name      = name,
 		index     = index,
@@ -47,28 +47,28 @@ self.RegisterElement = function(name, index, priority, html, data)
 		data      = data
 	})
 
-  self.UpdateElement(name, data)
+  module.UpdateElement(name, data)
 
 end
 
-self.RemoveElement = function(name)
+module.RemoveElement = function(name)
 
-  for i=1, #self.RegisteredElements, 1 do
-		if self.RegisteredElements[i] == name then
-			table.remove(self.RegisteredElements, i)
+  for i=1, #module.RegisteredElements, 1 do
+		if module.RegisteredElements[i] == name then
+			table.remove(module.RegisteredElements, i)
 			break
 		end
 	end
 
-	self.Frame:postMessage({
+	module.Frame:postMessage({
 		action    = 'deleteHUDElement',
 		name      = name
   })
 
 end
 
-self.UpdateElement = function(name, data)
-	self.Frame:postMessage({
+module.UpdateElement = function(name, data)
+	module.Frame:postMessage({
 		action = 'updateHUDElement',
 		name   = name,
 		data   = data

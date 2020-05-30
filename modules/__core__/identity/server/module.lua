@@ -49,9 +49,9 @@ Identity.fromId = function(id)
   return Identity.all[id]
 end
 
-function Identity:constructor(data, source)
-  self.super:constructor(data)
-  self.source = source
+function Identity:constructor(get, set, data, source)
+  self.super:constructor(get, set, data)
+  set('source', source)
 end
 
 function Identity:hasRole(name)

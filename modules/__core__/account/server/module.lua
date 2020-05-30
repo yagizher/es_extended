@@ -14,11 +14,11 @@ M('events')
 M('class')
 M('table')
 
-self.Accounts = {}
+module.Accounts = {}
 
 Account = Extends(EventEmitter)
 
-function Account:constructor(name, owner, money)
+function Account:constructor(get, set, name, owner, money)
 
   if (money == nil) or (tonumber(money) ~= money) then
     money = 0
@@ -29,26 +29,26 @@ function Account:constructor(name, owner, money)
     return module.Accounts[name]
   end
 
-  self.super:constructor()
+  self.super:constructor(get, set)
 
-  self.ready = false
-  self.name  = name
+  set('ready', false)
+  set('name', name)
 
   if owner then
-    self.owner  = owner
-    self.shared = true
+    set('owner', owner)
+    set('shared', true)
   else
-    self.owner  = nil
-    self.shared = false
+    set('owner', nil)
+    set('shared', false)
   end
 
-  self.money   = money
-  self.ensured = false
+  set('money', money)
+  set('ensured', false)
 
   self:on('ensure', function()
 
-    self.ensured = true
-    self.ready   = true
+    set('ensured', true)
+    set('ready', true)
 
     self:emit('ready')
 
@@ -177,7 +177,7 @@ end
 --[[
 on('esx:db:ready', function()
 
-  local account = Account:new('test')
+  local account = Account.new('test')
 
   account:on('save', function()
     print(account.name .. ' saved => ' .. account:get())

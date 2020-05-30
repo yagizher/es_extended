@@ -11,4 +11,4 @@
 --   This copyright should appear in every part of the project code
 
 -- Properties
-self.Config = run('data/config.lua', {vector3 = vector3})['Config']
+module.Config = run('data/config.lua', {vector3 = vector3})['Config']

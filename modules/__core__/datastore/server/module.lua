@@ -14,37 +14,37 @@ M('events')
 M('class')
 M('table')
 
-self.Stores = {}
+module.Stores = {}
 
 DataStore = Extends(EventEmitter)
 
-function DataStore:constructor(name, owner, data)
+function DataStore:constructor(get, set, name, owner, data)
 
   if module.Stores[name] ~= nil then
     print('[warning] there is already an active instance of datastore => ' .. name .. ' returning that instance')
     return module.Stores[name]
   end
 
-  self.super:constructor()
+  self.super:constructor(get, set)
 
-  self.ready = false
-  self.name  = name
+  set('ready', false)
+  set('name', name)
 
   if owner then
-    self.owner  = owner
-    self.shared = true
+    set('owner', owner)
+    set('shared', true)
   else
-    self.owner  = nil
-    self.shared = false
+    set('owner', nil)
+    set('shared', false)
   end
 
-  self.data    = data or {}
-  self.ensured = false
+  set('data', data or {})
+  set('ensured', false)
 
   self:on('ensure', function()
 
-    self.ensured = true
-    self.ready   = true
+    set('ensured', true)
+    set('ready', true)
 
     self:emit('ready')
 
@@ -168,7 +168,7 @@ end
 --[[
 on('esx:db:ready', function()
 
-  local ds = DataStore:new('test')
+  local ds = DataStore.new('test')
 
   ds:on('save', function()
     print(ds.name .. ' saved => ' .. json.encode(ds:get()))

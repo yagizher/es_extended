@@ -15,8 +15,8 @@ Config = {}
 Config.Locale             = 'en'
 Config.DisableWantedLevel = true
 Config.EnablePvP          = true
-Config.EnableHUD        = true
-Config.InventoryKey     = "REPLAY_START_STOP_RECORDING_SECONDARY" -- Key F2 by default
-Config.EnableLoadScreen = true
+Config.EnableHUD          = true
+Config.InventoryKey       = "REPLAY_START_STOP_RECORDING_SECONDARY" -- Key F2 by default
+Config.EnableLoadScreen   = true
 
 Config.Modules = {}

@@ -12,15 +12,37 @@
 
 M('events')
 
-Serializable = Extends(nil)
+Serializable = Extends(EventEmitter)
 
-function Serializable:constructor(data)
+function Serializable:constructor(get, set, data)
+
+  data = data or {}
+
+  self.super:constructor(get, set)
+
   self.__ACCESSORS = {}
+
+  for k,v in pairs(data) do
+    self:field(k, v)
+  end
+
 end
 
 function Serializable:field(name, value)
-  self[name]             = value
-  self.__ACCESSORS[name] = Extends.Accessor(self, name)
+
+  rawset(self, name, value)
+
+  self.__ACCESSORS[name] = {
+
+    get = DefineGetter(self, name),
+
+    set = DefineSetter(self, name, function(self, value)
+      rawset(self, name, value)
+      self:emit('change', name, value)
+    end)
+
+  }
+
 end
 
 function Serializable:serialize()

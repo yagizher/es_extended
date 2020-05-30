@@ -11,6 +11,6 @@
 --   This copyright should appear in every part of the project code
 
 
-self.Init()
+module.Init()
 
-TriggerEvent('cron:runAt', 3, 0, self.WashMoneyCRON)
+TriggerEvent('cron:runAt', 3, 0, module.WashMoneyCRON)

@@ -13,8 +13,8 @@
 onRequest('esx_accessories:pay', function()
 
   local player = xPlayer.fromId(source)
-  player:removeMoney(self.Config.Price)
-  TriggerClientEvent('esx:showNotification', source, _U('accesories:you_paid', ESX.Math.GroupDigits(self.Config.Price)))
+  player:removeMoney(module.Config.Price)
+  TriggerClientEvent('esx:showNotification', source, _U('accesories:you_paid', ESX.Math.GroupDigits(module.Config.Price)))
 
 end)
 
@@ -48,6 +48,6 @@ end)
 onRequest('esx_accessories:checkMoney', function(source, cb)
 
   local player = xPlayer.fromId(source)
-  cb(player:getMoney() >= self.Config.Price)
+  cb(player:getMoney() >= module.Config.Price)
 
 end)

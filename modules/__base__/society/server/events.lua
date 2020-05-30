@@ -28,29 +28,29 @@ on('esx_society:registerSociety', function(name, label, account, datastore, inve
 		data = data
 	}
 
-	for i=1, #self.RegisteredSocieties, 1 do
-		if self.RegisteredSocieties[i].name == name then
-			found, self.RegisteredSocieties[i] = true, society
+	for i=1, #module.RegisteredSocieties, 1 do
+		if module.RegisteredSocieties[i].name == name then
+			found, module.RegisteredSocieties[i] = true, society
 			break
 		end
 	end
 
 	if not found then
-		table.insert(self.RegisteredSocieties, society)
+		table.insert(module.RegisteredSocieties, society)
 	end
 end)
 
 on('esx_society:getSocieties', function(cb)
-	cb(self.RegisteredSocieties)
+	cb(module.RegisteredSocieties)
 end)
 
 on('esx_society:getSociety', function(name, cb)
-	cb(self.GetSociety(name))
+	cb(module.GetSociety(name))
 end)
 
 onClient('esx_society:withdrawMoney', function(societyName, amount)
 	local xPlayer = xPlayer.fromId(source)
-	local society = self.GetSociety(societyName)
+	local society = module.GetSociety(societyName)
 	amount = ESX.Math.Round(tonumber(amount))
 
 	if xPlayer.job.name == society.name then
@@ -70,7 +70,7 @@ end)
 
 onClient('esx_society:depositMoney', function(societyName, amount)
 	local xPlayer = xPlayer.fromId(source)
-	local society = self.GetSociety(societyName)
+	local society = module.GetSociety(societyName)
 	amount = ESX.Math.Round(tonumber(amount))
 
 	if xPlayer.job.name == society.name then
@@ -113,7 +113,7 @@ onClient('esx_society:washMoney', function(society, amount)
 end)
 
 onClient('esx_society:putVehicleInGarage', function(societyName, vehicle)
-	local society = self.GetSociety(societyName)
+	local society = module.GetSociety(societyName)
 
 	emit('esx_datastore:getSharedDataStore', society.datastore, function(store)
 		local garage = store.get('garage') or {}
@@ -123,7 +123,7 @@ onClient('esx_society:putVehicleInGarage', function(societyName, vehicle)
 end)
 
 onClient('esx_society:removeVehicleFromGarage', function(societyName, vehicle)
-	local society = self.GetSociety(societyName)
+	local society = module.GetSociety(societyName)
 
 	emit('esx_datastore:getSharedDataStore', society.datastore, function(store)
 		local garage = store.get('garage') or {}
@@ -140,7 +140,7 @@ onClient('esx_society:removeVehicleFromGarage', function(societyName, vehicle)
 end)
 
 onRequest('esx_society:getSocietyMoney', function(source, cb, societyName)
-	local society = self.GetSociety(societyName)
+	local society = module.GetSociety(societyName)
 
   if society then
 
@@ -166,10 +166,10 @@ onRequest('esx_society:getEmployees', function(source, cb, society)
 					identifier = results[i].identifier,
 					job = {
 						name        = results[i].job,
-						label       = self.Jobs[results[i].job].label,
+						label       = module.Jobs[results[i].job].label,
 						grade       = results[i].job_grade,
-						grade_name  = self.Jobs[results[i].job].grades[tostring(results[i].job_grade)].name,
-						grade_label = self.Jobs[results[i].job].grades[tostring(results[i].job_grade)].label
+						grade_name  = module.Jobs[results[i].job].grades[tostring(results[i].job_grade)].name,
+						grade_label = module.Jobs[results[i].job].grades[tostring(results[i].job_grade)].label
 					}
 				})
 			end
@@ -188,10 +188,10 @@ onRequest('esx_society:getEmployees', function(source, cb, society)
 					identifier = result[i].identifier,
 					job = {
 						name        = result[i].job,
-						label       = self.Jobs[result[i].job].label,
+						label       = module.Jobs[result[i].job].label,
 						grade       = result[i].job_grade,
-						grade_name  = self.Jobs[result[i].job].grades[tostring(result[i].job_grade)].name,
-						grade_label = self.Jobs[result[i].job].grades[tostring(result[i].job_grade)].label
+						grade_name  = module.Jobs[result[i].job].grades[tostring(result[i].job_grade)].name,
+						grade_label = module.Jobs[result[i].job].grades[tostring(result[i].job_grade)].label
 					}
 				})
 			end
@@ -202,7 +202,7 @@ onRequest('esx_society:getEmployees', function(source, cb, society)
 end)
 
 onRequest('esx_society:getJob', function(source, cb, society)
-	local job = json.decode(json.encode(self.Jobs[society]))
+	local job = json.decode(json.encode(module.Jobs[society]))
 	local grades = {}
 
 	for k,v in pairs(job.grades) do
@@ -256,13 +256,13 @@ onRequest('esx_society:setJobSalary', function(source, cb, job, grade, salary)
 	local xPlayer = xPlayer.fromId(source)
 
 	if xPlayer.job.name == job and xPlayer.job.grade_name == 'boss' then
-		if salary <= self.Config.MaxSalary then
+		if salary <= module.Config.MaxSalary then
 			MySQL.Async.execute('UPDATE job_grades SET salary = @salary WHERE job_name = @job_name AND grade = @grade', {
 				['@salary']   = salary,
 				['@job_name'] = job,
 				['@grade']    = grade
 			}, function(rowsChanged)
-				self.Jobs[job].grades[tostring(grade)].salary = salary
+				module.Jobs[job].grades[tostring(grade)].salary = salary
 				local xPlayers = ESX.GetPlayers()
 
 				for i=1, #xPlayers, 1 do
@@ -303,7 +303,7 @@ onRequest('esx_society:getOnlinePlayers', function(source, cb)
 end)
 
 onRequest('esx_society:getVehiclesInGarage', function(source, cb, societyName)
-	local society = self.GetSociety(societyName)
+	local society = module.GetSociety(societyName)
 
 	emit('esx_datastore:getSharedDataStore', society.datastore, function(store)
 		local garage = store.get('garage') or {}
@@ -312,20 +312,20 @@ onRequest('esx_society:getVehiclesInGarage', function(source, cb, societyName)
 end)
 
 onRequest('esx_society:isBoss', function(source, cb, job)
-	cb(self.isPlayerBoss(source, job))
+	cb(module.isPlayerBoss(source, job))
 end)
 
 on('esx:migrations:done', function()
 	local result = MySQL.Sync.fetchAll('SELECT * FROM jobs', {})
 
 	for i=1, #result, 1 do
-		self.Jobs[result[i].name] = result[i]
-		self.Jobs[result[i].name].grades = {}
+		module.Jobs[result[i].name] = result[i]
+		module.Jobs[result[i].name].grades = {}
 	end
 
 	local result2 = MySQL.Sync.fetchAll('SELECT * FROM job_grades', {})
 
 	for i=1, #result2, 1 do
-		self.Jobs[result2[i].job_name].grades[tostring(result2[i].grade)] = result2[i]
+		module.Jobs[result2[i].job_name].grades[tostring(result2[i].grade)] = result2[i]
 	end
 end)

@@ -10,7 +10,7 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-on('esx:interact:register', self.Register)
+on('esx:interact:register', module.Register)
 
 -- Do not use this in prod ! internal event only
 on('esx:interact:enter', function(name, data)

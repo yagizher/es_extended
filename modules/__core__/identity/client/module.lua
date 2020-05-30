@@ -23,9 +23,9 @@ local spawn = {x = -269.4, y = -955.3, z = 31.2, heading = 205.8}
 
 Identity = Extends(Serializable)
 
-function Identity:constructor(data)
+function Identity:constructor(get, set, data)
 
-  self.super:constructor()
+  self.super:constructor(get, set, data)
 
   for k,v in pairs(data) do
     self:field(k, v)
@@ -38,20 +38,20 @@ IdentityCacheConsumer = Extends(CacheConsumer)
 function IdentityCacheConsumer:provide(key, cb)
 
   request('esx:cache:identity:get', function(exists, data)
-    cb(exists, exists and Identity:new(data) or nil)
+    cb(exists, exists and Identity.new(data) or nil)
   end, key)
 
 end
 
-Cache.identity = IdentityCacheConsumer:new()
+Cache.identity = IdentityCacheConsumer.new()
 
-self.Menu = nil
+module.Menu = nil
 
-self.OpenMenu = function(cb)
+module.OpenMenu = function(cb)
 
   utils.ui.showNotification(_U('identity_register'))
 
-  self.Menu = Menu:new("identity", {
+  module.Menu = Menu.new("identity", {
     float = "center|middle",
     title = "Create Character",
     items = {
@@ -63,7 +63,7 @@ self.OpenMenu = function(cb)
     }
   })
 
-  self.Menu:on("item.change", function(item, prop, val, index)
+  module.Menu:on("item.change", function(item, prop, val, index)
 
     if (item.name == "isMale") and (prop == "value") then
       if val then
@@ -75,16 +75,16 @@ self.OpenMenu = function(cb)
 
   end)
 
-  self.Menu:on("item.click", function(item, index)
+  module.Menu:on("item.click", function(item, index)
 
     if item.name == "submit" then
 
-      local props = self.Menu:kvp()
+      local props = module.Menu:kvp()
 
       if (props.firstName ~= '') and (props.lastName ~= '') and (props.dob ~= '') then
 
-        self.Menu:destroy()
-        self.Menu = nil
+        module.Menu:destroy()
+        module.Menu = nil
 
         request('esx:identity:register', cb, props)
 
@@ -99,11 +99,11 @@ self.OpenMenu = function(cb)
 
 end
 
-self.DoSpawn = function(data, cb)
+module.DoSpawn = function(data, cb)
   exports.spawnmanager:spawnPlayer(data, cb)
 end
 
-self.Init = function(id)
+module.Init = function(id)
 
   if id == nil then
     error('Identity is not defined')
@@ -125,7 +125,7 @@ self.Init = function(id)
     end
 
     if Config.EnableHUD then
-      self.LoadHUD()
+      module.LoadHUD()
     end
 
     ESX.Ready = true
@@ -137,14 +137,14 @@ self.Init = function(id)
 
 end
 
-self.EnsureIdentity = function()
+module.EnsureIdentity = function()
 
   local player     = ESX.Player
   local identityId = player:getIdentityId()
 
   if identityId == nil then
 
-    self.DoSpawn({
+    module.DoSpawn({
 
       x        = spawn.x,
       y        = spawn.y,
@@ -155,7 +155,7 @@ self.EnsureIdentity = function()
 
     }, function()
 
-      self.OpenMenu(self.Init)
+      module.OpenMenu(module.Init)
 
     end)
 
@@ -165,11 +165,11 @@ self.EnsureIdentity = function()
 
       if exists then
 
-        self.Init(identityId)
+        module.Init(identityId)
 
       else
 
-        self.DoSpawn({
+        module.DoSpawn({
 
           x        = spawn.x,
           y        = spawn.y,
@@ -180,7 +180,7 @@ self.EnsureIdentity = function()
 
         }, function()
 
-          self.OpenMenu(self.Init)
+          module.OpenMenu(module.Init)
 
         end)
 
@@ -192,7 +192,7 @@ self.EnsureIdentity = function()
 
 end
 
-self.LoadHUD = function()
+module.LoadHUD = function()
 
   Citizen.CreateThread(function()
 

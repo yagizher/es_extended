@@ -10,87 +10,87 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-self.Containers = {}
+module.Containers = {}
 
 local DataStore      = M('datastore')
 local AddonAccount   = M('addonaccount')
 local AddonInventory = M('addoninventory')
 
-self.MissingDeps = 3
+module.MissingDeps = 3
 
-self.OnDependencyReady = function()
+module.OnDependencyReady = function()
 
-  self.MissingDeps = self.MissingDeps - 1
+  module.MissingDeps = module.MissingDeps - 1
 
-  if self.MissingDeps == 0 then
+  if module.MissingDeps == 0 then
     emit('esx:container:ready')
   end
 
 end
 
-self.Ensure = function(name, label, owner, data)
-  self.Containers[name] = self.Create(name, label, owner, data)
+module.Ensure = function(name, label, owner, data)
+  module.Containers[name] = module.Create(name, label, owner, data)
 end
 
-self.Get = function(name)
-  return self.Containers[name]
+module.Get = function(name)
+  return module.Containers[name]
 end
 
-self.Create = function(name, label, owner, data)
+module.Create = function(name, label, owner, data)
 
-  local _self = {}
+  local _module = {}
 
   data = data or {}
 
   for k,v in pairs(data) do
-    _self[k] = v
+    _module[k] = v
   end
 
-  _self._datastore = nil
-  _self._account   = nil
-  _self._inventory = nil
+  _module._datastore = nil
+  _module._account   = nil
+  _module._inventory = nil
 
-  _self.modified = {
+  _module.modified = {
     datastore = false,
     account   = false,
     inventory = false,
   }
 
-  _self.name     = name
-  _self.label    = label
-  _self.owner    = owner
+  _module.name     = name
+  _module.label    = label
+  _module.owner    = owner
 
-  _self.Init = function()
+  _module.Init = function()
 
-    if _self.owner == nil then
+    if _module.owner == nil then
 
-      _self._datastore = DataStore.GetSharedDataStore(name)
-      _self._account   = AddonAccount.GetSharedAccount(name)
-      _self._inventory = AddonInventory.GetSharedInventory(name)
+      _module._datastore = DataStore.GetSharedDataStore(name)
+      _module._account   = AddonAccount.GetSharedAccount(name)
+      _module._inventory = AddonInventory.GetSharedInventory(name)
 
     else
 
-      _self._datastore = DataStore.GetDataStore(name, owner)
-      _self._account   = AddonAccount.GetAccount(name, owner)
-      _self._inventory = AddonInventory.GetInventory(name, owner)
+      _module._datastore = DataStore.GetDataStore(name, owner)
+      _module._account   = AddonAccount.GetAccount(name, owner)
+      _module._inventory = AddonInventory.GetInventory(name, owner)
 
     end
 
-    _self._datastore.set('weapons', _self._datastore.get('weapons') or {})
-    -- _self._datastore.set('clothes', _self._datastore.get('clothes') or {})
+    _module._datastore.set('weapons', _module._datastore.get('weapons') or {})
+    -- _module._datastore.set('clothes', _module._datastore.get('clothes') or {})
 
   end
 
   -- all
-  _self.getAll = function()
+  _module.getAll = function()
 
     local data = {}
 
-    local money   = _self.getMoney()
-    local items   = _self.getItems()
-    local weapons = _self.getWeapons()
+    local money   = _module.getMoney()
+    local items   = _module.getItems()
+    local weapons = _module.getWeapons()
 
-    data[#data + 1] = {type = 'account', name = _self.name, count = money}
+    data[#data + 1] = {type = 'account', name = _module.name, count = money}
 
     for i=1, #items, 1 do
       data[#data + 1] = items[i]
@@ -112,58 +112,58 @@ self.Create = function(name, label, owner, data)
 
   end
 
-  _self.get = function(itemType, itemName)
+  _module.get = function(itemType, itemName)
 
     if itemType == 'account' then
-      return {type = 'account', name = _self.name, count = _self.getMoney()}
+      return {type = 'account', name = _module.name, count = _module.getMoney()}
     elseif itemType == 'item' then
-      return _self.getItem(itemName)
+      return _module.getItem(itemName)
     elseif itemType == 'weapon' then
-      return _self.getWeapon(itemName)
+      return _module.getWeapon(itemName)
     end
 
   end
 
-  _self.set = function(itemType, itemName, itemCount)
+  _module.set = function(itemType, itemName, itemCount)
 
     if itemType == 'account' then
-      return _self.setMoney(itemCount)
+      return _module.setMoney(itemCount)
     elseif itemType == 'item' then
-      return _self.setItem(itemName, itemCount)
+      return _module.setItem(itemName, itemCount)
     elseif itemType == 'weapon' then
-      return _self.setWeapon(itemName, itemCount)
+      return _module.setWeapon(itemName, itemCount)
     end
 
   end
 
-  _self.add = function(itemType, itemName, itemCount)
+  _module.add = function(itemType, itemName, itemCount)
 
     if itemType == 'account' then
-      return _self.addMoney(itemCount)
+      return _module.addMoney(itemCount)
     elseif itemType == 'item' then
-      return _self.addItem(itemName, itemCount)
+      return _module.addItem(itemName, itemCount)
     elseif itemType == 'weapon' then
-      return _self.addWeapon(itemName, itemCount)
+      return _module.addWeapon(itemName, itemCount)
     end
 
   end
 
-  _self.remove = function(itemType, itemName, itemCount)
+  _module.remove = function(itemType, itemName, itemCount)
 
     if itemType == 'account' then
-      return _self.removeMoney(itemCount)
+      return _module.removeMoney(itemCount)
     elseif itemType == 'item' then
-      return _self.removeItem(itemName, itemCount)
+      return _module.removeItem(itemName, itemCount)
     elseif itemType == 'weapon' then
-      return _self.removeWeapon(itemName, itemCount)
+      return _module.removeWeapon(itemName, itemCount)
     end
 
   end
 
   -- weapon
-  _self.getWeapon = function(name)
+  _module.getWeapon = function(name)
 
-    local weapons = _self._datastore.get('weapons')
+    local weapons = _module._datastore.get('weapons')
 
     if weapons[name] == nil then
       weapons[name] = {count = 0}
@@ -173,9 +173,9 @@ self.Create = function(name, label, owner, data)
 
   end
 
-  _self.getWeapons = function()
+  _module.getWeapons = function()
 
-    local weapons = _self._datastore.get('weapons')
+    local weapons = _module._datastore.get('weapons')
     local data    = {}
 
     for k,v in pairs(weapons) do
@@ -186,27 +186,27 @@ self.Create = function(name, label, owner, data)
 
   end
 
-  _self.setWeapon = function(name, count)
+  _module.setWeapon = function(name, count)
 
-    local weapon = _self.getWeapon(name)
+    local weapon = _module.getWeapon(name)
     weapon.count = 0
 
-    _self.modified.datastore = true
+    _module.modified.datastore = true
 
   end
 
-  _self.addWeapon = function(name, count)
+  _module.addWeapon = function(name, count)
 
-    local weapon = _self.getWeapon(name)
+    local weapon = _module.getWeapon(name)
     weapon.count = weapon.count + count
 
-    _self.modified.datastore = true
+    _module.modified.datastore = true
 
   end
 
-  _self.removeWeapon = function(name, count)
+  _module.removeWeapon = function(name, count)
 
-    local weapon = _self.getWeapon(name)
+    local weapon = _module.getWeapon(name)
 
     weapon.count = weapon.count - count
 
@@ -214,44 +214,44 @@ self.Create = function(name, label, owner, data)
       weapon.count = 0
     end
 
-    _self.modified.datastore = true
+    _module.modified.datastore = true
 
   end
 
   -- account
-  _self.getMoney = function()
-    return _self._account.getMoney()
+  _module.getMoney = function()
+    return _module._account.getMoney()
   end
 
-  _self.setMoney = function(amount)
+  _module.setMoney = function(amount)
 
-    _self._account.setMoney(amount)
-    _self.modified.account = true
-
-  end
-
-  _self.addMoney = function(amount)
-
-    _self._account.addMoney(amount)
-    _self.modified.account = true
+    _module._account.setMoney(amount)
+    _module.modified.account = true
 
   end
 
-  _self.removeMoney = function(amount)
+  _module.addMoney = function(amount)
 
-    _self._account.removeMoney(amount)
-    _self.modified.account = true
+    _module._account.addMoney(amount)
+    _module.modified.account = true
+
+  end
+
+  _module.removeMoney = function(amount)
+
+    _module._account.removeMoney(amount)
+    _module.modified.account = true
 
   end
 
   -- inventory
-	_self.getItem = function(name)
-    return _self._inventory.getItem(name)
+	_module.getItem = function(name)
+    return _module._inventory.getItem(name)
 	end
 
-  _self.getItems = function()
+  _module.getItems = function()
 
-    local items = _self._inventory.getItems()
+    local items = _module._inventory.getItems()
     local data  = {}
 
     for i=1, #items, 1 do
@@ -262,39 +262,39 @@ self.Create = function(name, label, owner, data)
 
   end
 
-	_self.setItem = function(name, count)
-    _self._inventory.setItem(name, count)
-    _self.modified.inventory = true
+	_module.setItem = function(name, count)
+    _module._inventory.setItem(name, count)
+    _module.modified.inventory = true
   end
 
-	_self.addItem = function(name, count)
-    _self._inventory.addItem(name, count)
-    _self.modified.inventory = true
+	_module.addItem = function(name, count)
+    _module._inventory.addItem(name, count)
+    _module.modified.inventory = true
 	end
 
-	_self.removeItem = function(name, count)
-    _self._inventory.removeItem(name, count)
-    _self.modified.inventory = true
+	_module.removeItem = function(name, count)
+    _module._inventory.removeItem(name, count)
+    _module.modified.inventory = true
   end
 
-  _self.save = function()
+  _module.save = function()
 
-    if _self.modified.datastore then
-      _self._datastore.save()
+    if _module.modified.datastore then
+      _module._datastore.save()
     end
 
-    if _self.modified.account then
-      _self._account.save()
+    if _module.modified.account then
+      _module._account.save()
     end
 
-    if _self.modified.inventory then
-      -- _self._inventory.save()
+    if _module.modified.inventory then
+      -- _module._inventory.save()
     end
 
   end
 
-  _self.Init()
+  _module.Init()
 
-  return _self
+  return _module
 
 end

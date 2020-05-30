@@ -14,26 +14,27 @@ M('db')
 M('serializable')
 M('table')
 
-Persistent = Extends(Serializable)
-
-function Persistent:constructor(schema, pk, data)
-
-  self.super:constructor(data)
-
-  self.__SCHEMA = schema
-  self.__PK     = pk
-  self.__ID     = data[pk]
-
-end
-
 local pass = function(x) return x end
 
 Persist = function(schema, pk)
 
   local fields   = {}
   local dbfields = {}
+  local pType    = Extends(Serializable)
 
-  local pType = Extends(Persistent)
+  function pType:constructor(get, set, data)
+
+    self.super:constructor(get, set, data)
+
+    set('__SCHEMA', schema)
+    set('__PK', pk)
+    set('__ID', data[pk])
+
+    for k,v in pairs(fields) do
+      self:field(k, data[k])
+    end
+
+  end
 
   local set = function(name, field, encode, decode)
 
@@ -84,7 +85,7 @@ Persist = function(schema, pk)
           data[k] = v.decode(row[v.data.name])
         end
 
-        cb(pType:new(data))
+        cb(pType.new(data))
 
       end
 
@@ -123,7 +124,7 @@ Persist = function(schema, pk)
           data[k] = v.decode(row[v.data.name])
         end
 
-        cb(pType:new(data))
+        cb(pType.new(data))
 
       end))
 
@@ -137,7 +138,7 @@ Persist = function(schema, pk)
 
     if id == nil then
 
-      local instance = pType:new(data)
+      local instance = pType.new(data)
 
       instance:save(function(id)
         cb(instance)
@@ -149,7 +150,7 @@ Persist = function(schema, pk)
 
         if instance == nil then
 
-          local instance = pType:new(data)
+          local instance = pType.new(data)
 
           instance:save(function(id)
             cb(instance)
@@ -167,18 +168,6 @@ Persist = function(schema, pk)
 
       end)
 
-    end
-
-  end
-
-  function pType:constructor(data)
-
-    data = data or {}
-
-    self.super:constructor(schema, pk, data)
-
-    for k,v in pairs(fields) do
-      self:field(k, data[k])
     end
 
   end
@@ -242,7 +231,7 @@ Persist = function(schema, pk)
     initTable(schema, pk, dbfields)
   end)
 
-  return Extends(pType)
+  return pType
 
 end
 

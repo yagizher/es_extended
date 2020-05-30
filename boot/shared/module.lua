@@ -149,30 +149,30 @@ end
 
 -- ESX main module
 ESX.Modules['boot'] = {}
-local self          = ESX.Modules['boot']
+local module        = ESX.Modules['boot']
 
 local resName = GetCurrentResourceName()
 local modType = IsDuplicityVersion() and 'server' or 'client'
 
-self.GroupNames        = json.decode(LoadResourceFile(resName, 'modules.groups.json'))
-self.Groups            = {}
-self.Entries           = {}
-self.EntriesOrders     = {}
+module.GroupNames        = json.decode(LoadResourceFile(resName, 'modules.groups.json'))
+module.Groups            = {}
+module.Entries           = {}
+module.EntriesOrders     = {}
 
-for i=1, #self.GroupNames, 1 do
+for i=1, #module.GroupNames, 1 do
 
-  local groupName        = self.GroupNames[i]
+  local groupName        = module.GroupNames[i]
   local modules          = json.decode(LoadResourceFile(resName, 'modules/__' .. groupName .. '__/modules.json'))
-  self.Groups[groupName] = modules
+  module.Groups[groupName] = modules
 
   for j=1, #modules, 1 do
-    local module         = modules[j]
-    self.Entries[module] = groupName
+    local modName           = modules[j]
+    module.Entries[modName] = groupName
   end
 
 end
 
-self.GetModuleEntryPoints = function(name, group)
+module.GetModuleEntryPoints = function(name, group)
 
   local prefix          = '__' .. group .. '__/'
   local shared, current = false, false
@@ -189,20 +189,20 @@ self.GetModuleEntryPoints = function(name, group)
 
 end
 
-self.IsModuleInGroup = function(name, group)
-  return self.Entries[name] ~= nil
+module.IsModuleInGroup = function(name, group)
+  return module.Entries[name] ~= nil
 end
 
-self.GetModuleGroup = function(name)
-  return self.Entries[name]
+module.GetModuleGroup = function(name)
+  return module.Entries[name]
 end
 
-self.ModuleHasEntryPoint = function(name, group)
-  local shared, current = self.GetModuleEntryPoints(name, group)
+module.ModuleHasEntryPoint = function(name, group)
+  local shared, current = module.GetModuleEntryPoints(name, group)
   return shared or current
 end
 
-self.CreateModuleEnv = function(name, group)
+module.CreateModuleEnv = function(name, group)
 
   local env = {}
 
@@ -216,8 +216,7 @@ self.CreateModuleEnv = function(name, group)
   env.__DIR__      = 'modules/__' .. group .. '__/' .. name
   env.run          = function(file, _env) return ESX.EvalFile(env.__RESOURCE__, env.__DIR__ .. '/' .. file, _env) end
   env.module       = {}
-  env.self         = env.module
-  env.M            = self.LoadModule
+  env.M            = module.LoadModule
 
   env.print = function(...)
 
@@ -240,11 +239,11 @@ self.CreateModuleEnv = function(name, group)
 
 end
 
-self.LoadModule = function(name)
+module.LoadModule = function(name)
 
   if ESX.Modules[name] == nil then
 
-    local group = self.GetModuleGroup(name)
+    local group = module.GetModuleGroup(name)
 
     if group == nil then
       ESX.LogError('module [' .. name .. '] is not declared in modules.json', '@' .. resName .. ':modules/__core__/__main__/module.lua')
@@ -252,12 +251,12 @@ self.LoadModule = function(name)
 
     local prefix = '__' .. group .. '__/'
 
-    self.EntriesOrders[group] = self.EntriesOrders[group] or {}
+    module.EntriesOrders[group] = module.EntriesOrders[group] or {}
 
     TriggerEvent('esx:module:load:before', name, group)
 
-    local menv            = self.CreateModuleEnv(name, group)
-    local shared, current = self.GetModuleEntryPoints(name, group)
+    local menv            = module.CreateModuleEnv(name, group)
+    local shared, current = module.GetModuleEntryPoints(name, group)
 
     local env, success, _success = nil, true, false
 
@@ -301,7 +300,7 @@ self.LoadModule = function(name)
 
       ESX.Modules[name] = menv['module']
 
-      self.EntriesOrders[group][#self.EntriesOrders[group] + 1] = name
+      module.EntriesOrders[group][#module.EntriesOrders[group] + 1] = name
 
       TriggerEvent('esx:module:load:done', name, group)
 
@@ -320,4 +319,4 @@ self.LoadModule = function(name)
 
 end
 
-M = self.LoadModule
+M = module.LoadModule

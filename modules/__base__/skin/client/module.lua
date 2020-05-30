@@ -13,26 +13,26 @@ local utils = M("utils")
 M("ui.menu")
 M("table")
 
-self.lastSkin = nil
-self.playerLoaded = false
-self.cam = nil
-self.isCameraActive = false
+module.lastSkin = nil
+module.playerLoaded = false
+module.cam = nil
+module.isCameraActive = false
 
-self.firstSpawn = true
-self.zoomOffset = 1.5
-self.camOffsetX = 0.0
-self.camOffsetY = 1.2
-self.camOffsetZ = 0.8
-self.camPointOffset = 0.2
-self.heading = 90.0
-self.angle = 0.0
+module.firstSpawn = true
+module.zoomOffset = 1.5
+module.camOffsetX = 0.0
+module.camOffsetY = 1.2
+module.camOffsetZ = 0.8
+module.camPointOffset = 0.2
+module.heading = 90.0
+module.angle = 0.0
 
-self.Init = function()
+module.Init = function()
 	local translations = run('data/locales/' .. Config.Locale .. '.lua')['Translations']
 	LoadLocale('skin', Config.Locale, translations)
 end
 
-self.OpenMenu = function(submitCb, cancelCb, restrict)
+module.OpenMenu = function(submitCb, cancelCb, restrict)
 	local playerPed = PlayerPedId()
 
 	local props = {}
@@ -109,7 +109,7 @@ self.OpenMenu = function(submitCb, cancelCb, restrict)
 	TriggerEvent(
 		"skinchanger:getSkin",
 		function(skin)
-			self.lastSkin = skin
+			module.lastSkin = skin
 		end
 	)
 
@@ -173,15 +173,15 @@ self.OpenMenu = function(submitCb, cancelCb, restrict)
 				end
 			end
 
-			self.CreateSkinCam()
-			self.zoomOffset = _components[1].zoomOffset
-			self.camOffset = _components[1].camOffset
+			module.CreateSkinCam()
+			module.zoomOffset = _components[1].zoomOffset
+			module.camOffset = _components[1].camOffset
 		end
 	)
 
 	function createMainMenu()
 		local menu =
-			Menu:new(
+			Menu.new(
 			"principalmenu",
 			{
 				title = _U("skin:skin_menu"),
@@ -219,7 +219,7 @@ self.OpenMenu = function(submitCb, cancelCb, restrict)
 						-- print(json.encode(props))
 						menu:destroy()
 						menu = nil
-						self.DeleteSkinCam()
+						module.DeleteSkinCam()
 
 						TriggerServerEvent("esx_skin:save", props)
 					end
@@ -230,7 +230,7 @@ self.OpenMenu = function(submitCb, cancelCb, restrict)
 
 	function createBodySubmenu()
 		local menu =
-			Menu:new(
+			Menu.new(
 			"bodymenu",
 			{
 				title = "Body",
@@ -263,7 +263,7 @@ self.OpenMenu = function(submitCb, cancelCb, restrict)
 
 	function createClothesSubmenu()
 		local menu =
-			Menu:new(
+			Menu.new(
 			"bodymenu",
 			{
 				title = "Clothes",
@@ -298,30 +298,30 @@ self.OpenMenu = function(submitCb, cancelCb, restrict)
 	createMainMenu()
 end
 
-self.CreateSkinCam = function()
+module.CreateSkinCam = function()
 	local playerPed = PlayerPedId()
 
 	RenderScriptCams(false, false, 0, 1, 0)
-	DestroyCam(self.cam, false)
+	DestroyCam(module.cam, false)
 
-	if not DoesCamExist(self.cam) then
-		self.cam = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
-		SetCamActive(self.cam, true)
+	if not DoesCamExist(module.cam) then
+		module.cam = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
+		SetCamActive(module.cam, true)
 		RenderScriptCams(true, false, 500, true, true)
-		self.isCameraActive = true
+		module.isCameraActive = true
 		SetEntityHeading(playerPed, 0.0)
-		SetCamRot(self.cam, 0.0, 0.0, 270.0, 2)
+		SetCamRot(module.cam, 0.0, 0.0, 270.0, 2)
 	end
 end
 
-self.DeleteSkinCam = function()
-	self.isCameraActive = false
-	SetCamActive(self.cam, false)
+module.DeleteSkinCam = function()
+	module.isCameraActive = false
+	SetCamActive(module.cam, false)
 	RenderScriptCams(false, true, 500, true, true)
-	self.cam = nil
+	module.cam = nil
 end
 
-self.OpenSaveableMenu = function(submitCb, cancelCb, restrict)
+module.OpenSaveableMenu = function(submitCb, cancelCb, restrict)
 	TriggerEvent(
 		"skinchanger:getSkin",
 		function(skin)
@@ -329,10 +329,10 @@ self.OpenSaveableMenu = function(submitCb, cancelCb, restrict)
 		end
 	)
 
-	self.OpenMenu(
+	module.OpenMenu(
 		function(data, menu)
 			menu.close()
-			self.DeleteSkinCam()
+			module.DeleteSkinCam()
 
 			TriggerEvent(
 				"skinchanger:getSkin",

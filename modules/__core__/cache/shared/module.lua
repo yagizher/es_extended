@@ -17,11 +17,11 @@ M('events')
 Cache         = {}
 CacheConsumer = Extends(EventEmitter)
 
-function CacheConsumer:constructor()
+function CacheConsumer:constructor(get, set)
 
-  self.super:constructor()
+  self.super:constructor(get, set)
 
-  self.data = {}
+  set('data', {})
 
   if self.provide == nil then
 

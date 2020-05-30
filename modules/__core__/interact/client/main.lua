@@ -10,23 +10,23 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-self.LOVE_PLAYER_GROUP = AddRelationshipGroup('LOVE_PLAYER')
+module.LOVE_PLAYER_GROUP = AddRelationshipGroup('LOVE_PLAYER')
 
-SetRelationshipBetweenGroups(0, self.LOVE_PLAYER_GROUP, 'PLAYER')
+SetRelationshipBetweenGroups(0, module.LOVE_PLAYER_GROUP, 'PLAYER')
 
 ESX.SetInterval(250, function()
 
   local ped    = PlayerPedId()
   local coords = GetOffsetFromEntityInWorldCoords(ped, 0.0, 0.0, -1.0)
 
-  self.Cache.player.ped    = ped
-  self.Cache.player.coords = vector3(table.unpack(coords))
+  module.Cache.player.ped    = ped
+  module.Cache.player.coords = vector3(table.unpack(coords))
 
   local toRemove = {}
 
-  for i=1, #self.Data, 1 do
+  for i=1, #module.Data, 1 do
 
-    local data = self.Data[i]
+    local data = module.Data[i]
 
     if data.pos == nil then
 
@@ -34,20 +34,20 @@ ESX.SetInterval(250, function()
 
     else
 
-      local distance = #(data.pos - self.Cache.player.coords);
+      local distance = #(data.pos - module.Cache.player.coords);
       if
         (distance <= data.distance) and
-        (table.findIndex(self.Cache.current , function(e) return e.__id == data.__id end) == -1)
+        (table.findIndex(module.Cache.current , function(e) return e.__id == data.__id end) == -1)
       then
 
-        if (data.check == nil) or data.check(self.Cache.player.ped, self.Cache.player.coords) then
+        if (data.check == nil) or data.check(module.Cache.player.ped, module.Cache.player.coords) then
           data.playing = false
-          self.Cache.current[#self.Cache.current + 1] = data
+          module.Cache.current[#module.Cache.current + 1] = data
         end
 
       elseif (distance > data.distance) then
 
-        local idx = table.findIndex(self.Cache.current, function(e) return e.__id == data.__id end)
+        local idx = table.findIndex(module.Cache.current, function(e) return e.__id == data.__id end)
 
         if idx ~= -1 then
           toRemove[#toRemove + 1] = idx
@@ -60,7 +60,7 @@ ESX.SetInterval(250, function()
   end
 
   if #toRemove > 0 then
-    self.Cache.current = table.filter(self.Cache.current, function(e) return table.indexOf(toRemove, e.__id) ~= -1 end)
+    module.Cache.current = table.filter(module.Cache.current, function(e) return table.indexOf(toRemove, e.__id) ~= -1 end)
   end
 
 end)
@@ -68,9 +68,9 @@ end)
 -- Markers
 Citizen.CreateThread(function()
 
-  for i=1, #self.Cache.current, 1 do
+  for i=1, #module.Cache.current, 1 do
 
-    local curr = self.Cache.current[i]
+    local curr = module.Cache.current[i]
 
     if curr.type == 'marker' then
 
@@ -95,9 +95,9 @@ end)
 -- NPCs
 ESX.SetInterval(1000, function()
 
-  for i=1, #self.Cache.current, 1 do
+  for i=1, #module.Cache.current, 1 do
 
-    local curr = self.Cache.current[i]
+    local curr = module.Cache.current[i]
 
     if curr.type == 'npc' then
 
@@ -150,7 +150,7 @@ ESX.SetInterval(1000, function()
 
           SetModelAsNoLongerNeeded(curr.model)
 
-          SetPedRelationshipGroupHash(curr.__ped, self.LOVE_PLAYER_GROUP)
+          SetPedRelationshipGroupHash(curr.__ped, module.LOVE_PLAYER_GROUP)
           SetBlockingOfNonTemporaryEvents(curr.__ped, true)
           TaskStandStill(curr.__ped, -1)
           SetEntityInvincible(curr.__ped, true)
@@ -170,16 +170,16 @@ end)
 
 ESX.SetInterval(250, function()
 
-  for i=1, #self.Cache.current, 1 do
+  for i=1, #module.Cache.current, 1 do
 
-    local data     = self.Cache.current[i]
-    local distance = #(data.pos - self.Cache.player.coords);
+    local data     = module.Cache.current[i]
+    local distance = #(data.pos - module.Cache.player.coords);
 
-    if (distance <= data.radius) and (not self.Cache.using[data.__id]) then
-      self.Cache.using[data.__id] = true
+    if (distance <= data.radius) and (not module.Cache.using[data.__id]) then
+      module.Cache.using[data.__id] = true
       emit('esx:interact:enter', data.name, data)
-    elseif (distance > data.radius) and self.Cache.using[data.__id] then
-      self.Cache.using[data.__id] = nil
+    elseif (distance > data.radius) and module.Cache.using[data.__id] then
+      module.Cache.using[data.__id] = nil
       emit('esx:interact:exit', data.name, data)
     end
 

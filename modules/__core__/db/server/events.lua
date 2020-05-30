@@ -58,13 +58,13 @@ on('esx:db:internal:ready', function()
   MySQL.Sync.execute(ADD_COLUMN_IN_NOT_EXISTS_PROCEDURE)
 
   -- Init minimum required schemas here
-  self.InitTable('migrations', 'id', {
+  module.InitTable('migrations', 'id', {
     {name = 'id',     type = 'INT',     length = nil, default = nil, extra = 'NOT NULL AUTO_INCREMENT'},
     {name = 'module', type = 'VARCHAR', length = 64,  default = nil, extra = nil},
     {name = 'last',   type = 'INT',     length = 11,  default = nil, extra = nil},
   })
 
-  self.InitTable('users', 'identifier', {
+  module.InitTable('users', 'identifier', {
     {name = 'identifier',  type = 'VARCHAR',  length = 40,  default = nil,                                                extra = 'NOT NULL'},
     {name = 'identity_id', type = 'VARCHAR',  length = 36,  default = 'UUID()',                                           extra = 'NOT NULL'},
     {name = 'name',        type = 'LONGTEXT', length = nil, default = 'NULL',                                             extra = nil},
@@ -78,14 +78,14 @@ on('esx:db:internal:ready', function()
     {name = 'is_dead',     type = 'INT',      length = nil, default = 0,                                                  extra = nil},
   })
 
-  self.InitTable('jobs', 'name', {
+  module.InitTable('jobs', 'name', {
     {name = 'name',  type = 'VARCHAR', length = 64,  default = nil,    extra = 'NOT NULL'},
     {name = 'label', type = 'VARCHAR', length = 64,  default = 'NULL', extra = nil},
   }, {
     {name = 'unemployed', label = 'Unemployed'}
   })
 
-  self.InitTable('job_grades', 'id', {
+  module.InitTable('job_grades', 'id', {
     {name = 'id',          type = 'INT',      length = nil,  default = nil,    extra = 'NOT NULL AUTO_INCREMENT'},
     {name = 'job_name',    type = 'VARCHAR',  length = 32,   default = nil,    extra = nil},
     {name = 'grade',       type = 'INT',      length = nil,  default = nil,    extra = 'NOT NULL'},
@@ -98,7 +98,7 @@ on('esx:db:internal:ready', function()
     {job_name = 'unemployed', grade = 0, name = 'unemployed', label = 'Unemployed', salary = 200, skin_male = '{}', skin_female = '{}'}
   })
 
-  self.InitTable('items', 'name', {
+  module.InitTable('items', 'name', {
     {name = 'name',        type = 'VARCHAR',  length = 64,  default = nil,    extra = 'NOT NULL'},
     {name = 'label',       type = 'VARCHAR',  length = 64,  default = nil,    extra = 'NOT NULL'},
     {name = 'weight',      type = 'INT',      length = nil, default = nil,    extra = 'NOT NULL'},
@@ -107,12 +107,12 @@ on('esx:db:internal:ready', function()
   })
 
   -- Leave a chance to extend schemas here
-  emit('esx:db:init', self.InitTable, self.ExtendTable)
+  emit('esx:db:init', module.InitTable, module.ExtendTable)
 
   -- Print schemas, sorted by name
   local sorted = {}
 
-  for k,v in pairs(self.Tables) do
+  for k,v in pairs(module.Tables) do
     sorted[#sorted + 1] = v
   end
 
@@ -141,7 +141,7 @@ on('esx:db:internal:ready', function()
   end
 
   -- Ensure schemas in database
-  for k,v in pairs(self.Tables) do
+  for k,v in pairs(module.Tables) do
     v:ensure()
   end
 

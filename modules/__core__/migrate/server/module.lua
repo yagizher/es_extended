@@ -12,7 +12,7 @@
 
 M('db')
 
-self.Ensure = function(module, group)
+module.Ensure = function(module, group)
 
   -- print('ensure migration for ^3' .. module)
 

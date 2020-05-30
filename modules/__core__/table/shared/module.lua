@@ -138,22 +138,17 @@ end
 
 table.clone = function(t)
 
-  if type(t) ~= 'table' then return t end
-
-  local meta   = getmetatable(t)
-  local target = {}
-
-  for k,v in pairs(t) do
-    if type(v) == 'table' then
-      target[k] = table.clone(v)
-    else
-      target[k] = v
-    end
+  if type(t) ~= 'table' then
+    return t
   end
 
-  setmetatable(target, meta)
+  local copy = {}
 
-  return target
+  for k,v in pairs(t) do
+    copy[k] = table.clone(v)
+  end
+
+  return copy
 
 end
 
@@ -196,15 +191,25 @@ end
 
 table.merge = function(t1, t2)
 
-  for k,v in pairs(t2) do
+  local t3 = {}
+
+  for k,v in pairs(t1) do
     if type(v) == 'table' then
-      table.merge(t1[k] or {}, t2[k] or {})
+      t3[k] = table.merge(v, t2[k] or {})
     else
-      t1[k] = t2[k]
+      t3[k] = v
     end
   end
 
-  return t1
+  for k,v in pairs(t2) do
+    if type(v) == 'table' then
+      t3[k] = table.merge(v, t1[k] or {})
+    else
+      t3[k] = v
+    end
+  end
+
+  return t3
 
 end
 

@@ -20,7 +20,7 @@ on('esx:onPlayerSpawn', function()
 			Citizen.Wait(100)
 		end
 
-		if self.firstSpawn then
+		if module.firstSpawn then
 			request('esx_skin:getPlayerSkin', function(skin, jobSkin)
 				if skin == nil then
 					TriggerEvent('skinchanger:loadSkin', {sex = 0}, OpenSaveableMenu)
@@ -29,7 +29,7 @@ on('esx:onPlayerSpawn', function()
 				end
 			end)
 
-      self.firstSpawn = false
+      module.firstSpawn = false
 
 		end
   end)
@@ -37,27 +37,27 @@ on('esx:onPlayerSpawn', function()
 end)
 
 on('esx_skin:getLastSkin', function(cb)
-	cb(self.lastSkin)
+	cb(module.lastSkin)
 end)
 
 on('esx_skin:setLastSkin', function(skin)
-	self.lastSkin = skin
+	module.lastSkin = skin
 end)
 
 onServer('esx_skin:openMenu', function(submitCb, cancelCb)
-	self.OpenMenu(submitCb, cancelCb, nil)
+	module.OpenMenu(submitCb, cancelCb, nil)
 end)
 
 onServer('esx_skin:openRestrictedMenu', function(submitCb, cancelCb, restrict)
-	self.OpenMenu(submitCb, cancelCb, restrict)
+	module.OpenMenu(submitCb, cancelCb, restrict)
 end)
 
 onServer('esx_skin:openSaveableMenu', function(submitCb, cancelCb)
-	self.OpenSaveableMenu(submitCb, cancelCb, nil)
+	module.OpenSaveableMenu(submitCb, cancelCb, nil)
 end)
 
 onServer('esx_skin:openSaveableRestrictedMenu', function(submitCb, cancelCb, restrict)
-	self.OpenSaveableMenu(submitCb, cancelCb, restrict)
+	module.OpenSaveableMenu(submitCb, cancelCb, restrict)
 end)
 
 onServer('esx_skin:requestSaveSkin', function()

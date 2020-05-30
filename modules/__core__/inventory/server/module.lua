@@ -10,20 +10,20 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-self.Inventories = {}
+module.Inventories = {}
 
 function Inventory.isItemDefined(name)
   return table.indexOf(Inventory.ItemDefs, name) ~= -1
 end
 
-function Inventory:constructor(name, owner, items)
+function Inventory:constructor(get, set, name, owner, items)
 
   if module.Inventories[name] ~= nil then
     print('[warning] there is already an active instance of inventory => ' .. name .. ' returning that instance')
     return module.Inventories[name]
   end
 
-  self.super:constructor()
+  self.super:constructor(get, set)
 
   self.ready = false
   self.name  = name

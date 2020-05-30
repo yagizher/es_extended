@@ -14,5 +14,5 @@ M('ui.menu')
 
 local utils = M('utils')
 
-on('esx:player:load:done', self.EnsureIdentity)
+on('esx:player:load:done', module.EnsureIdentity)
 

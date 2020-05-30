@@ -13,18 +13,18 @@
 M('class')
 M('events')
 
-self.Tables = {}
+module.Tables = {}
 
 -- field
 local DBField = Extends(nil)
 
-function DBField:constructor(name, _type, length, default, extra)
+function DBField:constructor(get, set, name, _type, length, default, extra)
 
-  self.name    = name
-  self.type    = _type
-  self.length  = length
-  self.default = default
-  self.extra   = extra
+  set('name', name)
+  set('type', _type)
+  set('length', length)
+  set('default', default)
+  set('extra', extra)
 
 end
 
@@ -143,28 +143,28 @@ function DBField:sqlAlterCompat(tableName)
 
 end
 
-self.DBField = DBField
+module.DBField = DBField
 
 -- table
 local DBTable = Extends(nil)
 
-function DBTable:constructor(name, pk)
+function DBTable:constructor(get, set, name, pk)
 
-  self.engine = 'InnoDB'
+  set('engine', 'InnoDB')
 
-  self.defaults = {
+  set('defaults', {
     {'CHARSET', 'utf8mb4'}
-  }
+  })
 
-  self.fields = {}
-  self.rows   = {}
-  self.name   = name
-  self.pk     = pk
+  set('fields', {})
+  set('rows', {})
+  set('name', name)
+  set('pk', pk)
 
 end
 
 function DBTable:field(name, _type, length, default, extra)
-  self.fields[#self.fields + 1] = DBField:new(name, _type, length, default, extra)
+  self.fields[#self.fields + 1] = DBField.new(name, _type, length, default, extra)
 end
 
 function DBTable:row(data)
@@ -293,12 +293,12 @@ function DBTable:ensure()
 
 end
 
-self.DBTable = DBTable
+module.DBTable = DBTable
 
-self.InitTable = function(name, pk, fields, rows)
+module.InitTable = function(name, pk, fields, rows)
 
   rows      = rows or {}
-  local tbl = DBTable:new(name, pk)
+  local tbl = DBTable.new(name, pk)
 
   for i=1, #fields, 1 do
     local field = fields[i]
@@ -309,7 +309,7 @@ self.InitTable = function(name, pk, fields, rows)
     tbl:row(rows[i])
   end
 
-  self.Tables[name] = tbl
+  module.Tables[name] = tbl
 
   emit('esx:db:init:' .. name, function(data)
     self.ExtendTable(name, data)
@@ -317,9 +317,9 @@ self.InitTable = function(name, pk, fields, rows)
 
 end
 
-self.ExtendTable = function(name, fields)
+module.ExtendTable = function(name, fields)
 
-  local tbl           = self.Tables[name]
+  local tbl           = module.Tables[name]
   local fieldNamesStr = ''
 
   for i=1, #fields, 1 do
@@ -329,6 +329,6 @@ self.ExtendTable = function(name, fields)
 
 end
 
-self.GetFieldNames = function(tableName)
-  return self.Tables[tableName]:fieldNames()
+module.GetFieldNames = function(tableName)
+  return module.Tables[tableName]:fieldNames()
 end

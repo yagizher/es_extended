@@ -12,7 +12,7 @@
 
 local HUD = M('game.hud')
 
-self.Init()
+module.Init()
 
 Citizen.CreateThread(function()
 
@@ -25,6 +25,6 @@ Citizen.CreateThread(function()
     Citizen.Wait(0)
   end
 
-  self.RefreshBossHUD()
+  module.RefreshBossHUD()
 
 end)

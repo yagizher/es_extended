@@ -16,9 +16,9 @@ M('cache')
 
 Player = Extends(Serializable)
 
-function Player:constructor(data)
+function Player:constructor(get, set, data)
 
-  self.super:constructor()
+  self.super:constructor(get, set, data)
 
   if data.identityId == nil then
     self:field('identityId')
@@ -35,11 +35,11 @@ PlayerCacheConsumer = Extends(CacheConsumer)
 function PlayerCacheConsumer:provide(key, cb)
 
   request('esx:cache:player:get', function(exists, data)
-    cb(exists, exists and Player:new(data) or nil)
+    cb(exists, exists and Player.new(data) or nil)
   end, key)
 
 end
 
-Cache.player = PlayerCacheConsumer:new()
+Cache.player = PlayerCacheConsumer.new()
 
 

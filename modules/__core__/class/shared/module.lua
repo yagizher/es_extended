@@ -14,147 +14,68 @@
 
 M('table')
 
-local prototypes = {}
+local envs = {}
 
-Extends = setmetatable({}, {
+Extends = function(baseType, vars)
 
-  __call = function(o, baseType)
+  local vars = vars or {}
+  local env  = table.clone(envs[baseType] or {})
 
-    local newType
+  for i=1, #vars, 1 do
+    env[vars[i]] = 0
+  end
 
-    if baseType == nil then
+  local baseType = baseType or {}
+  local newType  = setmetatable({super = baseType}, {__index = baseType})
 
-      newType = {}
+  envs[newType]  = env
 
-    else
+  function newType.new(...)
 
-      newType = setmetatable({super = baseType}, {__index = baseType})
+    local data = table.clone(env)
 
+    data.get = function(k)
+      return rawget(data, k)
     end
 
-    local mt  = {__index = newType}
-
-    function newType:new(...)
-
-      local newInst = setmetatable({}, mt)
-
-      local override
-
-      if type(newInst.constructor) == 'function' then
-        override = newInst:constructor(...)
-      end
-
-      if override ~= nil then
-        return override
-      else
-        return newInst
-      end
-
+    data.set = function(k, v)
+      rawset(data, k, v)
+      return v
     end
 
-    -- Implementation of additional OO properties starts here --
+    local self = setmetatable(data, {__index = newType, __newindex = data})
 
-    -- Return the type of the instance
-    function newType:proto()
-      return newType
+    if type(newType.constructor) == 'function' then
+      newType.constructor(self, data.get, data.set, ...)
     end
 
-    -- Return the parent type of the instance
-    function newType:prototype()
-      return baseType
-    end
-
-    -- Return true if the caller is an instance of theType
-    function newType:instanceOf(theType)
-
-      local isInstanceOf = false
-      local curType      = newType
-
-      while (curType ~= nil) and (not isInstanceOf) do
-        if curType == theType then
-          isInstanceOf = true
-        else
-          curType = curType:prototype()
-        end
-      end
-
-      return isInstanceOf
-
-    end
-
-    -- Return true if the caller is a type of theType
-    function newType:typeOf(theType)
-
-      local isTypeOf = false
-      local curType  = theType
-
-      while (curType ~= nil) and (not isTypeOf) do
-
-        local proto = curType:prototype()
-
-        if curType == newType then
-          isTypeOf = true
-        else
-          curType = curType:prototype()
-        end
-      end
-
-      return isTypeOf
-
-    end
-
-    -- Return true if the theType is a type of the caller
-    function newType:prototypeOf(theType)
-
-      local isPrototypeOf = false
-      local curType       = theType
-
-      while (curType ~= nil) and (not isPrototypeOf) do
-
-        local proto = theType:prototype()
-
-        if curType == theType then
-          isPrototypeOf = true
-        else
-          curType = curType:prototype()
-        end
-      end
-
-      return isPrototypeOf
-
-    end
-
-    -- Return prototype chain of caller (top parent is last element)
-    function newType:prototypes()
-      return prototypes[newType]
-    end
-
-    local cls   = newType
-    local chain = {}
-
-    while cls ~= nil do
-      cls = cls:prototype()
-      chain[#chain + 1] = cls
-    end
-
-    prototypes[newType] = chain
-
-    return newType
+    return self
 
   end
 
-})
 
-Extends.Accessor = function(baseType, name)
+  function newType:set(k, v)
+    rawset(self, k, v)
+  end
+
+  function newType:get(k)
+    return rawget(self, k)
+  end
+
+  return newType
+
+end
+
+DefineAccessor = function(baseType, name)
 
   return {
-    get = Extends.Getter(baseType, name),
-    set = Extends.Setter(baseType, name)
+    get = DefineGetter(baseType, name),
+    set = DefineSetter(baseType, name)
   }
 
 end
 
-Extends.HasGetter = function(baseType, name)
+HasGetter = function(baseType, name)
 
   local firstCharUpper = name:gsub("^%l", string.upper)
   local getter         = 'get' .. firstCharUpper
@@ -163,12 +84,12 @@ Extends.HasGetter = function(baseType, name)
 
 end
 
-Extends.Getter = function(baseType, name)
+DefineGetter = function(baseType, name, fn)
 
   local firstCharUpper = name:gsub("^%l", string.upper)
   local getter         = 'get' .. firstCharUpper
 
-  local get = function(self)
+  local get = fn or function(self)
     return self[name]
   end
 
@@ -178,7 +99,7 @@ Extends.Getter = function(baseType, name)
 
 end
 
-Extends.HasSetter = function(baseType, name)
+HasSetter = function(baseType, name)
 
   local firstCharUpper = name:gsub("^%l", string.upper)
   local setter         = 'set' .. firstCharUpper
@@ -187,12 +108,12 @@ Extends.HasSetter = function(baseType, name)
 
 end
 
-Extends.Setter = function(baseType, name)
+DefineSetter = function(baseType, name, fn)
 
   local firstCharUpper = name:gsub("^%l", string.upper)
   local setter         = 'set' .. firstCharUpper
 
-  local set = function(self, val)
+  local set = fn or function(self, val)
     self[name] = val
   end
 

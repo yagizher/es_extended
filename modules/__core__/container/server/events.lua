@@ -11,9 +11,9 @@
 --   This copyright should appear in every part of the project code
 
 
-on('esx_datastore:ready',      self.OnDependencyReady)
-on('esx_addonaccount:ready',   self.OnDependencyReady)
-on('esx_addoninventory:ready', self.OnDependencyReady)
+on('esx_datastore:ready',      module.OnDependencyReady)
+on('esx_addonaccount:ready',   module.OnDependencyReady)
+on('esx_addoninventory:ready', module.OnDependencyReady)
 
 onRequest('esx:container:get', function(source, cb, name, restrict)
 
@@ -23,7 +23,7 @@ onRequest('esx:container:get', function(source, cb, name, restrict)
     'weapon'
   }
 
-  local container = self.Get(name)
+  local container = module.Get(name)
   local _items    = container.getAll()
 
   local items = table.filter(_items, function(e) return table.indexOf(restrict, e.type) ~= -1 end)
@@ -77,7 +77,7 @@ end)
 onRequest('esx:container:pull', function(source, cb, name, itemType, itemName, itemCount)
 
   local player    = xPlayer.fromId(source)
-  local container = self.Get(name)
+  local container = module.Get(name)
 
   local item = container.get(itemType, itemName)
 
@@ -105,7 +105,7 @@ end)
 onRequest('esx:container:put', function(source, cb, name, itemType, itemName, itemCount)
 
   local xPlayer   = xPlayer.fromId(source)
-  local container = self.Get(name)
+  local container = module.Get(name)
 
   local count = 0
 
