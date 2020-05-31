@@ -16,14 +16,14 @@ function Inventory.isItemDefined(name)
   return table.indexOf(Inventory.ItemDefs, name) ~= -1
 end
 
-function Inventory:constructor(get, set, name, owner, items)
+function Inventory:constructor(name, owner, items)
 
   if module.Inventories[name] ~= nil then
     print('[warning] there is already an active instance of inventory => ' .. name .. ' returning that instance')
     return module.Inventories[name]
   end
 
-  self.super:constructor(get, set)
+  self.super:ctor()
 
   self.ready = false
   self.name  = name

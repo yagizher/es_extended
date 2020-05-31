@@ -18,17 +18,18 @@ local pass = function(x) return x end
 
 Persist = function(schema, pk)
 
-  local fields   = {}
-  local dbfields = {}
-  local pType    = Extends(Serializable)
+  local debugName     = debugName or 'PersistBase_' .. schema
+  local extDebugName = 'Persist_' .. schema
+  local fields        = {}
+  local dbfields      = {}
+  local pType         = Extends(Serializable, debugName)
 
-  function pType:constructor(get, set, data)
+  function pType:constructor(data)
 
-    self.super:constructor(get, set, data)
+    self.super:ctor(data)
 
-    set('__SCHEMA', schema)
-    set('__PK', pk)
-    set('__ID', data[pk])
+    self.__SCHEMA = schema
+    self.__PK     = pk
 
     for k,v in pairs(fields) do
       self:field(k, data[k])
@@ -70,7 +71,7 @@ Persist = function(schema, pk)
 
     end
 
-    local sql = 'SELECT ' .. keys .. ' FROM `' .. schema .. '` WHERE `' .. fields[key].data.name .. '` = @value'
+    local sql = 'SELECT ' .. keys .. ' FROM `' .. schema .. '` WHERE `' .. fields[key].data.name .. '` = @value LIMIT 1'
 
     MySQL.Async.fetchAll(sql, {['@value'] = value}, function(rows)
 
@@ -174,20 +175,21 @@ Persist = function(schema, pk)
 
   function pType:save(cb)
 
-    local keys   = ''
-    local values = ''
-    local update = ''
+    local serialized = self:serialize()
+    local keys       = ''
+    local values     = ''
+    local update     = ''
 
     local data   = {
       ['@pk'] = pk,
-      ['@id'] = self.__ID,
+      ['@id'] = self:getPK(),
     }
 
     local count = 0
 
     for k,v in pairs(fields) do
 
-      if self[k] ~= nil then
+      if serialized[k] ~= nil then
 
         local escaped    = '@' .. k
         local backticked = '`' .. v.data.name .. '`'
@@ -201,7 +203,7 @@ Persist = function(schema, pk)
         keys          = keys   .. backticked
         values        = values .. escaped
         update        = update .. backticked .. '=' .. escaped
-        data[escaped] = fields[k].encode(self[k])
+        data[escaped] = fields[k].encode(serialized[k])
 
         count = count + 1
 
@@ -213,25 +215,33 @@ Persist = function(schema, pk)
 
     MySQL.Async.fetchAll(sql, data, function(rows)
 
+      local id = rows[2][1]['LAST_INSERT_ID()']
+
+      if (id ~= nil) and (self:getPK() == nil) then
+        self:setPK(id)
+      end
+
       if cb ~= nil then
-
-        if self[pk] == nil then
-          self[pk] = rows[2][1]['LAST_INSERT_ID()']
-        end
-
-          cb(id)
-
+        cb(id)
       end
 
     end)
 
   end
 
+  function pType:setPK(val)
+    self[self.__PK] = val
+  end
+
+  function pType:getPK()
+    return self[self.__PK]
+  end
+
   on('esx:db:init', function(initTable, extendTable)
     initTable(schema, pk, dbfields)
   end)
 
-  return pType
+  return Extends(pType, extDebugName)
 
 end
 

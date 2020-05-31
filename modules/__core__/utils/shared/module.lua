@@ -49,6 +49,26 @@ module.string.random = function(length, recurse)
 
 end
 
+module.string.parsetpl = function(tpl, data)
+
+  local str = ''
+
+  for i=1, #tpl, 1 do
+
+    local tplPart = tostring(tpl[i])
+
+    if tplPart:sub(1, 1) == '@' then
+      str = str .. table.get(data, tplPart:sub(2))
+    else
+      str = str .. tplPart
+    end
+
+  end
+
+  return str
+
+end
+
 -- Table
 module.table.dump = function(t, indent)
 

@@ -16,6 +16,7 @@
   "migrate",
   "persistent",
   "player",
+  "role",
   "serializable",
   "string",
   "table",

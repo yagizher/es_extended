@@ -20,20 +20,13 @@ local utils = M("utils")
 
 local spawn = {x = -269.4, y = -955.3, z = 31.2, heading = 205.8}
 
+Identity = Extends(Serializable, 'Identity')
 
-Identity = Extends(Serializable)
+Identity.parseRole = module.Identity_parseRoles
+Identity.getRole   = module.Identity_getRole
+Identity.hasRole   = module.Identity_hasRole
 
-function Identity:constructor(get, set, data)
-
-  self.super:constructor(get, set, data)
-
-  for k,v in pairs(data) do
-    self:field(k, v)
-  end
-
-end
-
-IdentityCacheConsumer = Extends(CacheConsumer)
+IdentityCacheConsumer = Extends(CacheConsumer, 'IdentityCacheConsumer')
 
 function IdentityCacheConsumer:provide(key, cb)
 

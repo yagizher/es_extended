@@ -12,7 +12,10 @@
 
 M('events')
 
-onClient('esx:player:join', Player.onJoin)
+onClient('esx:player:join', function()
+  local source = source
+  Player.onJoin(source)
+end)
 
 AddEventHandler('playerDropped', function(reason)
 

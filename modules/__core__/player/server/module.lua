@@ -30,10 +30,9 @@ Player.fromId = function(id)
   return Player.all[tostring(id)]
 end
 
-Player.onJoin = function()
+Player.onJoin = function(source)
 
-  local source = source
-  local name   = GetPlayerName(source)
+  local name = GetPlayerName(source)
 
   Citizen.CreateThread(function()
 
@@ -74,7 +73,6 @@ Player.onJoin = function()
         }, function(player)
 
           player:field('source', source)
-
           player:on('change', print)
 
           Player.all[source] = player

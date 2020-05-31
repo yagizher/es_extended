@@ -15,13 +15,13 @@ M('events')
 
 -- Declare
 Cache         = {}
-CacheConsumer = Extends(EventEmitter)
+CacheConsumer = Extends(EventEmitter, 'CacheConsumer')
 
-function CacheConsumer:constructor(get, set)
+function CacheConsumer:constructor()
 
-  self.super:constructor(get, set)
+  self.super:ctor()
 
-  set('data', {})
+  self.data = {}
 
   if self.provide == nil then
 

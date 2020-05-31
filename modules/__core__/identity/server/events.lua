@@ -14,23 +14,23 @@ onRequest('esx:identity:register', function(source, cb, data)
 
   local player = Player.fromId(source)
 
-  Identity.ensure('identifier', {
-
+  local identity = Identity.new({
     owner     = player.identifier,
     firstName = data.firstName,
     lastName  = data.lastName,
     DOB       = data.dob,
     isMale    = data.isMale
+  })
 
-  }, function(identity)
+  identity:save(function(id)
 
-    Identity.all[identity.id] = identity
+    Identity.all[id] = identity
 
-    player:setIdentityId(identity.id)
+    player:setIdentityId(id)
     player:field('identity', identity)
     player:save()
 
-    cb(identity.id)
+    cb(id)
 
   end)
 

@@ -14,63 +14,187 @@
 
 M('table')
 
-local envs = {}
+module.debug = {
+  extends = false,
+  ctor    = false,
+  set     = false,
+}
 
-Extends = function(baseType, vars)
+module.owners  = {}
+module.callers = {}
 
-  local vars = vars or {}
-  local env  = table.clone(envs[baseType] or {})
+local last
 
-  for i=1, #vars, 1 do
-    env[vars[i]] = 0
-  end
+Extends = function(baseType, debugName)
 
-  local baseType = baseType or {}
-  local newType  = setmetatable({super = baseType}, {__index = baseType})
-
-  envs[newType]  = env
+  debugName         = debugName or '<anonymous>'
+  local newTypeBase = {super = baseType}
+  local newType     = setmetatable({super = baseType}, {__index = baseType})
 
   function newType.new(...)
 
-    local data = table.clone(env)
+    last = nil
 
-    data.get = function(k)
-      return rawget(data, k)
+    local self = newType.init(nil)
+
+    if module.debug.ctor then
+      newType.tracemethod(self, 'ctor', ...)
     end
 
-    data.set = function(k, v)
-      rawset(data, k, v)
-      return v
-    end
-
-    local self = setmetatable(data, {__index = newType, __newindex = data})
-
-    if type(newType.constructor) == 'function' then
-      newType.constructor(self, data.get, data.set, ...)
-    end
+    self:constructor(...)
 
     return self
 
   end
 
+  function newType.init(self)
 
-  function newType:set(k, v)
-    rawset(self, k, v)
+    local first    = self == nil
+    local self     = self or {}
+    local touched  = {}
+    local data     = {}
+    local fastpath = {}
+
+    local this
+
+    local __index = function(t, k)
+
+      if touched[k] then
+        return rawget(t, k)
+      end
+
+      if self[k] ~= nil then
+        return self[k]
+      end
+
+      local v = newType[k]
+
+      if type(v) ~= 'function' then
+
+        if fastpath[k] ~= nil then
+          return fastpath[k][k]
+        end
+
+        local caller = rawget(t, '__next')
+        local obj    = caller
+
+        while obj ~= nil do
+
+          if obj[k] ~= nil then
+            caller = obj
+          end
+
+          obj = obj.__next
+
+        end
+
+        if caller ~= nil then
+          fastpath[k] = caller
+          return fastpath[k][k]
+        end
+
+      end
+
+      return v
+
+    end
+
+    local __newindex = function(t, k, v)
+
+      if module.debug.set then
+        this:traceset(k, v)
+      end
+
+      touched[k] = true
+      rawset(t, k, v)
+
+    end
+
+    this = setmetatable(data, {__index = __index, __newindex = __newindex})
+    this.__prev = last
+
+    if last ~= nil then
+      last.__next = this
+    end
+
+    last = this
+
+    return this
+
   end
 
-  function newType:get(k)
-    return rawget(self, k)
+  function newType:ctor(...)
+
+    if module.debug.ctor then
+      newType.tracemethod(self, 'ctor', ...)
+    end
+
+    newType.init(self):constructor(...)
+
+  end
+
+  function newType:constructor(...)
+    if self.super ~= nil then
+      self.super:ctor(...)
+    end
+  end
+
+  function newType:type()
+    return newType
+  end
+
+  function newType:base()
+    return baseType
+  end
+
+  function newType:typename()
+    return debugName
+  end
+
+  function newType:traceset(k, v)
+    print('^4' .. self:typename() .. '^1 set ^7' .. tostring(k) .. ' => ^2' .. tostring(v or 'nil'))
+  end
+
+  function newType:trace(...)
+    print('^4' .. self:typename() .. '^7', ...)
+  end
+
+  function newType:tracemethod(name, ...)
+
+    local args = {...}
+    local str  = '^4' .. self:typename() .. '^7:^1' .. name .. '^7('
+
+    for i=1, #args, 1 do
+
+      local arg = args[i]
+
+      if i > 1 then
+        str = str .. ', '
+      end
+
+      str = str .. '^2' .. type(arg) .. '^7'
+
+    end
+
+    str = str .. ')'
+
+    print(str)
+
+  end
+
+  if module.debug.extends then
+    print('^4' .. newType:typename() .. '^1 extends ^4' .. (baseType and baseType:typename() or 'nil'))
   end
 
   return newType
 
 end
 
-DefineAccessor = function(baseType, name)
+DefineAccessor = function(baseType, name, get, set)
 
   return {
-    get = DefineGetter(baseType, name),
-    set = DefineSetter(baseType, name)
+    get = DefineGetter(baseType, name, get),
+    set = DefineSetter(baseType, name, set)
   }
 
 end
@@ -80,11 +204,13 @@ HasGetter = function(baseType, name)
   local firstCharUpper = name:gsub("^%l", string.upper)
   local getter         = 'get' .. firstCharUpper
 
-  return rawget(baseType, getter) ~= nil
+  return baseType[getter] ~= nil
 
 end
 
 DefineGetter = function(baseType, name, fn)
+
+  baseType:trace('DefineGetter', name, fn)
 
   local firstCharUpper = name:gsub("^%l", string.upper)
   local getter         = 'get' .. firstCharUpper
@@ -93,7 +219,7 @@ DefineGetter = function(baseType, name, fn)
     return self[name]
   end
 
-  rawset(baseType, getter, get)
+  baseType[getter] = get
 
   return get
 
@@ -104,7 +230,7 @@ HasSetter = function(baseType, name)
   local firstCharUpper = name:gsub("^%l", string.upper)
   local setter         = 'set' .. firstCharUpper
 
-  return rawget(baseType, setter) ~= nil
+  return baseType[setter] ~= nil
 
 end
 
@@ -117,7 +243,7 @@ DefineSetter = function(baseType, name, fn)
     self[name] = val
   end
 
-  rawset(baseType, setter, set)
+  baseType[setter] = set
 
   return set
 

@@ -16,9 +16,9 @@ M('table')
 
 module.Accounts = {}
 
-Account = Extends(EventEmitter)
+Account = Extends(EventEmitte, 'Account')
 
-function Account:constructor(get, set, name, owner, money)
+function Account:constructor(name, owner, money)
 
   if (money == nil) or (tonumber(money) ~= money) then
     money = 0
@@ -29,26 +29,26 @@ function Account:constructor(get, set, name, owner, money)
     return module.Accounts[name]
   end
 
-  self.super:constructor(get, set)
+  self.super:ctor()
 
-  set('ready', false)
-  set('name', name)
+  self.ready = false
+  self.name = name
 
   if owner then
-    set('owner', owner)
-    set('shared', true)
+    self.owner = owner
+    self.shared = true
   else
-    set('owner', nil)
-    set('shared', false)
+    self.owner = nil
+    self.shared = false
   end
 
-  set('money', money)
-  set('ensured', false)
+  self.money = money
+  self.ensured = false
 
   self:on('ensure', function()
 
-    set('ensured', true)
-    set('ready', true)
+    self.ensured = true
+    self.ready = true
 
     self:emit('ready')
 

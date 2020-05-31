@@ -12,14 +12,11 @@
 
 M('events')
 
-Serializable = Extends(EventEmitter)
+Serializable = Extends(EventEmitter, 'Serializable')
 
-function Serializable:constructor(get, set, data)
+function Serializable:constructor(data)
 
-  data = data or {}
-
-  self.super:constructor(get, set)
-
+  self.super:ctor()
   self.__ACCESSORS = {}
 
   for k,v in pairs(data) do
@@ -30,22 +27,34 @@ end
 
 function Serializable:field(name, value)
 
-  rawset(self, name, value)
+  self[name] = value
 
-  self.__ACCESSORS[name] = {
+  if not self:hasField(name) then
 
-    get = DefineGetter(self, name),
+    self:trace('field', name, value)
 
-    set = DefineSetter(self, name, function(self, value)
-      rawset(self, name, value)
-      self:emit('change', name, value)
-    end)
+    self.__ACCESSORS[name] = {
 
-  }
+      get = DefineGetter(self, name),
+
+      set = DefineSetter(self, name, function(self, value)
+        self[name] = value
+        self:emit('change', name, value)
+      end)
+
+    }
+
+  end
 
 end
 
+function Serializable:hasField(name)
+  return self.__ACCESSORS[name] ~= nil
+end
+
 function Serializable:serialize()
+
+  self:trace('serialize')
 
   local data = {}
 

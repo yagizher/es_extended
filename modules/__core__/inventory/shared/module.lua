@@ -14,7 +14,7 @@ M('events')
 M('class')
 M('table')
 
-Inventory = Extends(EventEmitter)
+Inventory = Extends(EventEmitter, 'Inventory')
 
 local itemFlags = {}
 local itemDefs  = {}

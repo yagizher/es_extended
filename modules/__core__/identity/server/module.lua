@@ -22,6 +22,7 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
+M('table')
 M('persistent')
 
 local spawn = {x = -269.4, y = -955.3, z = 31.2, heading = 205.8}
@@ -49,14 +50,15 @@ Identity.fromId = function(id)
   return Identity.all[id]
 end
 
-function Identity:constructor(get, set, data, source)
-  self.super:constructor(get, set, data)
-  set('source', source)
+Identity.parseRole = module.Identity_parseRole
+
+function Identity:constructor(data, source)
+  self.super:ctor(data)
+  self.source = source
 end
 
-function Identity:hasRole(name)
-  return table.indexOf(self.roles, name) ~= -1
-end
+Identity.getRole = module.Identity_getRole
+Identity.hasRole = module.Identity_hasRole
 
 function Identity:addRole(name)
 

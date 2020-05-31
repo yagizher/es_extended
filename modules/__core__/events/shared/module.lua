@@ -137,10 +137,10 @@ onRequest = function(name, cb)
 end
 
 -- EventEmitter
-EventEmitter = Extends(nil)
+EventEmitter = Extends(nil, 'EventEmitter')
 
-function EventEmitter:constructor(get, set)
-  set('handlers', {})
+function EventEmitter:constructor()
+  self.handlers = {}
 end
 
 function EventEmitter:on(name, cb)

@@ -16,15 +16,15 @@ M('events')
 module.Tables = {}
 
 -- field
-local DBField = Extends(nil)
+local DBField = Extends(nil, 'DBField')
 
-function DBField:constructor(get, set, name, _type, length, default, extra)
+function DBField:constructor(name, _type, length, default, extra)
 
-  set('name', name)
-  set('type', _type)
-  set('length', length)
-  set('default', default)
-  set('extra', extra)
+  self.name = name
+  self.type = _type
+  self.length = length
+  self.default = default
+  self.extra = extra
 
 end
 
@@ -146,20 +146,20 @@ end
 module.DBField = DBField
 
 -- table
-local DBTable = Extends(nil)
+local DBTable = Extends(nil, 'DBTable')
 
-function DBTable:constructor(get, set, name, pk)
+function DBTable:constructor(name, pk)
 
-  set('engine', 'InnoDB')
+  self.engine = 'InnoDB'
 
-  set('defaults', {
+  self.defaults = {
     {'CHARSET', 'utf8mb4'}
-  })
+  }
 
-  set('fields', {})
-  set('rows', {})
-  set('name', name)
-  set('pk', pk)
+  self.fields = {}
+  self.rows = {}
+  self.name = name
+  self.pk = pk
 
 end
 
