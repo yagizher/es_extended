@@ -16,21 +16,63 @@ M('table')
 
 module.debug = {
   extends = false,
-  ctor    = false,
-  set     = false,
+  ctor    = true,
+  set     = true,
+  chain   = false
 }
 
-local last
+local chain = {}
 
 Extends = function(baseType, debugName)
 
-  debugName         = debugName or '<anonymous>'
-  local newTypeBase = {super = baseType}
-  local newType     = setmetatable({super = baseType}, {__index = baseType})
+  debugName     = debugName or '<anonymous>'
+  local newType = setmetatable({super = baseType}, {__index = baseType})
+
+  local chainLength = 0
+
+  local pushchain = function(this)
+
+    if #chain > 0 then
+      this.__prev          = chain[#chain]
+      chain[#chain].__next = this
+    end
+
+    chain[#chain + 1] = this
+
+    chainLength = chainLength + 1
+
+    if module.debug.chain then
+      newType:tracechain('push')
+    end
+
+  end
+
+  local popchain = function()
+
+    chain[#chain] = nil
+    chainLength   = chainLength - 1
+
+    if module.debug.chain then
+      newType:tracechain('pop')
+    end
+
+  end
+
+  local endchain = function()
+
+    for i=1, chainLength, 1 do
+      chain[#chain] = nil
+    end
+
+    if module.debug.chain then
+      newType:tracechain('end')
+    end
+
+  end
 
   function newType.new(...)
 
-    last = nil
+    chainLength = 0
 
     local self = newType.init(nil)
 
@@ -39,6 +81,8 @@ Extends = function(baseType, debugName)
     end
 
     self:constructor(...)
+
+    endchain()
 
     return self
 
@@ -108,13 +152,8 @@ Extends = function(baseType, debugName)
     end
 
     this = setmetatable(data, {__index = __index, __newindex = __newindex})
-    this.__prev = last
 
-    if last ~= nil then
-      last.__next = this
-    end
-
-    last = this
+    pushchain(this)
 
     return this
 
@@ -127,6 +166,8 @@ Extends = function(baseType, debugName)
     end
 
     newType.init(self):constructor(...)
+
+    popchain()
 
   end
 
@@ -148,12 +189,12 @@ Extends = function(baseType, debugName)
     return debugName
   end
 
-  function newType:traceset(k, v)
-    print('^4' .. self:typename() .. '^1 set ^7' .. tostring(k) .. ' => ^2' .. tostring(v or 'nil'))
-  end
-
   function newType:trace(...)
     print('^4' .. self:typename() .. '^7', ...)
+  end
+
+  function newType:traceset(k, v)
+    self:trace('set ^7' .. tostring(k) .. ' => ^2' .. tostring(v or 'nil'))
   end
 
   function newType:tracemethod(name, ...)
@@ -176,6 +217,12 @@ Extends = function(baseType, debugName)
     str = str .. ')'
 
     print(str)
+
+  end
+
+  function newType:tracechain(event)
+
+    self:trace('chain', event, #chain, str)
 
   end
 

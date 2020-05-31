@@ -31,8 +31,6 @@ function Serializable:field(name, value)
 
   if not self:hasField(name) then
 
-    self:trace('field', name, value)
-
     self.__ACCESSORS[name] = {
 
       get = DefineGetter(self, name),
