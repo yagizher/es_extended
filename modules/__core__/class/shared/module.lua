@@ -20,9 +20,6 @@ module.debug = {
   set     = false,
 }
 
-module.owners  = {}
-module.callers = {}
-
 local last
 
 Extends = function(baseType, debugName)
@@ -209,8 +206,6 @@ HasGetter = function(baseType, name)
 end
 
 DefineGetter = function(baseType, name, fn)
-
-  baseType:trace('DefineGetter', name, fn)
 
   local firstCharUpper = name:gsub("^%l", string.upper)
   local getter         = 'get' .. firstCharUpper

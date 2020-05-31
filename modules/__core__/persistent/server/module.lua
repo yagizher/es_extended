@@ -125,7 +125,7 @@ Persist = function(schema, pk)
           data[k] = v.decode(row[v.data.name])
         end
 
-        cb(pType.new(data))
+        return pType.new(data)
 
       end))
 

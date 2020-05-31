@@ -52,9 +52,7 @@ function Serializable:hasField(name)
   return self.__ACCESSORS[name] ~= nil
 end
 
-function Serializable:serialize()
-
-  self:trace('serialize')
+function Serializable:serialize(encode)
 
   local data = {}
 
@@ -62,6 +60,6 @@ function Serializable:serialize()
     data[name] = accessor.get(self)
   end
 
-  return data
+  return encode == nil and data or encode(data)
 
 end
