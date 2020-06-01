@@ -10,40 +10,19 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-local self     = ESX.Modules['boot']
-local hasError = false
+local module = ESX.Modules['boot']
 
-for i=1, #self.CoreEntries, 1 do
+for i=1, #module.GroupNames, 1 do
 
-  local name = self.CoreEntries[i]
+  local groupName = module.GroupNames[i]
+  local group     = module.Groups[groupName]
 
-  if self.ModuleHasEntryPoint(name, true) then
+  for j=1, #group, 1 do
 
-    local module, _error = self.LoadModule(name, true)
+    local name = group[j]
 
-    if _error then
-      hasError = true
-      break
-    end
-
-  end
-
-end
-
-if not hasError then
-
-  for i=1, #self.Entries, 1 do
-
-    local name = self.Entries[i]
-
-    if Config.Modules[name] and self.ModuleHasEntryPoint(name, false) then
-
-      local module, _error = self.LoadModule(name, false)
-
-      if _error then
-        break
-      end
-
+    if module.ModuleHasEntryPoint(name, groupName) then
+      M(name, groupName)
     end
 
   end

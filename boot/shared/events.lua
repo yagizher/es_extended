@@ -12,24 +12,15 @@
 
 local self = ESX.Modules['boot']
 
-AddEventHandler('esx:module:load:before', function(name, isCore)
-
-  if isCore then
-    print('[^3@' .. name .. '^7] ^5load^7')
-  else
-    print('[^3'  .. name .. '^7] ^5load^7')
-  end
+AddEventHandler('esx:module:load:before', function(name, group)
+  local str = string.format('^7/^5%s^7/^3%s^7] start', group, name)
+  _print(str)
 
 end)
 
-AddEventHandler('esx:module:load:error', function(name, isCore)
-
-  if isCore then
-    print('[^3@' .. name .. '^7] ^1load error^7')
-  else
-    print('[^3'  .. name .. '^7] ^1load error^7')
-  end
-
+AddEventHandler('esx:module:load:error', function(name, group)
+  local str = string.format('[^7/^5%s^7/^3%s^7] start error', group, name)
+  _print(str)
 end)
 
 AddEventHandler('luaconsole:getHandlers', function(cb)

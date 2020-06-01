@@ -15,16 +15,15 @@ M('events')
 
 local HUD = M('ui.hud')
 
-Menu = Extends(nil)
+Menu = Extends(nil, 'Menu')
 
 function Menu:constructor(name, data, focus)
 
   self.name     = name
   self.float    = data.float or 'top|left'
   self.title    = data.title or 'Untitled ESX Menu'
-  self.items    = {}
-  self.frame    = nil
   self.handlers = {}
+  self.items    = {}
 
   if focus == nil then
     focus = true
@@ -93,7 +92,7 @@ function Menu:constructor(name, data, focus)
 
   end
 
-  self.frame = Frame:create('ui:menu:' .. self.name, 'nui://' .. __RESOURCE__ .. '/modules/__core__/ui.menu/data/html/index.html', true)
+  self.frame = Frame.new('ui:menu:' .. name, 'nui://' .. __RESOURCE__ .. '/modules/__core__/ui.menu/data/html/index.html', true)
 
   self.frame:on('message', function(msg)
 

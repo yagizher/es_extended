@@ -9,33 +9,67 @@
 --   You shall not provide any facility to install this particular software in a commercial product / service
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
+--
+-----
+--
+-- Following license apply for entityEnumerator and EnumerateEntities:
+--
+-- The MIT License (MIT)
+--
+-- Copyright (c) 2017 IllidanS4
+-- Permission is hereby granted, free of charge, to any person
+-- obtaining a copy of this software and associated documentation
+-- files (the "Software"), to deal in the Software without
+-- restriction, including without limitation the rights to use,
+-- copy, modify, merge, publish, distribute, sublicense, and/or sell
+-- copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following
+-- conditions:
+-- The above copyright notice and this permission notice shall be
+-- included in all copies or substantial portions of the Software.
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+-- EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+-- OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+-- NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+-- HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+-- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+-- OTHER DEALINGS IN THE SOFTWARE.
 
 -- Namespaces
-self.game = self.game or {}
-self.ui   = self.ui   or {}
+module.game = module.game or {}
+module.ui   = module.ui   or {}
 
 -- Locals
 local entityEnumerator = {
-	__gc = function(enum)
+
+  __gc = function(enum)
+
 		if enum.destructor and enum.handle then
 			enum.destructor(enum.handle)
 		end
 
 		enum.destructor = nil
-		enum.handle = nil
+    enum.handle     = nil
+
 	end
 }
 
 local EnumerateEntities = function(initFunc, moveFunc, disposeFunc)
-	return coroutine.wrap(function()
-		local iter, id = initFunc()
-		if not id or id == 0 then
+
+  return coroutine.wrap(function()
+
+    local iter, id = initFunc()
+
+    if not id or id == 0 then
 			disposeFunc(iter)
 			return
 		end
 
-		local enum = {handle = iter, destructor = disposeFunc}
-		setmetatable(enum, entityEnumerator)
+    local enum = {handle = iter, destructor = disposeFunc}
+
+    setmetatable(enum, entityEnumerator)
+
 		local next = true
 
 		repeat
@@ -43,37 +77,39 @@ local EnumerateEntities = function(initFunc, moveFunc, disposeFunc)
 			next, id = moveFunc(iter)
 		until not next
 
-		enum.destructor, enum.handle = nil, nil
-		disposeFunc(iter)
+    enum.destructor, enum.handle = nil, nil
+
+    disposeFunc(iter)
+
 	end)
 end
 
 -- Game
-self.game.enumerateObjects = function()
+module.game.enumerateObjects = function()
 	return EnumerateEntities(FindFirstObject, FindNextObject, EndFindObject)
 end
 
-enumerateObjects = self.game.enumerateObjects -- Make it global for convenience
+enumerateObjects = module.game.enumerateObjects -- Make it global for convenience
 
-self.game.enumeratePeds = function()
+module.game.enumeratePeds = function()
 	return EnumerateEntities(FindFirstPed, FindNextPed, EndFindPed)
 end
 
-enumeratePeds = self.game.enumeratePeds -- Make it global for convenience
+enumeratePeds = module.game.enumeratePeds -- Make it global for convenience
 
-self.game.enumerateVehicles = function()
+module.game.enumerateVehicles = function()
 	return EnumerateEntities(FindFirstVehicle, FindNextVehicle, EndFindVehicle)
 end
 
-enumerateVehicles = self.game.enumerateVehicles -- Make it global for convenience
+enumerateVehicles = module.game.enumerateVehicles -- Make it global for convenience
 
-self.game.enumeratePickups = function()
+module.game.enumeratePickups = function()
 	return EnumerateEntities(FindFirstPickup, FindNextPickup, EndFindPickup)
 end
 
-enumeratePickups = self.game.enumeratePickups -- Make it global for convenience
+enumeratePickups = module.game.enumeratePickups -- Make it global for convenience
 
-self.game.requestModel = function(model, cb)
+module.game.requestModel = function(model, cb)
 
   if type(model) == 'string' then
     model = GetHashKey(model)
@@ -97,13 +133,13 @@ self.game.requestModel = function(model, cb)
 
 end
 
-self.game.createObject = function(model, coords, cb)
+module.game.createObject = function(model, coords, cb)
 
   if type(model) == 'string' then
     model = GetHashKey(model)
   end
 
-  self.game.requestModel(model, function()
+  module.game.requestModel(model, function()
 
     local obj = CreateObject(model, coords.x, coords.y, coords.z, true, false, true)
     SetModelAsNoLongerNeeded(model)
@@ -116,13 +152,13 @@ self.game.createObject = function(model, coords, cb)
 
 end
 
-self.game.createLocalObject = function(model, coords, cb)
+module.game.createLocalObject = function(model, coords, cb)
 
   if type(model) == 'string' then
     model = GetHashKey(model)
   end
 
-  self.game.requestModel(model, function()
+  module.game.requestModel(model, function()
 
     local obj = CreateObject(model, coords.x, coords.y, coords.z, false, false, true)
     SetModelAsNoLongerNeeded(model)
@@ -135,13 +171,13 @@ self.game.createLocalObject = function(model, coords, cb)
 
 end
 
-self.game.createVehicle = function(model, coords, heading, cb)
+module.game.createVehicle = function(model, coords, heading, cb)
 
   if type(model) == 'string' then
     model = GetHashKey(model)
   end
 
-  self.game.requestModel(model, function()
+  module.game.requestModel(model, function()
 
 		RequestCollisionAtCoord(coords.x, coords.y, coords.z)
 
@@ -164,13 +200,13 @@ self.game.createVehicle = function(model, coords, heading, cb)
 
 end
 
-self.game.createLocalVehicle = function(model, coords, heading, cb)
+module.game.createLocalVehicle = function(model, coords, heading, cb)
 
   if type(model) == 'string' then
     model = GetHashKey(model)
   end
 
-  self.game.requestModel(model, function()
+  module.game.requestModel(model, function()
 
 		RequestCollisionAtCoord(coords.x, coords.y, coords.z)
 
@@ -193,7 +229,7 @@ self.game.createLocalVehicle = function(model, coords, heading, cb)
 
 end
 
-self.game.isVehicleEmpty = function(vehicle)
+module.game.isVehicleEmpty = function(vehicle)
 
 	local passengers     = GetVehicleNumberOfPassengers(vehicle)
 	local driverSeatFree = IsVehicleSeatFree(vehicle, -1)
@@ -202,7 +238,7 @@ self.game.isVehicleEmpty = function(vehicle)
 
 end
 
-self.game.getVehicleProperties = function(vehicle)
+module.game.getVehicleProperties = function(vehicle)
 
   if DoesEntityExist(vehicle) then
 
@@ -304,7 +340,7 @@ self.game.getVehicleProperties = function(vehicle)
 
 end
 
-self.game.setVehicleProperties = function(vehicle, props)
+module.game.setVehicleProperties = function(vehicle, props)
 
   if DoesEntityExist(vehicle) then
 
@@ -399,13 +435,13 @@ self.game.setVehicleProperties = function(vehicle, props)
 end
 
 -- UI
-self.ui.showNotification = function(msg)
+module.ui.showNotification = function(msg)
 	SetNotificationTextEntry('STRING')
 	AddTextComponentSubstringPlayerName(msg)
 	DrawNotification(false, true)
 end
 
-self.ui.showAdvancedNotification = function(sender, subject, msg, textureDict, iconType, flash, saveToBrief, hudColorIndex)
+module.ui.showAdvancedNotification = function(sender, subject, msg, textureDict, iconType, flash, saveToBrief, hudColorIndex)
 
   if saveToBrief == nil then
     saveToBrief = true
@@ -423,7 +459,7 @@ self.ui.showAdvancedNotification = function(sender, subject, msg, textureDict, i
 
 end
 
-self.ui.showHelpNotification = function(msg, thisFrame, beep, duration)
+module.ui.showHelpNotification = function(msg, thisFrame, beep, duration)
 
   BeginTextCommandDisplayHelp('STRING')
   AddTextComponentSubstringPlayerName(msg)
@@ -438,7 +474,7 @@ self.ui.showHelpNotification = function(msg, thisFrame, beep, duration)
 
 end
 
-self.ui.howFloatingHelpNotification = function(msg, coords, timeout)
+module.ui.howFloatingHelpNotification = function(msg, coords, timeout)
 
   timeout     = timeout or 5000
   local start = GetGameTimer()

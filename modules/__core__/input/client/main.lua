@@ -12,7 +12,7 @@
 
 M('events')
 
-self.InitESX()
+module.InitESX()
 
 Citizen.CreateThread(function()
   while true do
@@ -22,18 +22,18 @@ Citizen.CreateThread(function()
     local dpressed  = {}
     local dreleased = {}
 
-    for group, ids in pairs(self.RegisteredControls) do
+    for group, ids in pairs(module.RegisteredControls) do
 
       for i=1, #ids, 1 do
 
         local id = ids[i]
 
-        if self.IsControlEnabled(group, id) then
+        if module.IsControlEnabled(group, id) then
 
           if IsControlJustPressed(group, id) then
-            pressed[#pressed + 1] = {group, id, self.LastPressed[group][id]}
+            pressed[#pressed + 1] = {group, id, module.LastPressed[group][id]}
           elseif IsControlJustReleased(group, id) then
-            released[#released + 1] = {group, id, self.LastReleased[group][id]}
+            released[#released + 1] = {group, id, module.LastReleased[group][id]}
           end
 
         else
@@ -41,11 +41,11 @@ Citizen.CreateThread(function()
           DisableControlAction(group, id, true);
 
           if IsDisabledControlJustPressed(group, id) then
-            dpressed[#dpressed + 1] = {group, id, self.LastDisabledPressed[group][id]}
-            self.LastDisabledPressed[group][id] = GetGameTimer()
+            dpressed[#dpressed + 1] = {group, id, module.LastDisabledPressed[group][id]}
+            module.LastDisabledPressed[group][id] = GetGameTimer()
           elseif IsDisabledControlJustReleased(group, id) then
-            dreleased[#dreleased + 1] = {group, id, self.LastDisabledReleased[group][id]}
-            self.LastDisabledReleased[group][id] = GetGameTimer()
+            dreleased[#dreleased + 1] = {group, id, module.LastDisabledReleased[group][id]}
+            module.LastDisabledReleased[group][id] = GetGameTimer()
           end
 
         end

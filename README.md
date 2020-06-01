@@ -57,7 +57,7 @@ ensure es_extended
 
 M('ui.menu') -- This module provides global Menu factory method
 
-local menu = Menu:create('test', {
+local menu = Menu.new('test', {
   title = 'Test menu',
   float = 'top|left',
   items = {
@@ -106,7 +106,7 @@ M('datastore')
 
 on('esx:db:ready', function()
 
-  local ds = DataStore:create('test', true, {sample = 'data'}) -- name, shared, initial data
+  local ds = DataStore.new('test', true, {sample = 'data'}) -- name, shared, initial data
 
   ds:on('save', function()
     print(ds.name .. ' saved => ' .. json.encode(ds:get()))

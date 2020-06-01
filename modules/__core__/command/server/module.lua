@@ -12,25 +12,25 @@
 
 M('events')
 
-self.RegisterdCommands = {}
+module.RegisterdCommands = {}
 
-self.Register = function(name, group, cb, allowConsole, suggestion)
+module.Register = function(name, group, cb, allowConsole, suggestion)
 
   if type(name) == 'table' then
 
     for k, v in ipairs(name) do
-      self.Register(v, group, cb, allowConsole, suggestion)
+      module.Register(v, group, cb, allowConsole, suggestion)
     end
 
     return
 
   end
 
-  if self.RegisterdCommands[name] then
+  if module.RegisterdCommands[name] then
 
     print(('[^3WARNING^7] A command "%s" is already registered, overriding command'):format(name))
 
-    if self.RegisterdCommands[name].suggestion then
+    if module.RegisterdCommands[name].suggestion then
       emitClient('chat:removeSuggestion', -1, ('/%s'):format(name))
     end
 
@@ -43,7 +43,7 @@ self.Register = function(name, group, cb, allowConsole, suggestion)
     emitClient('chat:addSuggestion', -1, ('/%s'):format(name), suggestion.help, suggestion.arguments)
   end
 
-  self.RegisterdCommands[name] = {
+  module.RegisterdCommands[name] = {
       group        = group,
       cb           = cb,
       allowConsole = allowConsole,
@@ -52,7 +52,7 @@ self.Register = function(name, group, cb, allowConsole, suggestion)
 
   RegisterCommand(name, function(playerId, args, rawCommand)
 
-    local command = self.RegisterdCommands[name]
+    local command = module.RegisterdCommands[name]
 
     if not command.allowConsole and playerId == 0 then
       print(('[^3WARNING^7] %s'):format( _U('commanderror_console')))

@@ -11,7 +11,7 @@
 --   This copyright should appear in every part of the project code
 
 local esx_config = {
-  enable_loadscreen = true
+  enable_loadscreen = false
 }
 
 fx_version      'adamant'
@@ -34,12 +34,9 @@ files {
 
   'data/**/*',
   'hud/**/*',
-  'modules.json',
 
-  'modules/__core__/modules.json',
-  'modules/__core__/**/data/**/*',
-  'modules/__core__/**/*.lua',
-
+  'modules.groups.json',
+  'modules/**/modules.json',
   'modules/**/data/**/*',
   'modules/**/*.lua',
 
@@ -54,8 +51,7 @@ server_scripts {
   'locales/*.lua',
 
   'config/default/config.lua',
-  'config/default/config.weapons.lua',
-  'config/default/config.items.lua',
+  'config/default/config.*.lua',
   'config/default/modules/core/*.lua',
   'config/default/modules/*.lua',
 
@@ -77,8 +73,8 @@ client_scripts {
   'locales/*.lua',
 
   'config/default/config.lua',
-  'config/default/config.weapons.lua',
-  'config/default/config.items.lua',
+  'config/default/config.*.lua',
+
   'config/default/modules/core/*.lua',
   'config/default/modules/*.lua',
 

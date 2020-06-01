@@ -12,12 +12,29 @@
 
 -- Immediate definitions
 
-local _print = print
+local __print = print
+
+_print = function(...)
+
+  local args = {...}
+  local str  = '[^4esx^7'
+
+  for i=1, #args, 1 do
+    if i == 1 then
+      str = str .. '' .. tostring(args[i])
+    else
+      str = str .. ' ' .. tostring(args[i])
+    end
+  end
+
+  __print(str)
+
+end
 
 print = function(...)
 
   local args = {...}
-  local str  = '[^4esx^7]'
+  local str  = ']'
 
   for i=1, #args, 1 do
     str = str .. ' ' .. tostring(args[i])
@@ -132,21 +149,32 @@ end
 
 -- ESX main module
 ESX.Modules['boot'] = {}
-local self              = ESX.Modules['boot']
+local module        = ESX.Modules['boot']
 
 local resName = GetCurrentResourceName()
 local modType = IsDuplicityVersion() and 'server' or 'client'
 
-self.CoreEntries = json.decode(LoadResourceFile(resName, 'modules/__core__/modules.json'))
-self.Entries     = json.decode(LoadResourceFile(resName, 'modules.json'))
+module.GroupNames        = json.decode(LoadResourceFile(resName, 'modules.groups.json'))
+module.Groups            = {}
+module.Entries           = {}
+module.EntriesOrders     = {}
 
-self.CoreOrder   = {}
-self.Order       = {}
+for i=1, #module.GroupNames, 1 do
 
-self.GetModuleEntryPoints = function(name)
+  local groupName        = module.GroupNames[i]
+  local modules          = json.decode(LoadResourceFile(resName, 'modules/__' .. groupName .. '__/modules.json'))
+  module.Groups[groupName] = modules
 
-  local isCore          = self.IsCoreModule(name)
-  local prefix          = isCore and '__core__/' or ''
+  for j=1, #modules, 1 do
+    local modName           = modules[j]
+    module.Entries[modName] = groupName
+  end
+
+end
+
+module.GetModuleEntryPoints = function(name, group)
+
+  local prefix          = '__' .. group .. '__/'
   local shared, current = false, false
 
   if LoadResourceFile(resName, 'modules/' .. prefix .. name .. '/shared/module.lua') ~= nil then
@@ -161,28 +189,20 @@ self.GetModuleEntryPoints = function(name)
 
 end
 
-self.IsCoreModule = function(name)
-  return tableIndexOf(self.CoreEntries, name) ~= -1
+module.IsModuleInGroup = function(name, group)
+  return module.Entries[name] ~= nil
 end
 
-self.IsUserModule = function(name)
-  return tableIndexOf(self.Entries, name) ~= -1
+module.GetModuleGroup = function(name)
+  return module.Entries[name]
 end
 
-self.DoesModuleExist = function(name)
-  return self.IsCoreModule(name) or self.IsUserModule(name)
-end
-
-self.ModuleHasEntryPoint = function(name)
-
-  local isCore          = self.IsCoreModule(name)
-  local shared, current = self.GetModuleEntryPoints(name, isCore)
-
+module.ModuleHasEntryPoint = function(name, group)
+  local shared, current = module.GetModuleEntryPoints(name, group)
   return shared or current
-
 end
 
-self.createModuleEnv = function(name, isCore)
+module.CreateModuleEnv = function(name, group)
 
   local env = {}
 
@@ -190,23 +210,24 @@ self.createModuleEnv = function(name, isCore)
     env[k] = v
   end
 
+  env.__NAME__     = name
+  env.__GROUP__    = group
   env.__RESOURCE__ = resName
-  env.__ISCORE__   = isCore
-  env.__MODULE__   = name
+  env.__DIR__      = 'modules/__' .. group .. '__/' .. name
+  env.run          = function(file, _env) return ESX.EvalFile(env.__RESOURCE__, env.__DIR__ .. '/' .. file, _env) end
   env.module       = {}
-  env.self         = env.module
-  env.M            = self.LoadModule
+  env.M            = module.LoadModule
 
   env.print = function(...)
 
-    local args = {...}
-    local str  = '[^3' .. name .. '^7]'
+    local args   = {...}
+    local str    = '^7/^3' .. name .. '^7]'
 
     for i=1, #args, 1 do
       str = str .. ' ' .. tostring(args[i])
     end
 
-    print(str)
+    _print(str)
 
   end
 
@@ -218,37 +239,39 @@ self.createModuleEnv = function(name, isCore)
 
 end
 
-self.LoadModule = function(name)
-
-  local isCore = self.IsCoreModule(name)
-  local prefix = isCore and '__core__/' or ''
+module.LoadModule = function(name)
 
   if ESX.Modules[name] == nil then
 
-    if not self.DoesModuleExist(name) then
+    local group = module.GetModuleGroup(name)
+
+    if group == nil then
       ESX.LogError('module [' .. name .. '] is not declared in modules.json', '@' .. resName .. ':modules/__core__/__main__/module.lua')
     end
 
-    TriggerEvent('esx:module:load:before', name, isCore)
+    local prefix = '__' .. group .. '__/'
 
-    local menv            = self.createModuleEnv(name, isCore)
-    local shared, current = self.GetModuleEntryPoints(name, isCore)
+    module.EntriesOrders[group] = module.EntriesOrders[group] or {}
 
-    local env, success = nil, true
-    local _env, _success
+    TriggerEvent('esx:module:load:before', name, group)
+
+    local menv            = module.CreateModuleEnv(name, group)
+    local shared, current = module.GetModuleEntryPoints(name, group)
+
+    local env, success, _success = nil, true, false
 
     if shared then
 
       env, _success = ESX.EvalFile(resName, 'modules/' .. prefix .. name .. '/shared/module.lua', menv)
 
       if _success then
-        env, _success = ESX.EvalFile(resName, 'modules/' .. prefix .. name .. '/shared/events.lua', env)
+        env, _success = ESX.EvalFile(resName, 'modules/' .. prefix .. name .. '/shared/events.lua', menv)
       else
         success = false
       end
 
       if _success then
-        env, _success = ESX.EvalFile(resName, 'modules/' .. prefix .. name .. '/shared/main.lua', env)
+        menv, _success = ESX.EvalFile(resName, 'modules/' .. prefix .. name .. '/shared/main.lua', menv)
       else
         success = false
       end
@@ -257,20 +280,16 @@ self.LoadModule = function(name)
 
     if current then
 
-      if env then
-        env, _success = ESX.EvalFile(resName, 'modules/' .. prefix .. name .. '/' .. modType .. '/module.lua', env)
-      else
-        env, _success = ESX.EvalFile(resName, 'modules/' .. prefix .. name .. '/' .. modType .. '/module.lua', menv)
-      end
+      env, _success = ESX.EvalFile(resName, 'modules/' .. prefix .. name .. '/' .. modType .. '/module.lua', menv)
 
       if _success then
-        env, _success = ESX.EvalFile(resName, 'modules/' .. prefix .. name .. '/' .. modType .. '/events.lua', env)
+        env, _success = ESX.EvalFile(resName, 'modules/' .. prefix .. name .. '/' .. modType .. '/events.lua', menv)
       else
         success = false
       end
 
       if _success then
-        env, _success = ESX.EvalFile(resName, 'modules/' .. prefix .. name .. '/' .. modType .. '/main.lua', env)
+        env, _success = ESX.EvalFile(resName, 'modules/' .. prefix .. name .. '/' .. modType .. '/main.lua', menv)
       else
         success = false
       end
@@ -279,20 +298,16 @@ self.LoadModule = function(name)
 
     if success then
 
-      ESX.Modules[name] = env['module']
+      ESX.Modules[name] = menv['module']
 
-      if isCore then
-        self.CoreOrder[#self.CoreOrder + 1] = name
-      else
-        self.Order[#self.Order + 1] = name
-      end
+      module.EntriesOrders[group][#module.EntriesOrders[group] + 1] = name
 
-      TriggerEvent('esx:module:load:done', name, isCore)
+      TriggerEvent('esx:module:load:done', name, group)
 
     else
 
       ESX.LogError('module [' .. name .. '] does not exist', '@' .. resName .. ':modules/__core__/__main__/module.lua')
-      TriggerEvent('esx:module:load:error', name, isCore)
+      TriggerEvent('esx:module:load:error', name, group)
 
       return nil, true
 
@@ -304,4 +319,4 @@ self.LoadModule = function(name)
 
 end
 
-M = self.LoadModule
+M = module.LoadModule

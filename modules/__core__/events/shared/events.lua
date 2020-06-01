@@ -16,12 +16,12 @@ if IsDuplicityVersion() then
 
     local client = source
 
-    if self.requestCallbacks[name] == nil then
+    if module.requestCallbacks[name] == nil then
       print('request callback ^4' .. name .. '^7 does not exist')
       return
     end
 
-    self.requestCallbacks[name](client, function(...)
+    module.requestCallbacks[name](client, function(...)
       emitClient('esx:response', client, id, ...)
     end, ...)
 
@@ -31,9 +31,9 @@ if IsDuplicityVersion() then
 
     local client = source
 
-    if self.callbacks[id] ~= nil then
-      self.callbacks[id](client, ...)
-      self.callbacks[id] = nil
+    if module.callbacks[id] ~= nil then
+      module.callbacks[id](client, ...)
+      module.callbacks[id] = nil
     end
 
   end)
@@ -42,12 +42,12 @@ else
 
   onServer('esx:request', function(name, id, ...)
 
-    if self.requestCallbacks[name] == nil then
+    if module.requestCallbacks[name] == nil then
       print('request callback ^4' .. name .. '^7 does not exist')
       return
     end
 
-    self.requestCallbacks[name](client, function(...)
+    module.requestCallbacks[name](client, function(...)
       emitServer('esx:response', id, ...)
     end, ...)
 
@@ -56,9 +56,9 @@ else
 
   onServer('esx:response', function(id, ...)
 
-    if self.callbacks[id] ~= nil then
-      self.callbacks[id](...)
-      self.callbacks[id] = nil
+    if module.callbacks[id] ~= nil then
+      module.callbacks[id](...)
+      module.callbacks[id] = nil
     end
 
   end)

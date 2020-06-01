@@ -10,10 +10,10 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-self.Id    = 0
-self.Data  = {}
+module.Id    = 0
+module.Data  = {}
 
-self.Cache = {
+module.Cache = {
   player = {
     ped    = 0,
     coords = vector3(0.0, 0.0, 0.0)
@@ -25,21 +25,21 @@ self.Cache = {
   using   = {},
 }
 
-self.Register = function(data)
+module.Register = function(data)
 
   local idx = -1
 
-  for i=1, #self.Data, 1 do
-    if self.Data[i].name == data.name then
+  for i=1, #module.Data, 1 do
+    if module.Data[i].name == data.name then
       idx = i
       break
     end
   end
 
-  if self.Id >= 65535 then
+  if module.Id >= 65535 then
     data.__id = 1
   else
-    data.__id = self.Id + 1
+    data.__id = module.Id + 1
   end
 
   data.size = (type(data.size) == 'number') and {x = data.size, y = data.size, z = data.size} or data.size
@@ -48,12 +48,12 @@ self.Register = function(data)
   if data.bobUpAndDown == nil then data.bobUpAndDown = false end
   if data.rotate       == nil then data.rotate       = false end
 
-  self.Id = data.__id
+  module.Id = data.__id
 
   if idx == -1 then
-    self.Data[#self.Data + 1] = data
+    module.Data[#module.Data + 1] = data
   else
-    self.Data[idx] = data
+    module.Data[idx] = data
   end
 
 end

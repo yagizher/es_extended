@@ -35,11 +35,11 @@ local focusFrame = function(name, cursor)
 	SetNuiFocus(true, cursor)
 end
 
-self.Ready        = false
-self.Frames       = {}
+module.Ready        = false
+module.Frames       = {}
 module.FocusOrder = {}
 
-Frame = Extends(nil)
+Frame = Extends(nil, 'Frame')
 
 Frame.unfocusAll = function()
   module.FocusOrder = {}
@@ -48,19 +48,19 @@ end
 
 function Frame:constructor(name, url, visible)
 
-  self.name      = name
-  self.url       = url
-  self.handlers  = {}
-  self.loaded    = false
+  self.name = name
+  self.url = url
+  self.handlers = {}
+  self.loaded = false
   self.destroyed = false
-  self.hasFocus  = false
+  self.hasFocus = false
   self.hasCursor = false
 
   self:on('load', function()
     self.loaded = true
   end)
 
-  createFrame(name, url, visible)
+  createFrame(self.name, self.url, visible)
 
   module.Frames[self.name] = self
 

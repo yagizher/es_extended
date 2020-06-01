@@ -14,9 +14,9 @@ M('events')
 M('class')
 M('table')
 
-self.Stores = {}
+module.Stores = {}
 
-DataStore = Extends(EventEmitter)
+DataStore = Extends(EventEmitter, 'DataStore')
 
 function DataStore:constructor(name, owner, data)
 
@@ -25,26 +25,26 @@ function DataStore:constructor(name, owner, data)
     return module.Stores[name]
   end
 
-  self.super:constructor()
+  self.super:ctor()
 
   self.ready = false
-  self.name  = name
+  self.name = name
 
   if owner then
-    self.owner  = owner
+    self.owner = owner
     self.shared = true
   else
-    self.owner  = nil
+    self.owner = nil
     self.shared = false
   end
 
-  self.data    = data or {}
+  self.data = data or {}
   self.ensured = false
 
   self:on('ensure', function()
 
     self.ensured = true
-    self.ready   = true
+    self.ready = true
 
     self:emit('ready')
 
@@ -168,7 +168,7 @@ end
 --[[
 on('esx:db:ready', function()
 
-  local ds = DataStore:create('test')
+  local ds = DataStore.new('test')
 
   ds:on('save', function()
     print(ds.name .. ' saved => ' .. json.encode(ds:get()))
@@ -176,7 +176,7 @@ on('esx:db:ready', function()
 
   ds:on('ready', function()
 
-    ds:set('foo', 'bar')
+    ds:self.foo = 'bar'
 
     ds:save(function()
       print('callbacks also')
