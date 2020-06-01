@@ -67,7 +67,9 @@ Player.onJoin = function(source)
 
       else
 
-        Player.ensure('identifier', {
+        Player.ensure({
+          identifier = identifier
+        }, {
           identifier = identifier,
           name       = name,
         }, function(player)

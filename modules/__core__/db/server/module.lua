@@ -515,14 +515,11 @@ end
 module.DBQuery = DBQuery
 
 --[[
-local q1 = DBQuery().select({'field1', 'field2'}).from('thetable').where().equals('test', 'value').build())
-local q2 = DBQuery().insertInto('thetable', {foo = 'bar', baz = 123}).build())
-local q3 = DBQuery().select({'field1', 'field2'}).from('thetable').where({foo = 'bar'}).build()
-]]--
-
+local q1     = DBQuery().select({'field1', 'field2'}).from('thetable').where().equals('test', 'value').build())
+local q2     = DBQuery().insertInto('thetable', {foo = 'bar', baz = 123}).build())
+local q3     = DBQuery().select({'field1', 'field2'}).from('thetable').where({foo = 'bar'}).build()
 local q4, d4 = DBQuery().select({'field1', 'field2'}).from('thetable').where({foo = 'bar', baz = 123}).escape().build()
-
-print(q4, json.encode(d4))
+]]--
 
 module.InitTable = function(name, pk, fields, rows)
 

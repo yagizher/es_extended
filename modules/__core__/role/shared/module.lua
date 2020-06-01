@@ -62,10 +62,9 @@ module.parse = function(name)
 end
 
 --[[
-
 local data = module.parse('job.lspd.boss')
 
--- print(M('utils').table.dump(data))
+print(M('utils').table.dump(data))
 
 for i=1, #data, 1 do
 
@@ -77,16 +76,4 @@ for i=1, #data, 1 do
   end
 
 end
-
-local tpl = {'@test', ' foo ', '@a.b'}
-
-local data = {
-  test = 'this is a test',
-  a    = {
-    b = 'foo'
-  }
-}
-
-
--- print(utils.string.parsetpl(tpl, data))
 ]]--

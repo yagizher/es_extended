@@ -146,6 +146,6 @@ on('esx:db:internal:ready', function()
   end
 
   -- database ready for migrations
-  emit('esx:db:ready')
+  emit('esx:db:init:done')
 
 end)

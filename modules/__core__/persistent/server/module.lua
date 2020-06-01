@@ -125,43 +125,29 @@ Persist = function(schema, pk)
 
   end
 
-  pType.ensure = function(key, data, cb)
+  pType.ensure = function(query, data, cb)
 
-    local id = data[key]
+    pType.findOne(query, function(instance)
 
-    if id == nil then
+      if instance == nil then
 
-      local instance = pType.new(data)
+        local instance = pType.new(data)
 
-      instance:save(function(id)
-        cb(instance)
-      end)
-
-    else
-
-      pType.findOne({[key] = id}, function(instance)
-
-        if instance == nil then
-
-          local instance = pType.new(data)
-
-          instance:save(function(id)
-            cb(instance)
-          end)
-
-        else
-
-          for k,v in pairs(data) do
-            instance[k] = v
-          end
-
+        instance:save(function(id)
           cb(instance)
+        end)
 
+      else
+
+        for k,v in pairs(data) do
+          instance[k] = v
         end
 
-      end)
+        cb(instance)
 
-    end
+      end
+
+    end)
 
   end
 

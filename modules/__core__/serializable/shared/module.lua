@@ -17,6 +17,7 @@ Serializable = Extends(EventEmitter, 'Serializable')
 function Serializable:constructor(data)
 
   self.super:ctor()
+
   self.__ACCESSORS = {}
 
   for k,v in pairs(data) do

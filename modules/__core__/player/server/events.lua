@@ -28,7 +28,7 @@ AddEventHandler('playerDropped', function(reason)
 
     if player.identity ~= nil then
       player.identity:save(function()
-        Identity.all[identity.id] = nil
+        Identity.all[player.identity.id] = nil
       end)
     end
 
