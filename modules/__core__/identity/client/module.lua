@@ -158,7 +158,20 @@ module.EnsureIdentity = function()
 
       if exists then
 
-        module.Init(identityId)
+        local position = identity:getPosition()
+
+        module.DoSpawn({
+
+          x        = position.x,
+          y        = position.y,
+          z        = position.z,
+          heading  = position.heading,
+          model    = 'mp_m_freemode_01',
+          skipFade = false
+
+        }, function()
+          module.Init(identityId)
+        end)
 
       else
 
@@ -172,9 +185,7 @@ module.EnsureIdentity = function()
           skipFade = false
 
         }, function()
-
           module.OpenMenu(module.Init)
-
         end)
 
       end
