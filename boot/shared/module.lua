@@ -221,7 +221,7 @@ module.CreateModuleEnv = function(name, group)
   env.print = function(...)
 
     local args   = {...}
-    local str    = '^7/^3' .. name .. '^7]'
+    local str    = '^7/^5' .. group .. '^7/^3' .. name .. '^7]'
 
     for i=1, #args, 1 do
       str = str .. ' ' .. tostring(args[i])
