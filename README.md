@@ -4,7 +4,7 @@
 
 ### How to run latest ESX
 
-```
+```bash
 # minimum resources and config to get it working
 
 set mysql_connection_string "mysql://john:smith@localhost/es_extended?charset=utf8mb4"
@@ -19,11 +19,15 @@ ensure hardcap
 ensure rconlog
 ensure baseevents
 
+ensure yarn
+
 ensure mysql-async
 ensure cron
-ensure skinchanger
 
-ensure es_extended
+ensure es_extended # Will now auto-generate fxmanifest.lua to prevent platform-dependant behavior, will prompt you to type ensure es_extended in console when fxmanifest has changed. To save some typing, uncomment below lines
+
+# stop es_extended
+# start es_extended
 ```
 
 
