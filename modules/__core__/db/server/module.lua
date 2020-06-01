@@ -309,7 +309,15 @@ local DBQuery = function()
     end
 
     if type(value) == 'string' then
-      return '\'' .. value .. '\''
+
+      if value == 'NULL' then
+        return 'NULL'
+      elseif value == 'UUID()' then
+        return 'UUID()'
+      else
+        return '\'' .. value .. '\''
+      end
+      
     else
       return tostring(value)
     end
