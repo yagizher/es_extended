@@ -295,7 +295,7 @@ end
 
 module.DBTable = DBTable
 
-function DBQuery()
+local DBQuery = function()
 
   local self    = {}
   self.handlers = {}
@@ -326,7 +326,7 @@ function DBQuery()
 
     if type(proc.what) == 'table' then
 
-      sub = '('
+      sub = ''
 
       for i=1, #proc.what, 1 do
 
@@ -340,7 +340,7 @@ function DBQuery()
 
       end
 
-      sub = sub .. ')'
+      sub = sub
 
     else
       sub = proc.what
@@ -354,14 +354,41 @@ function DBQuery()
     return 'FROM ' .. handleField(proc.schema)
   end
 
-  self.handlers.where = function(proc)
+  self.handlers.where = function(proc, data)
 
     local sub = ''
 
     if proc.mode == 'raw' then
+
       sub = sub .. proc.raw
+
+    elseif proc.mode == 'kvp' then
+
+      local first = true
+
+      for k,v in pairs(proc.data) do
+
+        local name
+
+        if data ~= nil then
+          name           = k
+          data['@' .. k] = v
+        end
+
+        if first then
+          first = false
+        else
+          sub = sub .. ' AND '
+        end
+
+        sub = sub .. handleField(k) .. ' = ' .. handleValue(v, name)
+
+      end
+
     elseif proc.mode == 'equals' then
-      sub = sub .. handleField(proc.field) .. ' = ' .. handleValue(proc.value)
+
+      sub = sub .. handleField(proc.field) .. ' = ' .. handleValue(proc.value, name)
+
     end
 
     return 'WHERE ' .. sub
@@ -396,11 +423,23 @@ function DBQuery()
 
   end
 
+  self.handlers.limit = function(count1, count2)
+
+    if count2 == nil then
+      return 'LIMIT ' .. count1
+    else
+      return 'LIMIT ' .. count1 .. ',' .. count2
+    end
+
+  end
+
   self.build = function()
 
-    local sql = ''
+    local data = self.flags.escape and {} or nil
+    local sql  = ''
 
     for i=1, #self.procs, 1 do
+
       local proc = self.procs[i]
 
       if i > 1 then
@@ -408,11 +447,12 @@ function DBQuery()
       end
 
       sql = sql .. self.handlers[proc.type](proc, data)
+
     end
 
     sql = sql .. ';'
 
-    return sql
+    return sql, data
 
   end
 
@@ -438,10 +478,13 @@ function DBQuery()
     return self
   end
 
-  self.where = function(raw)
+  self.where = function(what)
 
-    if type(raw) == 'string' then
+    if type(what) == 'string' then
       self.procs[#self.procs + 1] = {type = 'where', mode = 'raw', raw = raw}
+      return self
+    elseif type(what) == 'table' then
+      self.procs[#self.procs + 1] = {type = 'where', mode = 'kvp', data = what}
       return self
     end
 
@@ -461,6 +504,10 @@ function DBQuery()
     return self
   end
 
+  self.limit = function(count)
+    self.procs[#self.procs + 1] = {type = 'limit', count = count}
+  end
+
   return self
 
 end
@@ -470,7 +517,12 @@ module.DBQuery = DBQuery
 --[[
 local q1 = DBQuery().select({'field1', 'field2'}).from('thetable').where().equals('test', 'value').build())
 local q2 = DBQuery().insertInto('thetable', {foo = 'bar', baz = 123}).build())
+local q3 = DBQuery().select({'field1', 'field2'}).from('thetable').where({foo = 'bar'}).build()
 ]]--
+
+local q4, d4 = DBQuery().select({'field1', 'field2'}).from('thetable').where({foo = 'bar', baz = 123}).escape().build()
+
+print(q4, json.encode(d4))
 
 module.InitTable = function(name, pk, fields, rows)
 

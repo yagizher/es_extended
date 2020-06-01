@@ -10,7 +10,8 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-M('db')
+local db = M('db')
+
 M('serializable')
 M('table')
 
@@ -53,27 +54,22 @@ Persist = function(schema, pk)
     end
   end
 
-  pType.findOne = function(key, value, cb)
+  pType.findOne = function(query, cb)
 
-    local keys  = ''
-    local count = 0
+    local queryFields = {}
+    local keys        = {}
 
     for k,v in pairs(fields) do
-
-      local backticked = '`' .. v.data.name .. '`'
-
-      if count > 0 then
-        keys   = keys   .. ', '
-      end
-
-      keys  = keys   .. backticked
-      count = count + 1
-
+      keys[#keys + 1] = v.data.name
     end
 
-    local sql = 'SELECT ' .. keys .. ' FROM `' .. schema .. '` WHERE `' .. fields[key].data.name .. '` = @value LIMIT 1'
+    for k,v in pairs(query) do
+      queryFields[fields[k].data.name] = v
+    end
 
-    MySQL.Async.fetchAll(sql, {['@value'] = value}, function(rows)
+    local sql, data = db.DBQuery().select(keys).from(schema).where(queryFields).escape().build()
+
+    MySQL.Async.fetchAll(sql, data, function(rows)
 
       if rows[1] == nil then
         cb(nil)
@@ -94,25 +90,21 @@ Persist = function(schema, pk)
 
   end
 
-  pType.find = function(key, value, cb)
+  pType.find = function(query, cb)
 
-    local keys  = ''
-    local count = 0
+    local queryFields = {}
+    local keys        = {}
 
     for k,v in pairs(fields) do
-
-      local backticked = '`' .. v.data.name .. '`'
-
-      if count > 0 then
-        keys   = keys   .. ', '
-      end
-
-      keys  = keys   .. backticked
-      count = count + 1
-
+      keys[#keys + 1] = v.data.name
     end
 
-    local sql = 'SELECT ' .. keys .. ' FROM `' .. schema .. '` WHERE `' .. fields[key].data.name .. '` = @value'
+    for k,v in pairs(query) do
+      queryFields[fields[k].data.name] = v
+    end
+
+    local keys      = table.map(fields, function(e) return e.data.name end)
+    local sql, data = db.DBQuery().select(keys).from(schema).where(queryFields).escape().build()
 
     MySQL.Async.fetchAll(sql, {['@value'] = value}, function(rows)
 
@@ -147,7 +139,7 @@ Persist = function(schema, pk)
 
     else
 
-      pType.findOne(key, id, function(instance)
+      pType.findOne({[key] = id}, function(instance)
 
         if instance == nil then
 

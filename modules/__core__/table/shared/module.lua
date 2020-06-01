@@ -271,3 +271,27 @@ table.set = function(t, path, v)
   end
 
 end
+
+table.keys = function(t)
+
+  local keys = {}
+
+  for k,v in pairs(t) do
+    keys[#keys + 1] = k
+  end
+
+  return keys
+
+end
+
+table.values = function(t)
+
+  local values = {}
+
+  for k,v in pairs(t) do
+    values[#values + 1] = v
+  end
+
+  return values
+
+end

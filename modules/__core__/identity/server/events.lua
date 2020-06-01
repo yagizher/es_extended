@@ -46,7 +46,7 @@ onRequest('esx:cache:identity:get', function(source, cb, id)
 
   else
 
-    Identity.findOne('id', id, function(instance)
+    Identity.findOne({id = id}, function(instance)
 
       if instance == nil then
         cb(false, nil)
