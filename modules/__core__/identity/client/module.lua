@@ -48,11 +48,11 @@ module.OpenMenu = function(cb)
     float = "center|middle",
     title = "Create Character",
     items = {
-      {name = "firstName", label = "First name", type = "text", placeholder = "John"},
-      {name = "lastName", label = "Last name", type = "text", placeholder = "Smith"},
-      {name = "dob", label = "Date of birth", type = "text", placeholder = "01/02/1234"},
-      {name = "isMale", label = "Male", type = "check", value = true},
-      {name = "submit", label = "Submit", type = "button"}
+      {name = "firstName", label = "First name",    type = "text", placeholder = "John"},
+      {name = "lastName",  label = "Last name",     type = "text", placeholder = "Smith"},
+      {name = "dob",       label = "Date of birth", type = "text", placeholder = "01/02/1234"},
+      {name = "isMale",    label = "Male",          type = "check", value = true},
+      {name = "submit",    label = "Submit",        type = "button"}
     }
   })
 

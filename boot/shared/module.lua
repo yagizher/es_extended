@@ -154,7 +154,7 @@ local module        = ESX.Modules['boot']
 local resName = GetCurrentResourceName()
 local modType = IsDuplicityVersion() and 'server' or 'client'
 
-module.GroupNames        = json.decode(LoadResourceFile(resName, 'modules.groups.json'))
+module.GroupNames        = json.decode(LoadResourceFile(resName, 'config/modules.groups.json'))
 module.Groups            = {}
 module.Entries           = {}
 module.EntriesOrders     = {}
@@ -316,6 +316,35 @@ module.LoadModule = function(name)
   end
 
   return ESX.Modules[name], false
+
+end
+
+module.Boot = function()
+
+  for i=1, #module.GroupNames, 1 do
+
+    local groupName = module.GroupNames[i]
+    local group     = module.Groups[groupName]
+
+    for j=1, #group, 1 do
+
+      local name = group[j]
+
+      if module.ModuleHasEntryPoint(name, groupName) then
+        M(name, groupName)
+      end
+
+    end
+
+  end
+
+  on('esx:ready', function()
+    print('^2ready')
+  end)
+
+  ESX.Loaded = true
+
+  emit('esx:load')
 
 end
 

@@ -10,12 +10,16 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-local self = ESX.Modules['boot']
+local module = ESX.Modules['boot']
 
 -- Need a bit of core modules here
 M('events')
 local Menu = M('ui.menu')
 local HUD  = M('game.hud')
+
+on('esx:ready', function()
+  AddTextEntry('FE_THDR_GTAO', 'ESX')
+end)
 
 onServer('esx:setMaxWeight', function(newMaxWeight) ESX.PlayerData.maxWeight = newMaxWeight end)
 

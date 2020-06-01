@@ -106,7 +106,7 @@ Persist = function(schema, pk)
     local keys      = table.map(fields, function(e) return e.data.name end)
     local sql, data = db.DBQuery().select(keys).from(schema).where(queryFields).escape().build()
 
-    MySQL.Async.fetchAll(sql, {['@value'] = value}, function(rows)
+    MySQL.Async.fetchAll(sql, data, function(rows)
 
       cb(table.map(rows, function(e)
 

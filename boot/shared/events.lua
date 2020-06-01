@@ -10,7 +10,9 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-local self = ESX.Modules['boot']
+local module = ESX.Modules['boot']
+
+AddEventHandler('esx:manifest:check:pass', module.Boot)
 
 AddEventHandler('esx:module:load:before', function(name, group)
   local str = string.format('^7/^5%s^7/^3%s^7] start', group, name)
@@ -41,3 +43,4 @@ AddEventHandler('luaconsole:getHandlers', function(cb)
   end)
 
 end)
+

@@ -22,8 +22,10 @@
     "url": "https://github.com/ESX-Org/es_extended/issues"
   },
   "homepage": "https://github.com/ESX-Org/es_extended#readme",
-  "devDependencies": {
-    "@prettier/plugin-lua": "git+https://github.com/indilo53/plugin-lua.git",
-    "prettier": "2.0.5"
+  "devDependencies": {},
+  "dependencies": {
+    "fengari": "^0.1.4",
+    "fengari-interop": "^0.1.2",
+    "glob": "^7.1.6"
   }
 }

@@ -17,6 +17,7 @@ M('table')
 module.debug = {
   extends = false,
   ctor    = false,
+  dtor    = false,
   set     = false,
   chain   = false
 }
@@ -151,7 +152,11 @@ Extends = function(baseType, debugName)
 
     end
 
-    this = setmetatable(data, {__index = __index, __newindex = __newindex})
+    local __gc = function(t)
+      t:dtor()
+    end
+
+    this = setmetatable(data, {__index = __index, __newindex = __newindex, __gc = __gc})
 
     pushchain(this)
 
@@ -162,7 +167,7 @@ Extends = function(baseType, debugName)
   function newType:ctor(...)
 
     if module.debug.ctor then
-      newType.tracemethod(self, 'ctor', ...)
+      newType:tracemethod('ctor', ...)
     end
 
     newType.init(self):constructor(...)
@@ -171,9 +176,29 @@ Extends = function(baseType, debugName)
 
   end
 
+  function newType:dtor()
+
+    if module.debug.dtor then
+      newType:tracemethod('dtor')
+    end
+
+    self:destructor()
+
+    for k,v in pairs(self) do
+      self[k] = nil
+    end
+
+  end
+
   function newType:constructor(...)
     if self.super ~= nil then
       self.super:ctor(...)
+    end
+  end
+
+  function newType:destructor()
+    if self.super ~= nil then
+      self.super:dtor()
     end
   end
 
@@ -210,7 +235,15 @@ Extends = function(baseType, debugName)
         str = str .. ', '
       end
 
-      str = str .. '^2' .. type(arg) .. '^7'
+      local escaped
+
+      if type(arg) == 'string' then
+        escaped = '\'' .. tostring(arg) .. '\''
+      else
+        escaped = tostring(arg)
+      end
+
+      str = str .. '^2' .. escaped .. '^7'
 
     end
 
