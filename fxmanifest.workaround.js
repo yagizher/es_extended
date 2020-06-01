@@ -13,7 +13,7 @@
 const fs   = require('fs');
 const glob = require('glob');
 
-const cwd = process.cwd()
+const cwd = process.cwd();
 
 // CHANGE ME IF NEEDED
 const RESOURCE_PATH = 'resources';
@@ -21,7 +21,7 @@ const RESOURCE_NAME = 'es_extended';
 
 // DON'T TOUCH BELOW
 const root         = path.resolve(path.join(cwd, RESOURCE_PATH)).replace('\\', '/');
-const files        = glob.sync('**/*/' + RESOURCE_NAME + '/fxmanifest*.lua', {cwd: root});
+const files        = glob.sync('**/' + RESOURCE_NAME + '/fxmanifest*.lua', {cwd: root, nodir: true});
 const MANIFEST     = path.resolve(path.join(root, files.find(e => e.endsWith('fxmanifest.lua'))));
 const MANIFEST_TPL = path.resolve(path.join(root, files.find(e => e.endsWith('fxmanifest.tpl.lua'))));
 const ESX_DIR      = path.dirname(MANIFEST);
@@ -185,7 +185,7 @@ const buildManifest = function(data) {
 }
 
 const expand = function(entry) {
-  return glob.sync(entry, {cwd: ESX_DIR});
+  return glob.sync(entry, {cwd: ESX_DIR, nodir: true});
 }
 
 const init = () => {
@@ -227,7 +227,7 @@ const init = () => {
 
     process.nextTick(() => {
       emit('esx:manifest:check:pass');
-    })
+    });
 
   } else {
 

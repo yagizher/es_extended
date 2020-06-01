@@ -284,30 +284,7 @@ files {
 
 server_scripts {
   'fxmanifest.workaround.js',
-  '@async/async.lua',
-  '@mysql-async/lib/MySQL.lua',
-  'locale.lua',
-  'locales/br.lua',
-  'locales/cs.lua',
-  'locales/de.lua',
-  'locales/en.lua',
-  'locales/es.lua',
-  'locales/fi.lua',
-  'locales/fr.lua',
-  'locales/pl.lua',
-  'locales/sc.lua',
-  'locales/sv.lua',
-  'locales/tc.lua',
-  'config/default/config.lua',
-  'config/default/config.items.lua',
-  'config/default/config.roles.lua',
-  'config/default/config.weapons.lua',
-  'boot/shared/module.lua',
-  'boot/server/module.lua',
-  'boot/shared/events.lua',
-  'boot/server/events.lua',
-  'boot/shared/main.lua',
-  'boot/server/main.lua'
+  '@async/async.lua'
 }
 
 client_scripts {
