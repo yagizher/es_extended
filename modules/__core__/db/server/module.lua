@@ -283,7 +283,7 @@ function DBField:sqlCompat()
       if self.default == 'NULL' then
         sql = sql .. 'NULL'
       elseif self.default == 'UUID()' then
-        sql = sql .. 'UUID()'
+        sql = sql .. '(UUID())'
       else
         sql = sql .. '\'' .. self.default .. '\''
       end
