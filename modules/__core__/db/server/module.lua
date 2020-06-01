@@ -295,6 +295,183 @@ end
 
 module.DBTable = DBTable
 
+function DBQuery()
+
+  local self    = {}
+  self.handlers = {}
+  self.procs    = {}
+  self.flags    = { escape = false }
+
+  local handleValue = function(value, name)
+
+    if self.flags.escape and (name ~= nil) then
+      return '@' .. tostring(name)
+    end
+
+    if type(value) == 'string' then
+      return '\'' .. value .. '\''
+    else
+      return tostring(value)
+    end
+
+  end
+
+  local handleField = function(name)
+    return '`' .. name .. '`'
+  end
+
+  self.handlers.select = function(proc)
+
+    local sub = ''
+
+    if type(proc.what) == 'table' then
+
+      sub = '('
+
+      for i=1, #proc.what, 1 do
+
+        local what = handleField(proc.what[i])
+
+        if i > 1 then
+          sub = sub .. ', '
+        end
+
+        sub = sub .. what
+
+      end
+
+      sub = sub .. ')'
+
+    else
+      sub = proc.what
+    end
+
+    return 'SELECT ' .. sub
+
+  end
+
+  self.handlers.from = function(proc)
+    return 'FROM ' .. handleField(proc.schema)
+  end
+
+  self.handlers.where = function(proc)
+
+    local sub = ''
+
+    if proc.mode == 'raw' then
+      sub = sub .. proc.raw
+    elseif proc.mode == 'equals' then
+      sub = sub .. handleField(proc.field) .. ' = ' .. handleValue(proc.value)
+    end
+
+    return 'WHERE ' .. sub
+
+  end
+
+  self.handlers.insert = function(proc)
+
+    local fields = '('
+    local values = '('
+    local first  = true
+
+
+    for k,v in pairs(proc.data) do
+
+      if first then
+        first = false
+      else
+        fields = fields .. ', '
+        values = values .. ', '
+      end
+
+      fields = fields .. handleField(k)
+      values = values .. handleValue(v)
+
+    end
+
+    fields = fields .. ')'
+    values = values .. ')'
+
+    return 'INSERT INTO ' .. handleField(proc.schema) .. ' ' .. fields .. ' VALUES ' .. values
+
+  end
+
+  self.build = function()
+
+    local sql = ''
+
+    for i=1, #self.procs, 1 do
+      local proc = self.procs[i]
+
+      if i > 1 then
+        sql = sql .. ' '
+      end
+
+      sql = sql .. self.handlers[proc.type](proc, data)
+    end
+
+    sql = sql .. ';'
+
+    return sql
+
+  end
+
+  self.escape = function(enabled)
+
+    if enabled == nil then
+      enabled = true
+    end
+
+    self.flags.escape = enabled
+
+    return self
+
+  end
+
+  self.select = function(what)
+    self.procs[#self.procs + 1] = {type = 'select', what = what}
+    return self
+  end
+
+  self.from = function(schema)
+    self.procs[#self.procs + 1] = {type = 'from', schema = schema}
+    return self
+  end
+
+  self.where = function(raw)
+
+    if type(raw) == 'string' then
+      self.procs[#self.procs + 1] = {type = 'where', mode = 'raw', raw = raw}
+      return self
+    end
+
+    local whereSelf = {}
+
+    whereSelf.equals = function(field, value)
+      self.procs[#self.procs + 1] = {type = 'where', mode = 'equals', field = field, value = value}
+      return self
+    end
+
+    return whereSelf
+
+  end
+
+  self.insertInto = function(schema, data)
+    self.procs[#self.procs + 1] = {type = 'insert', schema = schema, data = data}
+    return self
+  end
+
+  return self
+
+end
+
+module.DBQuery = DBQuery
+
+--[[
+local q1 = DBQuery().select({'field1', 'field2'}).from('thetable').where().equals('test', 'value').build())
+local q2 = DBQuery().insertInto('thetable', {foo = 'bar', baz = 123}).build())
+]]--
+
 module.InitTable = function(name, pk, fields, rows)
 
   rows      = rows or {}
