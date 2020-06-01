@@ -61,7 +61,7 @@ ensure es_extended # Will now auto-generate fxmanifest.lua to prevent platform-d
 
 M('ui.menu') -- This module provides global Menu factory method
 
-local menu = Menu.new('test', {
+local menu = Menu('test', {
   title = 'Test menu',
   float = 'top|left',
   items = {
@@ -110,7 +110,7 @@ M('datastore')
 
 on('esx:db:ready', function()
 
-  local ds = DataStore.new('test', true, {sample = 'data'}) -- name, shared, initial data
+  local ds = DataStore('test', true, {sample = 'data'}) -- name, shared, initial data
 
   ds:on('save', function()
     print(ds.name .. ' saved => ' .. json.encode(ds:get()))

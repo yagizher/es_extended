@@ -27,7 +27,8 @@ local chain = {}
 Extends = function(baseType, debugName)
 
   debugName     = debugName or '<anonymous>'
-  local newType = setmetatable({super = baseType}, {__index = baseType})
+  local mt      = {__index = baseType}
+  local newType = setmetatable({super = baseType}, mt)
 
   local chainLength = 0
 
@@ -261,6 +262,10 @@ Extends = function(baseType, debugName)
 
   if module.debug.extends then
     print('^4' .. newType:typename() .. '^1 extends ^4' .. (baseType and baseType:typename() or 'nil'))
+  end
+
+  mt.__call = function(t, ...)
+    return newType.new(...)
   end
 
   return newType

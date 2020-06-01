@@ -64,7 +64,7 @@ end
 --[[
 on('esx:db:ready', function()
 
-  local account = Account.new({
+  local account = Account({
     name  = 'test',
     money = 0,
   })

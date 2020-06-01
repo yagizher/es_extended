@@ -31,12 +31,12 @@ IdentityCacheConsumer = Extends(CacheConsumer, 'IdentityCacheConsumer')
 function IdentityCacheConsumer:provide(key, cb)
 
   request('esx:cache:identity:get', function(exists, data)
-    cb(exists, exists and Identity.new(data) or nil)
+    cb(exists, exists and Identity(data) or nil)
   end, key)
 
 end
 
-Cache.identity = IdentityCacheConsumer.new()
+Cache.identity = IdentityCacheConsumer()
 
 module.Menu = nil
 
@@ -44,7 +44,7 @@ module.OpenMenu = function(cb)
 
   utils.ui.showNotification(_U('identity_register'))
 
-  module.Menu = Menu.new("identity", {
+  module.Menu = Menu("identity", {
     float = "center|middle",
     title = "Create Character",
     items = {

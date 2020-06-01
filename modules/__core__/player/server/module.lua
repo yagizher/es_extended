@@ -94,7 +94,7 @@ Player.onJoin = function(source)
 
 end
 
-local p = Player.new({})
+local p = Player({})
 
 p = nil
 

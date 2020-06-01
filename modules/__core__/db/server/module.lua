@@ -403,7 +403,7 @@ function DBTable:constructor(name, pk)
 end
 
 function DBTable:field(name, _type, length, default, extra)
-  self.fields[#self.fields + 1] = DBField.new(name, _type, length, default, extra)
+  self.fields[#self.fields + 1] = DBField(name, _type, length, default, extra)
 end
 
 function DBTable:row(data)
@@ -539,7 +539,7 @@ module.DBTable = DBTable
 module.InitTable = function(name, pk, fields, rows)
 
   rows      = rows or {}
-  local tbl = DBTable.new(name, pk)
+  local tbl = DBTable(name, pk)
 
   for i=1, #fields, 1 do
     local field = fields[i]

@@ -181,7 +181,7 @@ module.OpenMenu = function(submitCb, cancelCb, restrict)
 
 	function createMainMenu()
 		local menu =
-			Menu.new(
+			Menu(
 			"principalmenu",
 			{
 				title = _U("skin:skin_menu"),
@@ -230,7 +230,7 @@ module.OpenMenu = function(submitCb, cancelCb, restrict)
 
 	function createBodySubmenu()
 		local menu =
-			Menu.new(
+			Menu(
 			"bodymenu",
 			{
 				title = "Body",
@@ -263,7 +263,7 @@ module.OpenMenu = function(submitCb, cancelCb, restrict)
 
 	function createClothesSubmenu()
 		local menu =
-			Menu.new(
+			Menu(
 			"bodymenu",
 			{
 				title = "Clothes",

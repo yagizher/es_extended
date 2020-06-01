@@ -82,7 +82,7 @@ Persist = function(schema, pk)
           data[k] = v.decode(row[v.data.name])
         end
 
-        cb(pType.new(data))
+        cb(pType(data))
 
       end
 
@@ -117,7 +117,7 @@ Persist = function(schema, pk)
           data[k] = v.decode(row[v.data.name])
         end
 
-        return pType.new(data)
+        return pType(data)
 
       end))
 
@@ -131,7 +131,7 @@ Persist = function(schema, pk)
 
       if instance == nil then
 
-        local instance = pType.new(data)
+        local instance = pType(data)
 
         instance:save(function(id)
           cb(instance)

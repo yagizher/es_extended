@@ -14,7 +14,7 @@ onRequest('esx:identity:register', function(source, cb, data)
 
   local player = Player.fromId(source)
 
-  local identity = Identity.new({
+  local identity = Identity({
     owner     = player.identifier,
     firstName = data.firstName,
     lastName  = data.lastName,

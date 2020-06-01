@@ -31,11 +31,11 @@ PlayerCacheConsumer = Extends(CacheConsumer)
 function PlayerCacheConsumer:provide(key, cb)
 
   request('esx:cache:player:get', function(exists, data)
-    cb(exists, exists and Player.new(data) or nil)
+    cb(exists, exists and Player(data) or nil)
   end, key)
 
 end
 
-Cache.player = PlayerCacheConsumer.new()
+Cache.player = PlayerCacheConsumer()
 
 
