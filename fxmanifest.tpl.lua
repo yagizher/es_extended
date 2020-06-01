@@ -32,10 +32,11 @@ files {
   'data/**/*',
   'hud/**/*',
 
-  'config/**/*.json',
-  'modules/**/modules.json',
-  'modules/**/data/**/*',
-  'modules/**/*.lua',
+  'config/*/*.json',
+  'modules/*/*/modules.json',
+  'modules/*/*/data/**/*',
+  'modules/*/*/shared/*.lua',
+  'modules/*/*/client/*.lua',
 
 }
 
