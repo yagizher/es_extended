@@ -18,6 +18,7 @@ ui_page         'hud/index.html'
 ui_page_preload 'yes'
 
 dependencies {
+  'yarn',
   'spawnmanager',
   'baseevents',
   'mysql-async',
