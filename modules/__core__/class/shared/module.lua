@@ -15,9 +15,9 @@
 M('table')
 
 module.debug = {
-  extends = true,
+  extends = false,
   ctor    = true,
-  dtor    = true,
+  dtor    = false,
   set     = false,
   chain   = false
 }
@@ -278,23 +278,24 @@ Mixin = function(...)
   local mt        = {}
   local newType   = setmetatable({}, mt)
 
+  local startIndex = 1
+
   if type(args[1]) == 'string' then
+    debugName  = args[1]
+    startIndex = 2
+  end
 
-    debugName = args[1]
+  for i=startIndex, #args, 1 do
 
-    for i=2, #args, 1 do
+    local arg = args[i]
 
-      local arg = args[i]
-
-      if i == 2 then
-        arg = setmetatable(args[i], {__index = newType})
-      else
-        arg = setmetatable(args[i], {__index = args[i - 1]})
-      end
-
-      types[#types + 1] = arg
-
+    if i == 2 then
+      arg = setmetatable(args[i], {__index = newType})
+    else
+      arg = setmetatable(args[i], {__index = args[i - 1]})
     end
+
+    types[#types + 1] = arg
 
   end
 
@@ -305,28 +306,50 @@ Mixin = function(...)
 
     for i=#types, 1, -1 do
 
-      local next
-
       if i == #types then
-        next = types[i].new()
+        local next = types[i].new()
         prev = next
       elseif i == 1 then
-        next       = types[i].new(...)
-        local wrap = setmetatable(next, {__index = prev})
-        prev       = next
-      else
-        next       = types[i].new()
-        local wrap = setmetatable(next, {__index = prev})
-        prev       = next
-      end
 
-      if i == 1 then
-        self = next
+        local cprev = prev
+        local next  = types[i].new(...)
+
+        local wrap = setmetatable({}, {
+          __index = function(t, k)
+            if next[k] ~= nil then
+              return next[k]
+            end
+            if cprev[k] ~= nil then
+              return cprev[k]
+            end
+          end
+        })
+
+        prev = wrap
+
+      else
+
+        local cprev = prev
+        local next  = types[i].new()
+
+        local wrap = setmetatable({}, {
+          __index = function(t, k)
+            if next[k] ~= nil then
+              return next[k]
+            end
+            if cprev[k] ~= nil then
+              return cprev[k]
+            end
+          end
+        })
+
+        prev = wrap
+
       end
 
     end
 
-    print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@', self)
+    self = prev
 
     return self
 

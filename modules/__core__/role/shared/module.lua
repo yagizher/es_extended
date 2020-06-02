@@ -10,6 +10,8 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
+M('class')
+M('events')
 M('string')
 
 local utils = M('utils')
@@ -58,6 +60,54 @@ module.parse = function(name)
   end
 
   return data
+
+end
+
+Enrolable = Extends(EventEmitter, 'Enrolable')
+
+function Enrolable:constructor()
+  self.roles = {}
+end
+
+function Enrolable.parseRole(name)
+  return module.parse(name)
+end
+
+function Enrolable:hasRole(name)
+  return table.indexOf(self.roles, name) ~= -1
+end
+
+function Enrolable:addRole(name)
+
+  if not self:hasRole(name) then
+    self.roles[#self.roles + 1] = name
+    self:emit('role.add', name)
+  end
+
+end
+
+function Enrolable:removeRole(name)
+
+  local newRoles = {}
+  local found    = false
+
+  for i=1, #self.roles, 1 do
+
+    local role = self.roles[i]
+
+    if role == name then
+      found = true
+    else
+      newRoles[#newRoles + 1] = role
+    end
+
+  end
+
+  self.roles = newRoles
+
+  if found then
+    self:emit('role.remove', name)
+  end
 
 end
 
