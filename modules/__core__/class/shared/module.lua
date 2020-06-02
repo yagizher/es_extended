@@ -16,7 +16,7 @@ M('table')
 
 module.debug = {
   extends = false,
-  ctor    = true,
+  ctor    = false,
   dtor    = false,
   set     = false,
   chain   = false
