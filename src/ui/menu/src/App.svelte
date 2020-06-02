@@ -71,7 +71,7 @@
           },
 
           set: (obj, prop, val) => {
-            items[i][prop] = val;
+            items[i][prop] = val; // not obj[prop] because svelte will not undertstand if have to re-render
             window.parent.postMessage({action: 'item.change', index: i, prop, val}, '*');
             return true;
           },
