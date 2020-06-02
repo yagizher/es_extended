@@ -2,7 +2,27 @@
 
 ### Sill looking for old version ? => https://github.com/ESX-Org/es_extended/tree/v1-final
 
-### How to run latest ESX
+# Table of Contents
+
+1. [Installation](#install)
+2. [Changelog](#changelog)
+3. [Code examples](#examples)
+   1. [Menu](#examples-menu)
+   2. [Datastore](#examples-datastore)
+   3. [Declarative Table Schemas](#examples-declarative-schema)
+   4. [Programmatically Extend xPlayer methods](#examples-extend-xplayer)
+
+## Installation <a name="install"></a>
+
+### Requirements :
+
+- An installed MariaDB server (MySQL not supported for now).
+- [Async script by ESX-Org](https://github.com/ESX-Org/async)
+- [Cron script by ESX-Org](https://github.com/ESX-Org/cron)
+- [SkinChanger script by ESX-Org](https://github.com/ESX-Org/skinchanger)
+- [MySQL-Async by brouznouf](https://github.com/brouznouf/fivem-mysql-async)
+
+### Server.cfg sample
 
 ```bash
 # minimum resources and config to get it working
@@ -30,9 +50,7 @@ ensure es_extended # Will now auto-generate fxmanifest.lua to prevent platform-d
 # start es_extended
 ```
 
-
-
-### Changelog
+## Changelog <a name="changelog"></a>
 
 ```
 - Switched to a module-based single resource for ease of use and performance
@@ -53,8 +71,9 @@ ensure es_extended # Will now auto-generate fxmanifest.lua to prevent platform-d
 - WIP rewrite of well-known datastore / inventory / account stuff
 ```
 
-### Code examples
+## Code examples <a name="examples"></a>
 
+### How to create and use menus <a name="examples-menu"></a>
 
 ```lua
 -- Menu
@@ -100,8 +119,9 @@ menu:on('item.click', function(item, index)
 end)
 ```
 
-
 ![Menu](https://cdn.discordapp.com/attachments/711547420479193088/714823698061721630/unknown.png)
+
+### How to store/retrieve datas <a name="examples-datastore"></a>
 
 ```lua
 -- DataStore
@@ -129,6 +149,8 @@ on('esx:db:ready', function()
 end)
 ```
 
+### Table schema declarations <a name="examples-declarative-schema"></a>
+
 ```lua
 -- Here is how datastore schema is declared, no need to feed some SQL file
 
@@ -144,6 +166,8 @@ on('esx:db:init', function(initTable, extendTable)
 
 end)
 ```
+
+### Extending xPlayer method programmatically <a name="examples-extend-xplayer"></a>
 
 ```lua
 -- Want to create faction system ?
