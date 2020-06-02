@@ -15,7 +15,7 @@ M('persistent')
 
 local spawn = {x = -269.4, y = -955.3, z = 31.2, heading = 205.8}
 
-Identity = Persist('identities', 'id')
+Identity = Persist('identities', 'id', Enrolable)
 
 Identity.define({
   {name = 'id',         field = {name = 'id',         type = 'INT',        length = nil, default = nil,                extra = 'NOT NULL AUTO_INCREMENT'}},
@@ -26,7 +26,7 @@ Identity.define({
   {name = 'lastName',   field = {name = 'last_name',  type = 'VARCHAR',    length = 32,  default = 'NULL',             extra = nil}},
   {name = 'DOB',        field = {name = 'dob',        type = 'VARCHAR',    length = 10,  default = 'NULL',             extra = nil}},
   {name = 'isMale',     field = {name = 'is_male',    type = 'INT',        length = nil, default = 1,                  extra = nil}},
-  {name = 'roles',      field = {name = 'roles',      type = 'MEDIUMTEXT', length = nil, default = '[]',               extra = nil}},
+  {name = 'roles',      field = {name = 'roles',      type = 'MEDIUMTEXT', length = nil, default = '[]',               extra = nil}, encode = json.encode, decode = json.decode},
 })
 
 Identity.all = setmetatable({}, {

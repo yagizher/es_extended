@@ -314,70 +314,85 @@ Mixin = function(...)
   function newType.new(...)
 
     local self
-    local prev
+    local before
 
     for i=#types, 1, -1 do
 
       if i == #types then
-        local next = types[i].new()
-        prev = next
+        local after = types[i].new()
+        before = after
       elseif i == 1 then
 
-        local cprev = prev
-        local next  = types[i].new(...)
+        local cbefore = before
+        local after  = types[i].new(...)
 
         local wrap = setmetatable({}, {
           __index = function(t, k)
-            if next[k] ~= nil then
-              return next[k]
+
+            if after[k] ~= nil then
+              return after[k]
             end
-            if cprev[k] ~= nil then
-              return cprev[k]
+
+            if cbefore[k] ~= nil then
+              return cbefore[k]
             end
+
+            return newType[k]
+
+          end,
+
+          __newindex = function(t, k, v)
+            after[k] = v
           end
         })
 
-        prev = wrap
+        before = wrap
+        self   = before
 
       else
 
-        local cprev = prev
-        local next  = types[i].new()
+        local cbefore = before
+        local after  = types[i].new()
 
         local wrap = setmetatable({}, {
           __index = function(t, k)
-            if next[k] ~= nil then
-              return next[k]
+
+            if after[k] ~= nil then
+              return after[k]
             end
-            if cprev[k] ~= nil then
-              return cprev[k]
-            end
+
+            return cbefore[k]
+
+          end,
+
+          __newindex = function(t, k, v)
+            after[k] = v
           end
         })
 
-        prev = wrap
+        before = wrap
 
       end
 
     end
 
-    local this = prev
-
-    self = setmetatable({}, {
-
-      __index = function(t, k)
-
-        if newType[k] ~= nil then
-          return newType[k]
-        end
-
-        return this[k]
-
-      end
-
-    })
-
     return self
+
+  end
+
+  function newType:ctor(...)
+
+    if module.debug.ctor then
+      newType:tracemethod('ctor', ...)
+    end
+
+  end
+
+  function newType:dtor()
+
+    if module.debug.dtor then
+      newType:tracemethod('dtor')
+    end
 
   end
 

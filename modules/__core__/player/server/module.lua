@@ -11,14 +11,16 @@
 --   This copyright should appear in every part of the project code
 
 M('persistent')
+M('role')
 
-Player = Persist('players', 'id')
+Player = Persist('players', 'id', Enrolable)
 
 Player.define({
-  {name = 'id',         field = {name = 'id',          type = 'INT',     length = nil, default = nil,    extra = 'NOT NULL AUTO_INCREMENT'}},
-  {name = 'identifier', field = {name = 'identifier',  type = 'VARCHAR', length = 64,  default = nil,    extra = 'NOT NULL'}},
-  {name = 'name',       field = {name = 'name',        type = 'VARCHAR', length = 255, default = 'NULL', extra = nil}},
-  {name = 'identityId', field = {name = 'identity_id', type = 'VARCHAR', length = 64,  default = 'NULL', extra = nil}},
+  {name = 'id',         field = {name = 'id',          type = 'INT',        length = nil, default = nil,    extra = 'NOT NULL AUTO_INCREMENT'}},
+  {name = 'identifier', field = {name = 'identifier',  type = 'VARCHAR',    length = 64,  default = nil,    extra = 'NOT NULL'}},
+  {name = 'name',       field = {name = 'name',        type = 'VARCHAR',    length = 255, default = 'NULL', extra = nil}},
+  {name = 'identityId', field = {name = 'identity_id', type = 'VARCHAR',    length = 64,  default = 'NULL', extra = nil}},
+  {name = 'roles',      field = {name = 'roles',       type = 'MEDIUMTEXT', length = nil, default = '[]',   extra = nil}, encode = json.encode, decode = json.decode},
 })
 
 Player.all = setmetatable({}, {

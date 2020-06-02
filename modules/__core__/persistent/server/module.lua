@@ -17,10 +17,11 @@ M('table')
 
 local pass = function(x) return x end
 
-Persist = function(schema, pk)
+Persist = function(schema, pk, ...)
 
+  local mixins        = {...}
   local debugName     = debugName or 'PersistBase_' .. schema
-  local extDebugName = 'Persist_' .. schema
+  local extDebugName  = 'Persist_' .. schema
   local fields        = {}
   local dbfields      = {}
   local pType         = Extends(Serializable, debugName)
@@ -33,9 +34,27 @@ Persist = function(schema, pk)
     self.__PK     = pk
 
     for k,v in pairs(fields) do
-      self:field(k, data[k])
+
+      local dataValue = data[k]
+
+      if dataValue == nil then
+
+        if not db.IsExpression(v.data.default) then
+          if v.decode ~= nil then
+            dataValue = v.decode(v.data.default)
+          end
+        end
+
+      end
+
+      self:field(k, dataValue)
+
     end
 
+  end
+
+  if #mixins > 0 then
+    pType = Mixin(debugName, pType, ...)
   end
 
   local set = function(name, field, encode, decode)
