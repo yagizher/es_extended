@@ -15,9 +15,9 @@
 M('table')
 
 module.debug = {
-  extends = false,
-  ctor    = false,
-  dtor    = false,
+  extends = true,
+  ctor    = true,
+  dtor    = true,
   set     = false,
   chain   = false
 }
@@ -26,7 +26,7 @@ local chain = {}
 
 Extends = function(baseType, debugName)
 
-  debugName     = debugName or '<anonymous>'
+  debugName     = debugName or '<anonymous:class>'
   local mt      = {__index = baseType}
   local newType = setmetatable({super = baseType}, mt)
 
@@ -255,13 +255,136 @@ Extends = function(baseType, debugName)
   end
 
   function newType:tracechain(event)
-
     self:trace('chain', event, #chain, str)
-
   end
 
   if module.debug.extends then
     print('^4' .. newType:typename() .. '^1 extends ^4' .. (baseType and baseType:typename() or 'nil'))
+  end
+
+  mt.__call = function(t, ...)
+    return newType.new(...)
+  end
+
+  return newType
+
+end
+
+Mixin = function(...)
+
+  local args      = {...}
+  local types     = {}
+  local debugName = '<anonymous:mixin>'
+  local mt        = {}
+  local newType   = setmetatable({}, mt)
+
+  if type(args[1]) == 'string' then
+
+    debugName = args[1]
+
+    for i=2, #args, 1 do
+
+      local arg = args[i]
+
+      if i == 2 then
+        arg = setmetatable(args[i], {__index = newType})
+      else
+        arg = setmetatable(args[i], {__index = args[i - 1]})
+      end
+
+      types[#types + 1] = arg
+
+    end
+
+  end
+
+  function newType.new(...)
+
+    local self
+    local prev
+
+    for i=#types, 1, -1 do
+
+      local next
+
+      if i == #types then
+        next = types[i].new()
+        prev = next
+      elseif i == 1 then
+        next       = types[i].new(...)
+        local wrap = setmetatable(next, {__index = prev})
+        prev       = next
+      else
+        next       = types[i].new()
+        local wrap = setmetatable(next, {__index = prev})
+        prev       = next
+      end
+
+      if i == 1 then
+        self = next
+      end
+
+    end
+
+    print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@', self)
+
+    return self
+
+  end
+
+  function newType:type()
+    return newType
+  end
+
+  function newType:base()
+    return types[1]
+  end
+
+  function newType:typename()
+    return debugName
+  end
+
+  function newType:trace(...)
+    print('^4' .. self:typename() .. '^7', ...)
+  end
+
+  function newType:traceset(k, v)
+    self:trace('set ^7' .. tostring(k) .. ' => ^2' .. tostring(v or 'nil'))
+  end
+
+  function newType:tracemethod(name, ...)
+
+    local args = {...}
+    local str  = '^4' .. self:typename() .. '^7:^1' .. name .. '^7('
+
+    for i=1, #args, 1 do
+
+      local arg = args[i]
+
+      if i > 1 then
+        str = str .. ', '
+      end
+
+      local escaped
+
+      if type(arg) == 'string' then
+        escaped = '\'' .. tostring(arg) .. '\''
+      else
+        escaped = tostring(arg)
+      end
+
+      str = str .. '^2' .. escaped .. '^7'
+
+    end
+
+    str = str .. ')'
+
+    print(str)
+
+  end
+
+  function newType:tracechain(event)
+    self:trace('chain', event, #chain, str)
   end
 
   mt.__call = function(t, ...)
