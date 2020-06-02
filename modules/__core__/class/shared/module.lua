@@ -278,9 +278,11 @@ Mixin = function(...)
   local mt        = {}
   local newType   = setmetatable({}, mt)
 
+  local hasName    = false
   local startIndex = 1
 
   if type(args[1]) == 'string' then
+    hasName    = true
     debugName  = args[1]
     startIndex = 2
   end
@@ -296,6 +298,16 @@ Mixin = function(...)
     end
 
     types[#types + 1] = arg
+
+  end
+
+  if not hasName then
+
+    debugName = 'Mixin'
+
+    for i=1, #args, 1 do
+      debugName = debugName .. args[i]:typename()
+    end
 
   end
 
@@ -349,7 +361,21 @@ Mixin = function(...)
 
     end
 
-    self = prev
+    local this = prev
+
+    self = setmetatable({}, {
+
+      __index = function(t, k)
+
+        if newType[k] ~= nil then
+          return newType[k]
+        end
+
+        return this[k]
+
+      end
+
+    })
 
     return self
 
