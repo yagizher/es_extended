@@ -9,9 +9,6 @@
 3. [Changelog](#changelog)
 4. [Module Examples](#examples)
    1. [Menu](#examples-menu)
-   2. [Datastore](#examples-datastore)
-   3. [Declarative Table Schemas](#examples-declarative-schema)
-   4. [Programmatically Extend xPlayer methods](#examples-extend-xplayer)
 
 ## Installation <a name="install"></a>
 
@@ -114,3 +111,5 @@ Another thing is the performance, so far, it's more optimized to work this way.
 ### [How to create and use menus <a name="examples-menu"></a>](https://github.com/ESX-Org/es_extended/tree/examples/menu/modules/__examples__/menu)
 
 ![Menu](https://i.snipboard.io/tF8AcT.jpg)
+
+### More to come...
