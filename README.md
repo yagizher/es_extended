@@ -67,7 +67,7 @@ Grab the module you'd like to install. Paste it in the `es_extended/modules/__us
   "module-name-here"
 ]
 ```
-**__WARNING:__** __The file may not already exists if it's your first installation, juste create a file named `modules.json` in the `es_extended/modules/__user__/` directory.__
+**__WARNING:__** __The file may not already exists if it's your first installation, just create a file named `modules.json` in the `es_extended/modules/__user__/` directory.__
 
 ### What's a module ?
 A module is an isolated bloc that work independently from any resources or other module (except the core modules provided by esx)
@@ -114,95 +114,3 @@ Another thing is the performance, so far, it's more optimized to work this way.
 ### [How to create and use menus <a name="examples-menu"></a>](https://github.com/ESX-Org/es_extended/tree/examples/menu/modules/__examples__/menu)
 
 ![Menu](https://i.snipboard.io/tF8AcT.jpg)
-
-### How to store/retrieve datas <a name="examples-datastore"></a>
-
-```lua
--- DataStore
-
-M('datastore')
-
-on('esx:db:ready', function()
-
-  local ds = DataStore('test', true, {sample = 'data'}) -- name, shared, initial data
-
-  ds:on('save', function()
-    print(ds.name .. ' saved => ' .. json.encode(ds:get()))
-  end)
-
-  ds:on('ready', function()
-
-    ds:set('foo', 'bar')
-
-    ds:save(function()
-      print('callbacks also')
-    end)
-
-  end)
-
-end)
-```
-
-### Table schema declarations <a name="examples-declarative-schema"></a>
-
-```lua
--- Here is how datastore schema is declared, no need to feed some SQL file
-
-M('events')
-
-on('esx:db:init', function(initTable, extendTable)
-
-  initTable('datastores', 'name', {
-    {name = 'name',  type = 'VARCHAR',  length = 255, default = nil,    extra = 'NOT NULL'},
-    {name = 'owner', type = 'VARCHAR',  length = 64,  default = 'NULL', extra = nil},
-    {name = 'data',  type = 'LONGTEXT', length = nil, default = nil,    extra = nil},
-  })
-
-end)
-```
-
-### Extending xPlayer method programmatically <a name="examples-extend-xplayer"></a>
-
-```lua
--- Want to create faction system ?
-
-M('player')
-
-xPlayer.createDBAccessor('faction', {name = 'faction', type = 'VARCHAR', length = 64, default = 'gang.ballas', extra = nil})
-
--- Now any player (which is instance of xPlayer) have the following methods
--- Also user table has now a faction column added automatically
-
-local player = xPlayer:fromId(2)
-
-print(player:getFaction())
-
-player:setFaction('another.faction')
-
-player:save()
-```
-
-```lua
--- I want to store JSON :(
--- No problem
-
-xPlayer.createDBAccessor('someData', {name = 'some_data', type = 'TEXT', length = nil, default = '{}', extra = nil}, json.encode, json.decode)
-```
-
-```lua
--- I want to store WHATEVER (comma-separated list for example) :(
--- No problem
-
-M('string')
-
-xPlayer.createDBAccessor(
-  'someWeirdData',
-  {name = 'some_weird_data', type = 'TEXT', length = nil, default = '1,2,3,4,5', extra = nil},
-  function(x) -- encode
-    return table.concat(x, ',')
-  end,
-  function(x) -- decode
-    return string.split(x, ',')
-  end
-)
-```
