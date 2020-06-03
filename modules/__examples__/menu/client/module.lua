@@ -51,15 +51,13 @@ module.onItemChanged = function(item, prop, val, index)
     if (item.name == 'superChecker') and (prop == 'value') then
         
         -- util function to get items table with key "name" and value "value" (of the input)
-        local itemsValues = module.menu:kvp('name', 'value')
-
-        -- print(utils.table.dump(itemsValues))
+        local byName = module.menu:by('name')
 
         -- get the value of the superText input
-        local textItemValue = itemsValues['superText']
-        
+        local textItemValue = byName['superText'].value
+
         -- change the superSecretBind value based on what superText value is
-        module.menu.items[4].value = 'Dynamic text ' .. tostring(textItemValue);
+        byName['superSecretBind'].value = 'Dynamic text ' .. tostring(textItemValue);
     end
 
 end
