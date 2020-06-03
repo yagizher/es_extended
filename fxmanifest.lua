@@ -31,6 +31,7 @@ files {
   'config/modules.groups.json',
   'modules/__base__/modules.json',
   'modules/__core__/modules.json',
+  'modules/__examples__/modules.json',
   'modules/__user__/modules.json',
   'modules/__base__/accessories/data/config.lua',
   'modules/__base__/accessories/data/locales/cs.lua',
@@ -168,7 +169,10 @@ files {
   'modules/__core__/ui.menu/client/module.lua',
   'modules/__core__/utils/client/events.lua',
   'modules/__core__/utils/client/main.lua',
-  'modules/__core__/utils/client/module.lua'
+  'modules/__core__/utils/client/module.lua',
+  'modules/__examples__/menu/client/events.lua',
+  'modules/__examples__/menu/client/main.lua',
+  'modules/__examples__/menu/client/module.lua'
 }
 
 server_scripts {

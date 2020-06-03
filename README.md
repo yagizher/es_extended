@@ -6,7 +6,7 @@
 
 1. [Installation](#install)
 2. [Changelog](#changelog)
-3. [Code examples](#examples)
+3. [Examples](#examples)
    1. [Menu](#examples-menu)
    2. [Datastore](#examples-datastore)
    3. [Declarative Table Schemas](#examples-declarative-schema)
@@ -75,51 +75,7 @@ ensure es_extended # Will now auto-generate fxmanifest.lua to prevent platform-d
 
 ### How to create and use menus <a name="examples-menu"></a>
 
-```lua
--- Menu
-
-M('ui.menu') -- This module provides global Menu factory method
-
-local menu = Menu('test', {
-  title = 'Test menu',
-  float = 'top|left',
-  items = {
-    {name = 'a', label = 'Fufu c\'est ma bro', type = 'slider'},
-    {name = 'b', label = 'Fuck that shit',     type = 'check'},
-    {name = 'c', label = 'Fuck that shit',     type = 'text'},
-    {name = 'd', label = 'Lorem ipsum'},
-    {name = 'e', label = 'Submit',             type = 'button'},
-  }
-})
-
-menu:on('ready', function()
-  menu.items[1].label = 'TEST';-- label changed instantly in webview
-end)
-
-menu:on('item.change', function(item, prop, val, index)
-
-  if (item.name == 'a') and (prop == 'value') then
-
-    item.label = 'Dynamic label ' .. tostring(val);
-
-  end
-
-  if (item.name == 'b') and (prop == 'value') then
-
-    local c = table.find(menu.items, function(e) return e.name == 'c' end)
-
-    c.value = 'Dynamic text ' .. tostring(val);
-
-  end
-
-end)
-
-menu:on('item.click', function(item, index)
-  print('index', index)
-end)
-```
-
-![Menu](https://cdn.discordapp.com/attachments/711547420479193088/714823698061721630/unknown.png)
+![Menu](https://i.snipboard.io/tF8AcT.jpg)
 
 ### How to store/retrieve datas <a name="examples-datastore"></a>
 
