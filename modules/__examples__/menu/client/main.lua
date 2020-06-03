@@ -10,10 +10,6 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-
+-- The main file contains imports and logic of the module
 M('ui.menu') -- This module provides global Menu factory method
 M('events') -- This module provides easy ways to receive/send event
-
--- Temporary
-SetNuiFocus(0, 0)
-
