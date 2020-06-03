@@ -71,6 +71,12 @@ function Menu:constructor(name, data, focus)
           item.value = ''
         end
 
+      elseif item.type == 'color' then
+
+        if item.value == nil then
+          item.value = '#FFF'
+        end
+
       end
 
       self.items[i] = setmetatable({}, {
