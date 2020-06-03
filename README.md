@@ -5,8 +5,9 @@
 # Table of Contents
 
 1. [Installation](#install)
-2. [Changelog](#changelog)
-3. [Examples](#examples)
+2. [Modules](#modules)
+3. [Changelog](#changelog)
+4. [Module Examples](#examples)
    1. [Menu](#examples-menu)
    2. [Datastore](#examples-datastore)
    3. [Declarative Table Schemas](#examples-declarative-schema)
@@ -14,14 +15,20 @@
 
 ## Installation <a name="install"></a>
 
-### Requirements :
+### Requirements:
 
 - An installed MariaDB server (MySQL not supported for now).
 - [Async script by ESX-Org](https://github.com/ESX-Org/async)
 - [Cron script by ESX-Org](https://github.com/ESX-Org/cron)
 - [SkinChanger script by ESX-Org](https://github.com/ESX-Org/skinchanger)
 - [MySQL-Async by brouznouf](https://github.com/brouznouf/fivem-mysql-async)
+- [Node.Js 8+](https://nodejs.org/en/)
 
+### How to Install:
+* Grab the resource, install it as usual (place it in the `/resource` subfolder of your FxServer).
+* Open a cmd in the `es_extended` resource.
+* Type `npm i` or `yarn` in-order-to install dependents packages.
+* Copy the part of the `server.cfg` sample and paste it to yours.
 ### Server.cfg sample
 
 ```bash
@@ -50,6 +57,37 @@ ensure es_extended # Will now auto-generate fxmanifest.lua to prevent platform-d
 # start es_extended
 ```
 
+## Modules <a name="modules"></a>
+*_There is no more `esx_` resource on this version. This had been deprecated in favor of modules_*
+
+### How to install a module ?
+Grab the module you'd like to install. Paste it in the `es_extended/modules/__user__/` directory and add the module name to the list of the `es_extended/modules/__user__/modules.json` file. `modules.json` file should looks like this :
+```json
+[
+  "module-name-here"
+]
+```
+**__WARNING:__** __The file may not already exists if it's your first installation, juste create a file named `modules.json` in the `es_extended/modules/__user__/` directory.__
+
+### What's a module ?
+A module is an isolated bloc that work independently from any resources or other module (except the core modules provided by esx)
+
+### How does modules work ?
+Modules are composed of three parts (not mandatory, you can only use of of these) :
+* client - handle all client logic (as usual)
+* server - handle all server logic (as usual)
+* shared - handle both logic
+
+Each part are again divided in three parts in-order-to make things clearer :
+* main.lua : responsible of importing needed core modules and managing the module state. (control flow)
+* events.lua : responsible of handling events (the code to execute when an event is received)
+* module.lua : see this one as all the functions that would be useful to your module.
+
+### Why is it better ?
+For a better and cleaner architecture it's obviously better to have a pattern already set. You'll end up with organized files and modules.
+
+Another thing is the performance, so far, it's more optimized to work this way.
+
 ## Changelog <a name="changelog"></a>
 
 ```
@@ -71,9 +109,9 @@ ensure es_extended # Will now auto-generate fxmanifest.lua to prevent platform-d
 - WIP rewrite of well-known datastore / inventory / account stuff
 ```
 
-## Code examples <a name="examples"></a>
+## Module Examples <a name="examples"></a>
 
-### How to create and use menus <a name="examples-menu"></a>
+### [How to create and use menus <a name="examples-menu"></a>](https://github.com/ESX-Org/es_extended/tree/examples/menu/modules/__examples__/menu)
 
 ![Menu](https://i.snipboard.io/tF8AcT.jpg)
 
