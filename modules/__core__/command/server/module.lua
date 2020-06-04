@@ -10,174 +10,164 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
+M('class')
 M('events')
+M('string')
+local utils = M('utils')
 
-module.RegisterdCommands = {}
+module.RegisteredCommands = {}
 
-module.Register = function(name, group, cb, allowConsole, suggestion)
+Command = Extends(EventEmitter, 'Command')
 
-  if type(name) == 'table' then
+function Command:constructor(name, group, description)
 
-    for k, v in ipairs(name) do
-      module.Register(v, group, cb, allowConsole, suggestion)
+  -- ensure name and group arn't nil
+  if not(name) or not(group) then
+    error("A name and a group are required for a Command.")
+  end
+
+  local doesCommandNameExists = table.find(module.RegisteredCommands, function(command) return command.name == name end)
+  if doesCommandNameExists then
+    utils.printWarning(("A command with name: %s already registered, register it would remove the old one"):format(name))
+  end
+
+  self.super:ctor()
+
+  self.registered = false
+  self.name = name
+  self.group = group
+  self.description = description
+  self.arguments = {}
+  self.handler = nil
+end
+
+function Command:addArgument(name, argumentType, description, isOptional)
+  -- ensure name isn't nil
+  if not(name) then
+    error("A name is required for Command:addArgument [1].")
+  end
+
+  -- set default values if none provided
+  if not(argumentType) then
+    argumentType = "string"
+  end
+
+  if not(description) then
+    description = ""
+  end
+
+  if not(isOptional) then
+    isOptional = false
+  end
+
+  -- ensure argumentType is a recognized value, one of string, number, player
+  local authorizedArgumentType = {"string", "number", "player"}
+
+  local isTypeAuthorized = table.find(authorizedArgumentType, function (value) return value == argumentType end)
+
+  if (not(isTypeAuthorized)) then
+    error(("The type %s is not recognized."):format(argumentType))
+  end
+
+  -- ensure type of description and isOptional are correct
+  if type(description) ~= "string" then
+    error(("description must be a string not %s."):format(type(description)))
+  end
+
+  if type(isOptional) ~= "boolean" then
+    error(("description must be a boolean not %s."):format(type(isOptional)))
+  end
+
+  -- add argument to the list of command arguments
+  table.insert(self.arguments, {name = name, type = argumentType, description = description, isOptional = isOptional})
+end
+
+function Command:setHandler(commandHandler)
+  -- ensure the handler is a function
+  if type(commandHandler) ~= "function" then
+    error(("commandHandler must be a function not %s."):format(type(commandHandler)))
+  end
+
+  self.handler = commandHandler
+end
+
+function Command:getSuggestion()
+  local commandParametersHelp = {}
+
+  for i,v in ipairs(self.arguments) do
+    table.insert(commandParametersHelp, {name = v.name, help = ("%s | type: %s"):format(v.description, v.type)})
+  end
+
+  return commandParametersHelp
+end
+
+function Command:register()
+  if not(self.handler) then
+    error(("Cannot register command %s, you need to set a command handler with command:setHandler."):format(self.name))
+  end
+
+  -- add the command to the command list
+  table.insert(module.RegisteredCommands, self)
+
+  -- a generic handler which parse arguments and retrieve base player
+  local genericHandler = function(source, args, rawCommand)
+    local sourcePlayer = Player.fromId(source)
+
+    if not(sourcePlayer) then
+      error(("Cannot retrieve sourcePlayer in Command handler %s, source : %s."):format(self.name, source))
     end
 
-    return
+    -- for each arguments let's try to map them with given arguments
+    local parsedArgs = {}
+    for i,v in ipairs(self.arguments) do
+      local commandArgument = v
+      local givenArgument = args[i]
 
-  end
-
-  if module.RegisterdCommands[name] then
-
-    print(('[^3WARNING^7] A command "%s" is already registered, overriding command'):format(name))
-
-    if module.RegisterdCommands[name].suggestion then
-      emitClient('chat:removeSuggestion', -1, ('/%s'):format(name))
-    end
-
-  end
-
-  if suggestion then
-    if not suggestion.arguments then suggestion.arguments = {} end
-    if not suggestion.help      then suggestion.help      = '' end
-
-    emitClient('chat:addSuggestion', -1, ('/%s'):format(name), suggestion.help, suggestion.arguments)
-  end
-
-  module.RegisterdCommands[name] = {
-      group        = group,
-      cb           = cb,
-      allowConsole = allowConsole,
-      suggestion   = suggestion
-  }
-
-  RegisterCommand(name, function(playerId, args, rawCommand)
-
-    local command = module.RegisterdCommands[name]
-
-    if not command.allowConsole and playerId == 0 then
-      print(('[^3WARNING^7] %s'):format( _U('commanderror_console')))
-    else
-
-      local xPlayer, error = xPlayer.fromId(playerId), nil
-
-      if command.suggestion then
-
-        if command.suggestion.validate then
-          if #args ~= #command.suggestion.arguments then
-            error = _U('commanderror_argumentmismatch', #args, #command.suggestion.arguments)
-          end
+      -- if the command argument is a number, let's ensure the user type a number
+      if commandArgument.type == "number" then
+        if not(string.onlyContainsDigit(givenArgument)) then
+          emitClient('chat:addMessage', source, {
+            color = { 255, 0, 0 },
+            multiline = true,
+            args = {("%s Command"):format(self.name), ('[^1Error^7] Argument %s needs to be a %s, %s given.'):format(commandArgument.name, commandArgument.type, givenArgument)}
+          })
+          return
         end
+        parsedArgs[commandArgument.name] = tonumber(givenArgument)
 
-        if not error and command.suggestion.arguments then
+      -- if the command argument is a player, let's ensure player exists with provided source
+      elseif commandArgument.type == "player" then
+        local requestedPlayer = Player.fromId(givenArgument)
 
-          local newArgs = {}
-
-          for k, v in ipairs(command.suggestion.arguments) do
-
-            if v.type then
-
-              if v.type == 'number' then
-
-                local newArg = tonumber(args[k])
-
-                if newArg then
-                  newArgs[v.name] = newArg
-                else
-                  error = _U('commanderror_argumentmismatch_number', k)
-                end
-
-              elseif v.type == 'player' or v.type == 'playerId' then
-
-                local targetPlayer = tonumber(args[k])
-
-                if args[k] == 'me' then
-                  targetPlayer = playerId
-                end
-
-                if targetPlayer then
-
-                  local xTargetPlayer = xPlayer.fromId(targetPlayer)
-
-                    if xTargetPlayer then
-
-                      if v.type == 'player' then
-                        newArgs[v.name] = xTargetPlayer
-                      else
-                        newArgs[v.name] = targetPlayer
-                      end
-
-                    else
-                      error =_U('commanderror_invalidplayerid')
-                    end
-                else
-                  error = _U('commanderror_argumentmismatch_number', k)
-                end
-
-              elseif v.type == 'string' then
-
-                newArgs[v.name] = args[k]
-
-              elseif v.type == 'item' then
-
-                if ESX.Items[args[k]] then
-                  newArgs[v.name] = args[k]
-                else
-                  error = _U('commanderror_invaliditem')
-                end
-
-              elseif v.type == 'weapon' then
-
-                if ESX.GetWeapon(args[k]) then
-                  newArgs[v.name] = string.upper(args[k])
-                else
-                  error = _U('commanderror_invalidweapon')
-                end
-
-              elseif v.type == 'any' then
-
-                newArgs[v.name] = args[k]
-
-              end
-            end
-
-            if error then break end
-
-          end
-
-          args = newArgs
-
+        if not(requestedPlayer) then
+          emitClient('chat:addMessage', source, {
+            color = { 255, 0, 0 },
+            multiline = true,
+            args = {("%s Command"):format(self.name), ('[^1Error^7] Argument %s needs an existing player, player %s not found.'):format(commandArgument.name, givenArgument)}
+          })
+          return
         end
-      end
-
-      if error then
-
-        if playerId == 0 then
-          print(('[^3WARNING^7] %s^7'):format(error))
-        else
-          xPlayer.triggerEvent('chat:addMessage', {args = {'^1SYSTEM', error}})
-        end
-
+        parsedArgs[commandArgument.name] = requestedPlayer
+      
+      -- if the command argument is a string, just pass 
       else
-
-          cb(xPlayer or false, args, function(msg)
-            if playerId == 0 then
-              print(('[^3WARNING^7] %s^7'):format(msg))
-            else
-              xPlayer.triggerEvent('chat:addMessage', {args = {'^1SYSTEM', msg}})
-            end
-          end)
-
+        parsedArgs[commandArgument.name] = givenArgument
       end
-
     end
 
-  end, true)
-
-  if type(group) == 'table' then
-      for k, v in ipairs(group) do
-        ExecuteCommand(('add_ace group.%s command.%s allow'):format(v, name))
-      end
-  else
-    ExecuteCommand(('add_ace group.%s command.%s allow'):format(group, name))
+    self.handler(sourcePlayer, parsedArgs, args)
   end
+
+  RegisterCommand(self.name, genericHandler, false)
+
+  print(('/%s'):format(self.name))
+  print(json.encode(self:getSuggestion()))
+  print(self.description)
+
+  emitClient('chat:addSuggestion', -1, ('/%s'):format(self.name), self.description, self:getSuggestion())
+
+  -- allow this command to be executed by the provided group
+  ExecuteCommand(('add_ace group.%s command.%s allow'):format(group, name))
+
+  self.registered = true
 end
