@@ -22,7 +22,15 @@ module.debug = {
   chain   = false
 }
 
-local chain = {}
+local chains = {}
+
+local pushchain = function()
+  chains[#chains + 1] = {}
+end
+
+local popchain = function()
+  chains[#chains] = nil
+end
 
 Extends = function(baseType, debugName)
 
@@ -32,7 +40,9 @@ Extends = function(baseType, debugName)
 
   local chainLength = 0
 
-  local pushchain = function(this)
+  local pushtype = function(this)
+    
+    local chain = chains[#chains]
 
     if #chain > 0 then
       this.__prev          = chain[#chain]
@@ -49,7 +59,9 @@ Extends = function(baseType, debugName)
 
   end
 
-  local popchain = function()
+  local poptype = function()
+
+    local chain = chains[#chains]
 
     chain[#chain] = nil
     chainLength   = chainLength - 1
@@ -60,7 +72,9 @@ Extends = function(baseType, debugName)
 
   end
 
-  local endchain = function()
+  local endtype = function()
+
+    local chain = chains[#chains]
 
     for i=1, chainLength, 1 do
       chain[#chain] = nil
@@ -74,6 +88,7 @@ Extends = function(baseType, debugName)
 
   function newType.new(...)
 
+    pushchain()
     chainLength = 0
 
     local self = newType.init(nil)
@@ -84,7 +99,8 @@ Extends = function(baseType, debugName)
 
     self:constructor(...)
 
-    endchain()
+    endtype()
+    popchain()
 
     return self
 
@@ -159,7 +175,7 @@ Extends = function(baseType, debugName)
 
     this = setmetatable(data, {__index = __index, __newindex = __newindex, __gc = __gc})
 
-    pushchain(this)
+    pushtype(this)
 
     return this
 
@@ -173,7 +189,7 @@ Extends = function(baseType, debugName)
 
     newType.init(self):constructor(...)
 
-    popchain()
+    poptype()
 
   end
 

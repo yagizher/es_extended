@@ -10,12 +10,5 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-M('events')
-M('ui.hud')
-
-module.Frame = Frame('hud', 'nui://' .. __RESOURCE__ .. '/modules/__core__/game.hud/data/html/ui.html')
-
-module.Frame:on('load', function()
-  module.Ready = true
-  emit('esx:hud:ready')
-end)
+-- the Events file contains event handlers
+on('esx:nui:ready', module.onNuiReady)

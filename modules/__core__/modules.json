@@ -4,6 +4,7 @@
   "cache",
   "class",
   "command",
+  "constants",
   "db",
   "events",
   "game.hud",

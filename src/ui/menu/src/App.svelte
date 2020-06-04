@@ -14,19 +14,20 @@
 
 <script>
 
-	import { onMount, beforeUpdate } from 'svelte';
-  import { HsvPicker }             from 'svelte-color-picker';
-  import rgbHex                    from 'rgb-hex';
-  import hexRgb                    from 'hex-rgb';
+	import { onMount, onDestroy, beforeUpdate } from 'svelte';
+  import { HsvPicker }                        from 'svelte-color-picker';
+  import rgbHex                               from 'rgb-hex';
+  import hexRgb                               from 'hex-rgb';
 
 	export let float = 'left|top';
 	export let title = 'Untitled ESX Menu';
   export let items = [];
 
-	export let _items = [];
+	let _items = [];
+	let el     = null;
 
 	window.addEventListener('message', e => {
-
+		
 		const msg = e.data;
 
 		switch(msg.action) {
@@ -93,12 +94,14 @@
 		_items = [..._items];
 
   }
+	
+	const onMouseEnter= (e) => {
+		window.parent.postMessage({action: 'mouse.in'}, '*');
+	}
 
-	onMount(() => {
-		window.parent.postMessage({action: 'ready'}, '*');
-	});
-
-	beforeUpdate(proxifyItems);
+	const onMouseLeave = (e) => {
+		window.parent.postMessage({action: 'mouse.out'}, '*');
+	}
 
 	const onItemClick = (e, item, index) => {
 		window.parent.postMessage({action: 'item.click', index}, '*');
@@ -125,11 +128,27 @@
 
     }
 
-  }
+	}
+
+	onMount(() => {
+
+		window.parent.postMessage({action: 'ready'}, '*');
+
+		el.addEventListener('mouseenter',  onMouseEnter);
+		el.addEventListener('mouseleave', onMouseLeave);
+
+	});
+
+	onDestroy(() => {
+		el.removeEventListener('mouseenter', onMouseEnter);
+		el.removeEventListener('mouseleave', onMouseLeave);
+	})
+
+	beforeUpdate(proxifyItems);
 
 </script>
 
-<main class="{float.split('|').map(e => 'float-' + e).join(' ')}">
+<main class="{float.split('|').map(e => 'float-' + e).join(' ')}" bind:this={el}>
 	<main-wrap>
 
 		<item class="title">{title}</item>

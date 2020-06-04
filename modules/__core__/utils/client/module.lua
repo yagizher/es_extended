@@ -36,9 +36,13 @@
 -- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 -- OTHER DEALINGS IN THE SOFTWARE.
 
+M('constants')
+
 -- Namespaces
 module.game = module.game or {}
 module.ui   = module.ui   or {}
+module.math = module.math or {}
+module.time = module.time or {}
 
 -- Locals
 local entityEnumerator = {
@@ -89,25 +93,25 @@ module.game.enumerateObjects = function()
 	return EnumerateEntities(FindFirstObject, FindNextObject, EndFindObject)
 end
 
-enumerateObjects = module.game.enumerateObjects -- Make it global for convenience
+EnumerateObjects = module.game.enumerateObjects -- Make it global for convenience
 
 module.game.enumeratePeds = function()
 	return EnumerateEntities(FindFirstPed, FindNextPed, EndFindPed)
 end
 
-enumeratePeds = module.game.enumeratePeds -- Make it global for convenience
+EnumeratePeds = module.game.enumeratePeds -- Make it global for convenience
 
 module.game.enumerateVehicles = function()
 	return EnumerateEntities(FindFirstVehicle, FindNextVehicle, EndFindVehicle)
 end
 
-enumerateVehicles = module.game.enumerateVehicles -- Make it global for convenience
+EnumerateVehicles = module.game.enumerateVehicles -- Make it global for convenience
 
 module.game.enumeratePickups = function()
 	return EnumerateEntities(FindFirstPickup, FindNextPickup, EndFindPickup)
 end
 
-enumeratePickups = module.game.enumeratePickups -- Make it global for convenience
+EnumeratePickups = module.game.enumeratePickups -- Make it global for convenience
 
 module.game.requestModel = function(model, cb)
 
@@ -495,4 +499,87 @@ module.ui.howFloatingHelpNotification = function(msg, coords, timeout)
 
   end)
 
+end
+
+module.math.polar3DToWorld3D = function(center, polar, azimuth, radius)
+
+  local polarRad   = polar   * DEG2RAD
+  local azimuthRad = azimuth * DEG2RAD
+
+  local sinPolar   = math.sin(polarRad)
+  local cosPolar   = math.cos(polarRad)
+  local sinAzimuth = math.sin(azimuthRad)
+  local cosAzimuth = math.cos(azimuthRad)
+
+  return vector3(
+    center.x + radius * (sinAzimuth * cosPolar),
+    center.y - radius * (sinAzimuth * sinPolar),
+    center.z - radius *  cosAzimuth
+  )
+
+end
+
+module.math.world3DtoPolar3D = function(center, position)
+  
+  local diff   = position - center
+  local radius = #(diff)
+  local p      = math.atan(diff.y / diff.x)
+  local o      = math.atan(math.sqrt(diff.x ^ 2 + diff.y ^ 2) / diff.z)
+
+  local polarDeg   = 180 - p * RAD2DEG % 180
+  local azimuthDeg = 180 - o * RAD2DEG % 180
+
+  return polarDeg, azimuthDeg, radius
+
+end
+
+module.math.screen2DToWorld3D = function(x, y, fov, near, far, right, forward, up, at)
+
+  local fovRatio = (360 - fov) / 360
+  local sX, sY   = GetActiveScreenResolution()
+  local sX2, sY2 = sX/2, sY/2
+  local aspect   = sX / sY
+
+  local transformMatrix = Matrix:new({
+    {right.x,   right.z,   right.y,   0},
+    {forward.x, forward.z, forward.y, 0},
+    {up.x,      up.z,      up.y,      0},
+    {at.x,      at.z,      at.y,      1},
+  })
+
+  local dx = math.tan(fovRatio * 0.5) * (x / sX2 - 1) * aspect
+  local dy = math.tan(fovRatio * 0.5) * (1 - y / sY2)
+
+  local p1 = Matrix:new({{dx * near, near, dy * near, 1}})
+  local p2 = Matrix:new({{dx * far,  far,  dy * far , 1}})
+
+  p1 = Matrix.mul(p1, transformMatrix)
+  p2 = Matrix.mul(p2, transformMatrix)
+
+  _near = vector3(p1[1][1], p1[1][3], p1[1][2])
+  _far  = vector3(p2[1][1], p2[1][3], p2[1][2])
+
+  return _near, _far
+
+end
+
+module.math.rotateAround = function(p1, p2, angle)
+
+  p1 = Matrix:new({{p1.x, p1.z, p1.y}})
+  p2 = Matrix:new({{p2.x, p2.z, p2.y}})
+
+  local rotationMatrix = Matrix:new({
+    {math.cos(angle), -p2[1][1] * math.cos(angle) + p2[1][1] + p2[1][2] * math.sin(angle), -math.sin(angle)},
+    {math.sin(angle), -p2[1][1] * math.sin(angle) - p2[1][2] * math.cos(angle) + p2[1][2], math.cos(angle)},
+    {              0,                                                                  1,               0}
+  })
+
+  local np = Matrix.add(p1, rotationMatrix)
+
+  return vector3(np[1][1], np[1][3], p1[1][2])
+
+end
+
+module.time.timestamp = function()
+  return Citizen.InvokeNative(0x9A73240B49945C76)
 end

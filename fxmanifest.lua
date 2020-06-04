@@ -15,12 +15,11 @@ dependencies {
   'spawnmanager',
   'baseevents',
   'mysql-async',
-  'async',
-  'cron',
-  'skinchanger'
+  'async'
 }
 
 files {
+  'data/ped_bones.json',
   'data/peds.json',
   'data/weapon_components.json',
   'data/weapons.json',
@@ -31,6 +30,7 @@ files {
   'config/modules.groups.json',
   'modules/__base__/modules.json',
   'modules/__core__/modules.json',
+  'modules/__examples__/modules.json',
   'modules/__user__/modules.json',
   'modules/__base__/accessories/data/config.lua',
   'modules/__base__/accessories/data/locales/cs.lua',
@@ -97,6 +97,9 @@ files {
   'modules/__core__/class/shared/events.lua',
   'modules/__core__/class/shared/main.lua',
   'modules/__core__/class/shared/module.lua',
+  'modules/__core__/constants/shared/events.lua',
+  'modules/__core__/constants/shared/main.lua',
+  'modules/__core__/constants/shared/module.lua',
   'modules/__core__/events/shared/events.lua',
   'modules/__core__/events/shared/main.lua',
   'modules/__core__/events/shared/module.lua',
@@ -168,7 +171,10 @@ files {
   'modules/__core__/ui.menu/client/module.lua',
   'modules/__core__/utils/client/events.lua',
   'modules/__core__/utils/client/main.lua',
-  'modules/__core__/utils/client/module.lua'
+  'modules/__core__/utils/client/module.lua',
+  'modules/__examples__/menu/client/events.lua',
+  'modules/__examples__/menu/client/main.lua',
+  'modules/__examples__/menu/client/module.lua'
 }
 
 server_scripts {
@@ -212,6 +218,7 @@ client_scripts {
   'locales/sc.lua',
   'locales/sv.lua',
   'locales/tc.lua',
+  'vendor/matrix.lua',
   'config/default/config.lua',
   'config/default/config.items.lua',
   'config/default/config.roles.lua',

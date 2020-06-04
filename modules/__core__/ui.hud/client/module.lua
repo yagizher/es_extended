@@ -12,34 +12,69 @@
 
 M('events')
 
+module.Ready        = false
+module.Frames       = {}
+module.FocusOrder = {}
+
+local ensureReady = function(fn)
+
+  if module.Ready then
+    fn()
+  else
+
+    local tick
+
+    tick = ESX.SetTick(function()
+
+      if module.Ready then
+        ESX.ClearTick(tick)
+        fn()
+      end
+
+    end)
+
+  end
+
+end
+
 local createFrame = function(name, url, visible)
 
   if visible == nil then
     visible = true
   end
 
-  SendNUIMessage({action = 'create_frame', name = name, url = url, visible = visible})
+  ensureReady(function()
+    SendNUIMessage({action = 'create_frame', name = name, url = url, visible = visible})
+  end)
 
 end
 
 local destroyFrame = function(name)
-	SendNUIMessage({action = 'destroy_frame', name = name})
+
+  ensureReady(function()
+    SendNUIMessage({action = 'destroy_frame', name = name})
+  end)
+
 end
 
 local sendFrameMessage = function(name, msg)
-	SendNUIMessage({target = name, data = msg})
+
+  ensureReady(function()
+    SendNUIMessage({target = name, data = msg})
+  end)
+
 end
 
 local focusFrame = function(name, cursor)
-	SendNUIMessage({action = 'focus_frame', name = name})
-	SetNuiFocus(true, cursor)
+
+  ensureReady(function()
+    SendNUIMessage({action = 'focus_frame', name = name})
+    SetNuiFocus(true, cursor)
+  end)
+
 end
 
-module.Ready        = false
-module.Frames       = {}
-module.FocusOrder = {}
-
-Frame = Extends(nil, 'Frame')
+Frame = Extends(EventEmitter, 'Frame')
 
 Frame.unfocusAll = function()
   module.FocusOrder = {}
@@ -48,13 +83,15 @@ end
 
 function Frame:constructor(name, url, visible)
 
-  self.name = name
-  self.url = url
-  self.handlers = {}
-  self.loaded = false
+  self.super:ctor();
+
+  self.name      = name
+  self.url       = url
+  self.loaded    = false
   self.destroyed = false
-  self.hasFocus = false
+  self.hasFocus  = false
   self.hasCursor = false
+  self.mouse     = {down = {}, pos = {x = -1, y = -1}}
 
   self:on('load', function()
     self.loaded = true
@@ -63,6 +100,46 @@ function Frame:constructor(name, url, visible)
   createFrame(self.name, self.url, visible)
 
   module.Frames[self.name] = self
+  
+  self:on('message', function(msg)
+    if msg.__esxinternal then
+      self:emit('internal', msg.action, table.unpack(msg.args or {}))
+    end
+  end)
+
+  self:on('internal', function(action, ...)
+    self:emit(action, ...)
+  end)
+
+  self:on('mouse:down', function(button)
+    self.mouse.down[button] = true
+  end)
+
+  self:on('mouse:up', function(button)
+    self.mouse.down[button] = false
+  end)
+
+  self:on('mouse:move', function(x, y)
+    
+    local last = table.clone(self.mouse)
+    local data = table.clone(last)
+
+    data.pos.x, data.pos.y = x, y
+
+    if (last.x ~= -1) and (last.y ~= -1) then
+
+      local offsetX = x - last.pos.x
+      local offsetY = y - last.pos.y
+
+      data.direction = {left = offsetX < 0, right = offsetX > 0, up = offsetY < 0, down = offsetY > 0}
+
+      self:emit('mouse:move:offset', offsetX, offsetY, data)
+
+    end
+
+    self.mouse = data
+
+  end)
 
 end
 
@@ -127,19 +204,3 @@ function Frame:unfocus()
 
 end
 
-function Frame:on(name, fn)
-  self.handlers[name]     = self.handlers[name] or {}
-  local handlers          = self.handlers[name]
-  handlers[#handlers + 1] = fn
-end
-
-function Frame:emit(name, ...)
-
-  self.handlers[name] = self.handlers[name] or {}
-  local handlers      = self.handlers[name]
-
-  for i=1, #handlers, 1 do
-    handlers[i](...)
-  end
-
-end
