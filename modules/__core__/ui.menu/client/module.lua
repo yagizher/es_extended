@@ -19,6 +19,10 @@ Menu = Extends(EventEmitter, 'Menu')
 
 function Menu:constructor(name, data, focus)
 
+  if focus == nil then
+    focus = true
+  end
+
   self.super:ctor();
 
   self.name     = name
@@ -26,10 +30,8 @@ function Menu:constructor(name, data, focus)
   self.title    = data.title or 'Untitled ESX Menu'
   self.items    = {}
   self.mouseIn  = false
-
-  if focus == nil then
-    focus = true
-  end
+  self.visible  = true
+  self.hasFocus = focus
 
   local _items = data.items or {}
 
@@ -118,9 +120,12 @@ function Menu:constructor(name, data, focus)
 
   end)
 
-
   self.frame:on('mouse:move:offset', function(offsetX, offsetY, data)
     self:emit('mouse:move:offset', offsetX, offsetY, data)
+  end)
+
+  self.frame:on('destroy', function()
+    self:emit('destroy')
   end)
 
   self:on('internal:ready', function()
@@ -132,7 +137,7 @@ function Menu:constructor(name, data, focus)
     }})
 
     if focus then
-      self.frame:focus(true)
+      self:focus()
     end
 
     self:emit('ready')
@@ -156,7 +161,28 @@ function Menu:constructor(name, data, focus)
   self:on('internal:item.click', function(index)
     self:emit('item.click', self.items[index], index)
   end)
+  
 
+end
+
+function Menu:focus()
+  self.hasFocus = true
+  self.frame:focus(true)
+end
+
+function Menu:unfocus()
+  self.hasFocus = false
+  self.frame:unfocus()
+end
+
+function Menu:show()
+  self.visible = true
+  self.frame:show()
+end
+
+function Menu:hide()
+  self.visible = false
+  self.frame:hide()
 end
 
 function Menu:by(k)

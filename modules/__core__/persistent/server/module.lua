@@ -238,7 +238,7 @@ Persist = function(schema, pk, ...)
     initTable(schema, pk, dbfields)
   end)
 
-  return Extends(pType, extDebugName)
+  return Extends(pType, extDebugName), pType
 
 end
 

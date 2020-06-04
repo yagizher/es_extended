@@ -49,6 +49,22 @@ local createFrame = function(name, url, visible)
 
 end
 
+local showFrame = function(name)
+
+  ensureReady(function()
+    SendNUIMessage({action = 'show_frame', name = name})
+  end)
+
+end
+
+local hideFrame = function(name)
+
+  ensureReady(function()
+    SendNUIMessage({action = 'hide_frame', name = name})
+  end)
+
+end
+
 local destroyFrame = function(name)
 
   ensureReady(function()
@@ -89,6 +105,7 @@ function Frame:constructor(name, url, visible)
   self.url       = url
   self.loaded    = false
   self.destroyed = false
+  self.visible   = visible
   self.hasFocus  = false
   self.hasCursor = false
   self.mouse     = {down = {}, pos = {x = -1, y = -1}}
@@ -97,7 +114,7 @@ function Frame:constructor(name, url, visible)
     self.loaded = true
   end)
 
-  createFrame(self.name, self.url, visible)
+  createFrame(self.name, self.url, self.visible)
 
   module.Frames[self.name] = self
   
@@ -133,6 +150,7 @@ function Frame:constructor(name, url, visible)
 
       data.direction = {left = offsetX < 0, right = offsetX > 0, up = offsetY < 0, down = offsetY > 0}
 
+      emit('mouse:move:offset', offsetX, offsetY, data)
       self:emit('mouse:move:offset', offsetX, offsetY, data)
 
     end
@@ -204,3 +222,12 @@ function Frame:unfocus()
 
 end
 
+function Frame:show()
+  self.visible = true
+  showFrame(self.name)
+end
+
+function Frame:hide()
+  self.visible = false
+  hideFrame(self.name)
+end

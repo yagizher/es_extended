@@ -198,7 +198,7 @@ Extends = function(baseType, debugName)
     if module.debug.dtor then
       newType:tracemethod('dtor')
     end
-
+    
     self:destructor()
 
     for k,v in pairs(self) do

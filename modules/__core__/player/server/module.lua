@@ -13,7 +13,7 @@
 M('persistent')
 M('role')
 
-Player = Persist('players', 'id', Enrolable)
+Player, PlayerBase = Persist('players', 'id', Enrolable)
 
 Player.define({
   {name = 'id',         field = {name = 'id',          type = 'INT',        length = nil, default = nil,    extra = 'NOT NULL AUTO_INCREMENT'}},
@@ -103,9 +103,3 @@ Player.onJoin = function(source)
   end)
 
 end
-
-local p = Player({})
-
-p = nil
-
-
