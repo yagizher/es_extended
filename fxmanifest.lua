@@ -15,12 +15,11 @@ dependencies {
   'spawnmanager',
   'baseevents',
   'mysql-async',
-  'async',
-  'cron',
-  'skinchanger'
+  'async'
 }
 
 files {
+  'data/ped_bones.json',
   'data/peds.json',
   'data/weapon_components.json',
   'data/weapons.json',
@@ -97,6 +96,9 @@ files {
   'modules/__core__/class/shared/events.lua',
   'modules/__core__/class/shared/main.lua',
   'modules/__core__/class/shared/module.lua',
+  'modules/__core__/constants/shared/events.lua',
+  'modules/__core__/constants/shared/main.lua',
+  'modules/__core__/constants/shared/module.lua',
   'modules/__core__/events/shared/events.lua',
   'modules/__core__/events/shared/main.lua',
   'modules/__core__/events/shared/module.lua',
@@ -212,6 +214,7 @@ client_scripts {
   'locales/sc.lua',
   'locales/sv.lua',
   'locales/tc.lua',
+  'vendor/matrix.lua',
   'config/default/config.lua',
   'config/default/config.items.lua',
   'config/default/config.roles.lua',

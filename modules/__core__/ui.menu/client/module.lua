@@ -15,15 +15,17 @@ M('events')
 
 local HUD = M('ui.hud')
 
-Menu = Extends(nil, 'Menu')
+Menu = Extends(EventEmitter, 'Menu')
 
 function Menu:constructor(name, data, focus)
+
+  self.super:ctor();
 
   self.name     = name
   self.float    = data.float or 'top|left'
   self.title    = data.title or 'Untitled ESX Menu'
-  self.handlers = {}
   self.items    = {}
+  self.mouseIn  = false
 
   if focus == nil then
     focus = true
@@ -94,7 +96,7 @@ function Menu:constructor(name, data, focus)
 
   self.frame = Frame('ui:menu:' .. name, 'nui://' .. __RESOURCE__ .. '/modules/__core__/ui.menu/data/html/index.html', true)
 
-  self.frame:on('message', function(msg)
+  self.frame:on('message', function(msg, handleCallback)
 
     if msg.action == 'ready' then
       self:emit('internal:ready')
@@ -102,8 +104,17 @@ function Menu:constructor(name, data, focus)
       self:emit('internal:item.change', msg.prop, msg.val, msg.index + 1)
     elseif msg.action == 'item.click' then
       self:emit('internal:item.click', msg.index + 1)
+    elseif msg.action == 'mouse.in' then
+      self.mouseIn  = true
+    elseif msg.action == 'mouse.out' then
+      self.mouseIn  = false
     end
 
+  end)
+
+
+  self.frame:on('mouse:move:offset', function(offsetX, offsetY, data)
+    self:emit('mouse:move:offset', offsetX, offsetY, data)
   end)
 
   self:on('internal:ready', function()
@@ -139,23 +150,6 @@ function Menu:constructor(name, data, focus)
   self:on('internal:item.click', function(index)
     self:emit('item.click', self.items[index], index)
   end)
-
-end
-
-function Menu:on(name, fn)
-  self.handlers[name]     = self.handlers[name] or {}
-  local handlers          = self.handlers[name]
-  handlers[#handlers + 1] = fn
-end
-
-function Menu:emit(name, ...)
-
-  self.handlers[name] = self.handlers[name] or {}
-  local handlers      = self.handlers[name]
-
-  for i=1, #handlers, 1 do
-    handlers[i](...)
-  end
 
 end
 

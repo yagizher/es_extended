@@ -11,6 +11,7 @@
 --   This copyright should appear in every part of the project code
 local utils = M("utils")
 
+--[[
 module.Init()
 
 Citizen.CreateThread(
@@ -74,7 +75,7 @@ Citizen.CreateThread(
 		end
 	end
 )
-
+]]--
 -- NEED INPUT FROM NUI TO ROTATE CAMERA
 
 -- Citizen.CreateThread(

@@ -19,6 +19,7 @@ module.weapon  = module.weapon  or {}
 module.game    = module.game    or {}
 module.vehicle = module.vehicle or {}
 module.random  = module.random  or {}
+module.time    = module.time    or {}
 
 -- Locals
 local printableChars = {}
@@ -285,5 +286,17 @@ module.random.inRange = function(min, max)
   math.randomseed(GetGameTimer())
 
   return math.random(min, max)
+
+end
+
+module.time.fromTimestamp = function(timestamp)
+  
+  local w = math.floor(timestamp / 86400 / 7)
+  local d = math.floor(timestamp / 86400 % 7)
+  local h = math.floor(timestamp / 3600  % 24)
+  local m = math.floor(timestamp / 60    % 60)
+  local s = math.floor(timestamp % 60)
+
+  return w, d, h, m, s
 
 end
