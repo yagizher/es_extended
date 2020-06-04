@@ -218,8 +218,13 @@ table.by = function(t, k)
   local t2 = {}
 
   for i=1, #t, 1 do
-    local entry  = t[i]
-    t2[entry[k]] = entry
+    local entry = t[i]
+    local val   = entry[k]
+
+    if val ~= nil then
+      t2[val] = entry
+    end
+
   end
 
   return t2

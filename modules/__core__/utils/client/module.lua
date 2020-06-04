@@ -473,7 +473,6 @@ module.game.ensureForcedComponents = function(ped, componentId, drawableId, text
 
     for i=1, #v, 1 do
       local forcedComponent = v[i]
-      print(ped, compId, forcedComponent[2], 0, 0)
       SetPedComponentVariation(ped, compId, forcedComponent[2], 0, 0)
     end
 
@@ -486,7 +485,7 @@ end
 module.game.setEnforcedPedComponentVariation = function(ped, componentId, drawableId, textureId, paletteId)
   paletteId = paletteId or 0
   SetPedComponentVariation(ped, componentId, drawableId, textureId, paletteId)
-  module.game.ensureForcedComponents(ped, componentId, drawableId, textureId)
+  return module.game.ensureForcedComponents(ped, componentId, drawableId, textureId)
 end
 
 -- UI

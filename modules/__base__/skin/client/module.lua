@@ -22,6 +22,34 @@ local SkinEditor = module.Editor
 local humans     = table.concat({MP_M_FREEMODE_01, MP_F_FREEMODE_01}, table.filter(PED_MODELS_HUMANS, function(x) return (x ~= MP_M_FREEMODE_01) and (t ~= MP_F_FREEMODE_01) end))
 local animals    = table.clone(PED_MODELS_ANIMALS)
 
+local componentLabels = {
+  [PV_COMP_BERD] = 'Mask',
+  [PV_COMP_HAIR] = 'Hair',
+  [PV_COMP_UPPR] = 'Arms',
+  [PV_COMP_LOWR] = 'Legs',
+  [PV_COMP_HAND] = 'Bag / Parachute',
+  [PV_COMP_FEET] = 'Shoes',
+  [PV_COMP_TEEF] = 'Accessories',
+  [PV_COMP_ACCS] = 'Undershirt',
+  [PV_COMP_TASK] = 'Body armor',
+  [PV_COMP_DECL] = 'Decals',
+  [PV_COMP_JBIB] = 'Torso / Top',
+}
+
+local componentOrder = {
+  PV_COMP_BERD,
+  PV_COMP_HAIR,
+  PV_COMP_UPPR,
+  PV_COMP_LOWR,
+  PV_COMP_HAND,
+  PV_COMP_FEET,
+  PV_COMP_TEEF,
+  PV_COMP_ACCS,
+  PV_COMP_TASK,
+  PV_COMP_DECL,
+  PV_COMP_JBIB,
+}
+
 function SkinEditor:constructor(ped)
 
   self.super:ctor()
@@ -192,13 +220,31 @@ end
 
 function SkinEditor:openMenu()
 
-  self.menu = Menu('test_menu', {
-    title = 'Test menu',
-    float = 'top|left', -- not needed, default value
-    items = {
-      {name = 'model',   label = self:getModelLabel(0),         type = 'slider', max   = #self.models - 1, visible = self.isPedPlayer},
-      {name = 'enforce', label = 'Enforce compatible elements', type = 'check',  value = true,             visible = self.enforceComponents},
+  local items = {
+    {name = 'model',   label = self:getModelLabel(0),         type = 'slider', max   = #self.models - 1, visible = self.isPedPlayer},
+    {name = 'enforce', label = 'Enforce compatible elements', type = 'check',  value = true,             visible = self.enforceComponents},
+  }
+
+  for i=1, #componentOrder, 1 do
+
+    local comp  = componentOrder[i]
+    local label = componentLabels[comp]
+
+    items[#items + 1] = {
+      name      = 'component.' .. GetEnumKey(PED_COMPONENTS, comp),
+      component = comp,
+      label     = label,
+      type      = 'slider',
+      min       = 0,
+      max       = GetNumberOfPedDrawableVariations(self._ped, comp)
     }
+
+  end
+
+  self.menu = Menu('test_menu', {
+    title = 'Character',
+    float = 'top|left', -- not needed, default value
+    items = items
   })
 
   self.menu:on('mouse:move:offset', function(offsetX, offsetY, data)
@@ -244,16 +290,17 @@ function SkinEditor:onItemChanged(item, prop, val, index)
 
     if item.name == 'model' then
 
+      item.label = self:getModelLabel(val)
+
       -- Ensure not spamming model changes
       if self.modelTimeout ~= nil then
         ESX.ClearTimeout(self.modelTimeout)
       end
 
       self.modelTimeout = ESX.SetTimeout(250, function()
- 
+
         local model  = self.models[val + 1]
         local ped    = self:getPed()
-        item.label   = self:getModelLabel(val)
   
         utils.game.requestModel(model, function()
           
@@ -275,15 +322,50 @@ function SkinEditor:onItemChanged(item, prop, val, index)
       end)
 
     elseif item.name == 'ensure' then
+    
       self.enforceComponents = val
-    end
+    
+    elseif item.component ~= nil then
 
+      self:setComponentVariation(item.component, val)
+
+    end
+  
   end
 
 end
 
 function SkinEditor:getModelLabel(value)
   return 'Model (' .. PED_MODELS_BY_HASH[self.models[value + 1]] .. ')'
+end
+
+function SkinEditor:setComponentVariation(component, drawableId, textureId, paletteId)
+
+  textureId = textureId or 0
+  paletteId = paletteId or 0
+
+  local ped = self:getPed()
+
+  if self.enforceComponents then
+
+    local byComponent = self.menu:by('component')
+    local enforced    = utils.game.setEnforcedPedComponentVariation(ped, component, drawableId, textureId, paletteId)
+
+    for k,v in pairs(enforced) do
+    
+      local compId = tonumber(k)
+  
+      for i=1, #v, 1 do
+        local forcedComponent     = v[i]
+        byComponent[compId].value = forcedComponent[2]
+      end
+  
+    end
+    
+  else
+    SetPedComponentVariation(ped, component, drawableId, textureId, paletteId)
+  end
+
 end
 
 on('esx:ready', function()
