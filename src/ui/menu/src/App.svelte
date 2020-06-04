@@ -228,7 +228,7 @@
 		user-select: none;
 		flex-direction: column;
 		border-radius: 10px;
-    min-width: 280px;
+    width: 320px;
     max-width: calc(100vh - 50px);
     max-height: calc(100vh - 50px);
     overflow-y: auto;

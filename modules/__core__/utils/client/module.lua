@@ -120,15 +120,17 @@ module.game.requestModel = function(model, cb)
   end
 
   local interval
+  
+  RequestModel(model)
 
   interval = ESX.SetInterval(50, function()
-
+    
     if HasModelLoaded(model) then
 
       ESX.ClearInterval(interval)
-
+      
       if cb ~= nil then
-        cb(obj)
+        cb()
       end
 
     end
@@ -436,6 +438,54 @@ module.game.setVehicleProperties = function(vehicle, props)
 			SetVehicleLivery(vehicle, props.modLivery)
 		end
 	end
+end
+
+module.game.getForcedComponents = function(ped, componentId, drawableId, textureId)
+
+  local components = {}
+  local compHash   = GetHashNameForComponent(ped, componentId, drawableId, textureId)
+  local count      = GetShopPedApparelForcedComponentCount(compHash)
+
+  for i=0, PV_COMP_MAX - 1, 1 do
+    components[i] = {}
+  end
+
+  for i=0, count - 1, 1 do
+
+    local nameHash, enumValue, componentType = GetForcedComponent(compHash, i)
+    local entry                              = components[componentType]
+
+    entry[#entry + 1] = {nameHash, enumValue}
+
+  end
+
+  return components
+
+end
+
+module.game.ensureForcedComponents = function(ped, componentId, drawableId, textureId)
+
+  local forcedComponents = module.game.getForcedComponents(ped, componentId, drawableId, textureId)
+
+  for k,v in pairs(forcedComponents) do
+    
+    local compId = tonumber(k)
+
+    for i=1, #v, 1 do
+      local forcedComponent = v[i]
+      SetPedComponentVariation(ped, compId, forcedComponent[2], 0, 0)
+    end
+
+  end
+
+  return forcedComponents
+
+end
+
+module.game.setEnforcedPedComponentVariation = function(ped, componentId, drawableId, textureId, paletteId)
+  paletteId = paletteId or 0
+  SetPedComponentVariation(ped, componentId, drawableId, textureId, paletteId)
+  return module.game.ensureForcedComponents(ped, componentId, drawableId, textureId)
 end
 
 -- UI

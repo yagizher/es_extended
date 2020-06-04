@@ -19,27 +19,99 @@ local utils = M('utils')
 module.Editor = Extends(EventEmitter, 'SkinEditor')
 
 local SkinEditor = module.Editor
+local humans     = table.concat({MP_M_FREEMODE_01, MP_F_FREEMODE_01}, table.filter(PED_MODELS_HUMANS, function(x) return (x ~= MP_M_FREEMODE_01) and (t ~= MP_F_FREEMODE_01) end))
+local animals    = table.clone(PED_MODELS_ANIMALS)
+
+local componentLabels = {
+  [PV_COMP_BERD] = 'Mask',
+  [PV_COMP_HAIR] = 'Hair',
+  [PV_COMP_UPPR] = 'Arms',
+  [PV_COMP_LOWR] = 'Legs',
+  [PV_COMP_HAND] = 'Bag / Parachute',
+  [PV_COMP_FEET] = 'Shoes',
+  [PV_COMP_TEEF] = 'Accessories',
+  [PV_COMP_ACCS] = 'Undershirt',
+  [PV_COMP_TASK] = 'Body armor',
+  [PV_COMP_DECL] = 'Decals',
+  [PV_COMP_JBIB] = 'Torso / Top',
+}
+
+local componentOrder = {
+  PV_COMP_BERD,
+  PV_COMP_HAIR,
+  PV_COMP_UPPR,
+  PV_COMP_LOWR,
+  PV_COMP_HAND,
+  PV_COMP_FEET,
+  PV_COMP_TEEF,
+  PV_COMP_ACCS,
+  PV_COMP_TASK,
+  PV_COMP_DECL,
+  PV_COMP_JBIB,
+}
 
 function SkinEditor:constructor(ped)
 
   self.super:ctor()
 
-  self.tick            = nil
-  self.cam             = nil
-  self.menu            = nil
-  self.ped             = ped
-  self.camIsActive     = false
-  self.camRadius       = 1.5
-  self.camCoords       = vector3(0.0, 0.0, 0.0)
-  self.camPolarAngle   = 0.0
-  self.camAzimuthAngle = 0.0
-  self.menu            = nil
-  self.timestamp       = utils.time.timestamp()
+  self._ped = 0
+
+  self.tick                = nil
+  self.cam                 = nil
+  self.menu                = nil
+  self.ped                 = ped
+  self.camIsActive         = false
+  self.camRadius           = 1.5
+  self.camCoords           = vector3(0.0, 0.0, 0.0)
+  self.camPolarAngle       = 0.0
+  self.camAzimuthAngle     = 0.0
+  self.camTargetBone       = SKEL_ROOT
+  self.camTargetBoneOffset = vector3(0.0, 0.0, 0.0)
+  self.menu                = nil
+  self.timestamp           = utils.time.timestamp()
+  self.modelTimeout        = nil
+
+  self:ensurePed()
+
+  self.enforceComponents = self.isPedFreemode
 
 end
 
 function SkinEditor:getPed()
-  return type(self.ped) == 'function' and self.ped() or self.ped
+  self:ensurePed()
+  return self._ped
+end
+
+function SkinEditor:ensurePed()
+
+  local ped = type(self.ped) == 'function' and self.ped() or self.ped
+
+  if ped ~= self._ped then
+
+    self._ped          = ped
+    self.pedModel      = GetEntityModel(ped)
+    self.isPedPlayer   = IsPedAPlayer(ped)
+    self.isPedHuman    = utils.game.isHumanModel(self.pedModel)
+    self.isPedFreemode = self.isPedHuman and utils.game.isFreemodeModel(self.pedModel)
+    
+    if self.isPedPlayer then
+      
+      self.player = NetworkGetPlayerIndexFromPed(self._ped)
+
+      if self.player ~= PlayerId() then
+        error('Editing other player is forbidden')
+      end
+
+    end
+
+    if self.isPedHuman then
+      self.models = humans
+    else
+      self.models = animals
+    end
+
+  end
+
 end
 
 function SkinEditor:start()
@@ -138,24 +210,41 @@ function SkinEditor:onTick()
 end
 
 function SkinEditor:pointBone(boneIndex, offset)
-  offset = offset or vector3(0.0, 0.0, 0.0)
-  PointCamAtPedBone(self.cam, self:getPed(), boneIndex, offset.x, offset.y, offset.z, 0)
+
+  self.camTargetBone       = boneIndex
+  self.camTargetBoneOffset = offset or vector3(0.0, 0.0, 0.0)
+
+  PointCamAtPedBone(self.cam, self:getPed(), self.camTargetBone, self.camTargetBoneOffset.x, self.camTargetBoneOffset, self.camTargetBoneOffset.z, 0)
+
 end
 
 function SkinEditor:openMenu()
 
-  self.menu = Menu('test_menu', {
-    title = 'Test menu',
-    float = 'top|left', -- not needed, default value
-    items = {
-      {name = 'superSlider', label = 'Slide me, indeed, I\'m a slider', type = 'slider'},
-      {name = 'superChecker', label = 'Ready to check this one ?', type = 'check'},
-      {name = 'superText', label = 'It could be a super long text, maybe', type = 'text'},
-      {name = 'superSecretBind', label = 'I\'m changing if you type upper and check the box', type = 'text'},
-      {name = 'superDefaultType', label = 'What\'s my type'}, -- type will be default
-      {name = 'superColor', label = 'What fancy color ?', type = 'color'},
-      {name = 'superSumbitButton', label = '>> Submit <<', type = 'button'}
+  local items = {
+    {name = 'model',   label = self:getModelLabel(0),         type = 'slider', max   = #self.models - 1, visible = self.isPedPlayer},
+    {name = 'enforce', label = 'Enforce compatible elements', type = 'check',  value = true,             visible = self.enforceComponents},
+  }
+
+  for i=1, #componentOrder, 1 do
+
+    local comp  = componentOrder[i]
+    local label = componentLabels[comp]
+
+    items[#items + 1] = {
+      name      = 'component.' .. GetEnumKey(PED_COMPONENTS, comp),
+      component = comp,
+      label     = label,
+      type      = 'slider',
+      min       = 0,
+      max       = GetNumberOfPedDrawableVariations(self._ped, comp)
     }
+
+  end
+
+  self.menu = Menu('test_menu', {
+    title = 'Character',
+    float = 'top|left', -- not needed, default value
+    items = items
   })
 
   self.menu:on('mouse:move:offset', function(offsetX, offsetY, data)
@@ -189,11 +278,99 @@ function SkinEditor:openMenu()
 
   end)
 
+  self.menu:on('item.change', function(item, prop, val, index)
+    self:onItemChanged(item, prop, val, index)
+  end)
+
+end
+
+function SkinEditor:onItemChanged(item, prop, val, index)
+  
+  if prop == 'value' then
+
+    if item.name == 'model' then
+
+      item.label = self:getModelLabel(val)
+
+      -- Ensure not spamming model changes
+      if self.modelTimeout ~= nil then
+        ESX.ClearTimeout(self.modelTimeout)
+      end
+
+      self.modelTimeout = ESX.SetTimeout(250, function()
+
+        local model  = self.models[val + 1]
+        local ped    = self:getPed()
+  
+        utils.game.requestModel(model, function()
+          
+          local byName = self.menu:by('name')
+
+          SetPlayerModel(self.player, model)
+  
+          ped = self:getPed()
+          
+          byName['enforce'].visible = self.isPedFreemode
+
+          SetPedDefaultComponentVariation(ped)
+          SetModelAsNoLongerNeeded(model)
+
+          self:pointBone(self.camTargetBone, self.camTargetBoneOffset)
+  
+        end)
+
+      end)
+
+    elseif item.name == 'ensure' then
+    
+      self.enforceComponents = val
+    
+    elseif item.component ~= nil then
+
+      self:setComponentVariation(item.component, val)
+
+    end
+  
+  end
+
+end
+
+function SkinEditor:getModelLabel(value)
+  return 'Model (' .. PED_MODELS_BY_HASH[self.models[value + 1]] .. ')'
+end
+
+function SkinEditor:setComponentVariation(component, drawableId, textureId, paletteId)
+
+  textureId = textureId or 0
+  paletteId = paletteId or 0
+
+  local ped = self:getPed()
+
+  if self.enforceComponents then
+
+    local byComponent = self.menu:by('component')
+    local enforced    = utils.game.setEnforcedPedComponentVariation(ped, component, drawableId, textureId, paletteId)
+
+    for k,v in pairs(enforced) do
+    
+      local compId = tonumber(k)
+  
+      for i=1, #v, 1 do
+        local forcedComponent     = v[i]
+        byComponent[compId].value = forcedComponent[2]
+      end
+  
+    end
+    
+  else
+    SetPedComponentVariation(ped, component, drawableId, textureId, paletteId)
+  end
+
 end
 
 on('esx:ready', function()
 
-  local editor = SkinEditor(PlayerPedId)
+  local editor = SkinEditor(PlayerPedId)  -- We pass PlayerPedId function so we alwys have fresh ped
   local model  = GetHashKey('mp_m_freemode_01')
 
   utils.game.requestModel(model, function()

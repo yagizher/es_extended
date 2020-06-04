@@ -20,7 +20,8 @@ dependencies {
 
 files {
   'data/ped_bones.json',
-  'data/peds.json',
+  'data/ped_components.json',
+  'data/ped_models.json',
   'data/weapon_components.json',
   'data/weapons.json',
   'hud/app.css',
