@@ -18,7 +18,6 @@ on('esx:nui:ready', module.onNuiReady)
 -- Key Controls
 Input.On('released', Input.Groups.MOVE, Input.Controls.SAVE_REPLAY_CLIP, function(lastPressed)
 
-  print("ok ?")
   if not ESX.IsDead then
     module.openMenu()
   end
