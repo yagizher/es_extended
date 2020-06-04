@@ -9,6 +9,7 @@
 3. [Changelog](#changelog)
 4. [Module Examples](#examples)
    1. [Menu](#examples-menu)
+   2. [Command](#examples-command)
 
 ## Installation <a name="install"></a>
 
@@ -108,8 +109,10 @@ Another thing is the performance, so far, it's more optimized to work this way.
 
 ## Module Examples <a name="examples"></a>
 
-### [How to create and use menus <a name="examples-menu"></a>](https://github.com/ESX-Org/es_extended/tree/examples/menu/modules/__examples__/menu)
+### [How to create and use menus <a name="examples-menu"></a>](https://github.com/ESX-Org/es_extended/tree/develop/modules/__examples__/menu/)
 
 ![Menu](https://i.snipboard.io/tF8AcT.jpg)
+
+### [How to create basic command <a name="examples-command"></a>](https://github.com/ESX-Org/es_extended/tree/develop/modules/__examples__/ping_command/)
 
 ### More to come...
