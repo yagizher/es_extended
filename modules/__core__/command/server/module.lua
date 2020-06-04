@@ -160,10 +160,6 @@ function Command:register()
 
   RegisterCommand(self.name, genericHandler, false)
 
-  print(('/%s'):format(self.name))
-  print(json.encode(self:getSuggestion()))
-  print(self.description)
-
   emitClient('chat:addSuggestion', -1, ('/%s'):format(self.name), self.description, self:getSuggestion())
 
   -- allow this command to be executed by the provided group
