@@ -10,7 +10,3 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
--- Make all constants global until it break something somehow
-for k,v in pairs(module) do
-  _G[k] = v
-end

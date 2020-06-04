@@ -19,27 +19,71 @@ local utils = M('utils')
 module.Editor = Extends(EventEmitter, 'SkinEditor')
 
 local SkinEditor = module.Editor
+local humans     = table.concat({MP_M_FREEMODE_01, MP_F_FREEMODE_01}, table.filter(PED_MODELS_HUMANS, function(x) return (x ~= MP_M_FREEMODE_01) and (t ~= MP_F_FREEMODE_01) end))
+local animals    = table.clone(PED_MODELS_ANIMALS)
 
 function SkinEditor:constructor(ped)
 
   self.super:ctor()
 
-  self.tick            = nil
-  self.cam             = nil
-  self.menu            = nil
-  self.ped             = ped
-  self.camIsActive     = false
-  self.camRadius       = 1.5
-  self.camCoords       = vector3(0.0, 0.0, 0.0)
-  self.camPolarAngle   = 0.0
-  self.camAzimuthAngle = 0.0
-  self.menu            = nil
-  self.timestamp       = utils.time.timestamp()
+  self._ped = 0
+
+  self.tick                = nil
+  self.cam                 = nil
+  self.menu                = nil
+  self.ped                 = ped
+  self.camIsActive         = false
+  self.camRadius           = 1.5
+  self.camCoords           = vector3(0.0, 0.0, 0.0)
+  self.camPolarAngle       = 0.0
+  self.camAzimuthAngle     = 0.0
+  self.camTargetBone       = SKEL_ROOT
+  self.camTargetBoneOffset = vector3(0.0, 0.0, 0.0)
+  self.menu                = nil
+  self.timestamp           = utils.time.timestamp()
+  self.modelTimeout        = nil
+
+  self:ensurePed()
+
+  self.enforceComponents = self.isPedFreemode
 
 end
 
 function SkinEditor:getPed()
-  return type(self.ped) == 'function' and self.ped() or self.ped
+  self:ensurePed()
+  return self._ped
+end
+
+function SkinEditor:ensurePed()
+
+  local ped = type(self.ped) == 'function' and self.ped() or self.ped
+
+  if ped ~= self._ped then
+
+    self._ped          = ped
+    self.pedModel      = GetEntityModel(ped)
+    self.isPedPlayer   = IsPedAPlayer(ped)
+    self.isPedHuman    = utils.game.isHumanModel(self.pedModel)
+    self.isPedFreemode = self.isPedHuman and utils.game.isFreemodeModel(self.pedModel)
+    
+    if self.isPedPlayer then
+      
+      self.player = NetworkGetPlayerIndexFromPed(self._ped)
+
+      if self.player ~= PlayerId() then
+        error('Editing other player is forbidden')
+      end
+
+    end
+
+    if self.isPedHuman then
+      self.models = humans
+    else
+      self.models = animals
+    end
+
+  end
+
 end
 
 function SkinEditor:start()
@@ -138,8 +182,12 @@ function SkinEditor:onTick()
 end
 
 function SkinEditor:pointBone(boneIndex, offset)
-  offset = offset or vector3(0.0, 0.0, 0.0)
-  PointCamAtPedBone(self.cam, self:getPed(), boneIndex, offset.x, offset.y, offset.z, 0)
+
+  self.camTargetBone       = boneIndex
+  self.camTargetBoneOffset = offset or vector3(0.0, 0.0, 0.0)
+
+  PointCamAtPedBone(self.cam, self:getPed(), self.camTargetBone, self.camTargetBoneOffset.x, self.camTargetBoneOffset, self.camTargetBoneOffset.z, 0)
+
 end
 
 function SkinEditor:openMenu()
@@ -148,13 +196,8 @@ function SkinEditor:openMenu()
     title = 'Test menu',
     float = 'top|left', -- not needed, default value
     items = {
-      {name = 'superSlider', label = 'Slide me, indeed, I\'m a slider', type = 'slider'},
-      {name = 'superChecker', label = 'Ready to check this one ?', type = 'check'},
-      {name = 'superText', label = 'It could be a super long text, maybe', type = 'text'},
-      {name = 'superSecretBind', label = 'I\'m changing if you type upper and check the box', type = 'text'},
-      {name = 'superDefaultType', label = 'What\'s my type'}, -- type will be default
-      {name = 'superColor', label = 'What fancy color ?', type = 'color'},
-      {name = 'superSumbitButton', label = '>> Submit <<', type = 'button'}
+      {name = 'model',   label = self:getModelLabel(0),         type = 'slider', max   = #self.models - 1, visible = self.isPedPlayer},
+      {name = 'enforce', label = 'Enforce compatible elements', type = 'check',  value = true,             visible = self.enforceComponents},
     }
   })
 
@@ -189,11 +232,63 @@ function SkinEditor:openMenu()
 
   end)
 
+  self.menu:on('item.change', function(item, prop, val, index)
+    self:onItemChanged(item, prop, val, index)
+  end)
+
+end
+
+function SkinEditor:onItemChanged(item, prop, val, index)
+  
+  if prop == 'value' then
+
+    if item.name == 'model' then
+
+      -- Ensure not spamming model changes
+      if self.modelTimeout ~= nil then
+        ESX.ClearTimeout(self.modelTimeout)
+      end
+
+      self.modelTimeout = ESX.SetTimeout(250, function()
+ 
+        local model  = self.models[val + 1]
+        local ped    = self:getPed()
+        item.label   = self:getModelLabel(val)
+  
+        utils.game.requestModel(model, function()
+          
+          local byName = self.menu:by('name')
+
+          SetPlayerModel(self.player, model)
+  
+          ped = self:getPed()
+          
+          byName['enforce'].visible = self.isPedFreemode
+
+          SetPedDefaultComponentVariation(ped)
+          SetModelAsNoLongerNeeded(model)
+
+          self:pointBone(self.camTargetBone, self.camTargetBoneOffset)
+  
+        end)
+
+      end)
+
+    elseif item.name == 'ensure' then
+      self.enforceComponents = val
+    end
+
+  end
+
+end
+
+function SkinEditor:getModelLabel(value)
+  return 'Model (' .. PED_MODELS_BY_HASH[self.models[value + 1]] .. ')'
 end
 
 on('esx:ready', function()
 
-  local editor = SkinEditor(PlayerPedId)
+  local editor = SkinEditor(PlayerPedId)  -- We pass PlayerPedId function so we alwys have fresh ped
   local model  = GetHashKey('mp_m_freemode_01')
 
   utils.game.requestModel(model, function()
