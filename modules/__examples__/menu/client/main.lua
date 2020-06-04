@@ -13,3 +13,5 @@
 -- The main file contains imports and logic of the module
 M('ui.menu') -- This module provides global Menu factory method
 M('events') -- This module provides easy ways to receive/send event
+
+module.init()

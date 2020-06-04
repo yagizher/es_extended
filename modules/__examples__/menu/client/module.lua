@@ -12,8 +12,17 @@
 
 -- The module file contains every module specific methods
 local utils = M("utils")
+local Input = M('input')
 
-module.onNuiReady = function()
+module.init = function()
+    module.registerControls()
+end
+
+module.isMenuOpened = function()
+    return module.menu ~= nil
+end
+
+module.openMenu = function()
     -- we instanciate a new menu with name ' test_menu ' and title ' Test Menu '
     module.menu = Menu('test_menu', {
         title = 'Test menu',
@@ -64,4 +73,13 @@ end
 
 module.onItemClicked = function(item, index)
   print('index', index)
+
+  if (item.name == 'superSumbitButton') then
+    module.menu:destroy()
+    module.menu = nil
+  end
+end
+
+module.registerControls = function()
+    Input.RegisterControl(Input.Groups.MOVE, Input.Controls.SAVE_REPLAY_CLIP)
 end
