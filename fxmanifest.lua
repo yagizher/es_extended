@@ -175,7 +175,10 @@ files {
   'modules/__core__/utils/client/module.lua',
   'modules/__examples__/menu/client/events.lua',
   'modules/__examples__/menu/client/main.lua',
-  'modules/__examples__/menu/client/module.lua'
+  'modules/__examples__/menu/client/module.lua',
+  'modules/__examples__/ping_command/client/events.lua',
+  'modules/__examples__/ping_command/client/main.lua',
+  'modules/__examples__/ping_command/client/module.lua'
 }
 
 server_scripts {

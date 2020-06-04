@@ -324,3 +324,8 @@ module.game.isAnimalModel = function(nameOrHash)
   return name:sub(1, 2) == 'a_'
 
 end
+
+
+module.printWarning = function(str)
+  print(('[^3WARNING^7] %s'):format(str))
+end

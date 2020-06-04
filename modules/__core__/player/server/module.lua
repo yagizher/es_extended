@@ -79,6 +79,14 @@ Player.onJoin = function(source)
           player:field('source', source)
           player:on('change', print)
 
+          -- update ACL
+          player:on('role.add', function(roleName)
+            ExecuteCommand(("add_principal identifier.%s group.%s"):format(player.identifier, roleName))
+          end)
+          player:on('role.remove', function(roleName)
+            ExecuteCommand(("remove_principal identifier.%s group.%s"):format(player.identifier, roleName))
+          end)
+
           Player.all[source] = player
 
           emit('esx:player:load', player)
