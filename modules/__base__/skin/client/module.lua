@@ -22,18 +22,18 @@ local SkinEditor = module.Editor
 local humans     = table.concat({MP_M_FREEMODE_01, MP_F_FREEMODE_01}, table.filter(PED_MODELS_HUMANS, function(x) return (x ~= MP_M_FREEMODE_01) and (t ~= MP_F_FREEMODE_01) end))
 local animals    = table.clone(PED_MODELS_ANIMALS)
 
-local componentLabels = {
-  [PV_COMP_BERD] = 'Mask',
-  [PV_COMP_HAIR] = 'Hair',
-  [PV_COMP_UPPR] = 'Arms',
-  [PV_COMP_LOWR] = 'Legs',
-  [PV_COMP_HAND] = 'Bag / Parachute',
-  [PV_COMP_FEET] = 'Shoes',
-  [PV_COMP_TEEF] = 'Accessories',
-  [PV_COMP_ACCS] = 'Undershirt',
-  [PV_COMP_TASK] = 'Body armor',
-  [PV_COMP_DECL] = 'Decals',
-  [PV_COMP_JBIB] = 'Torso / Top',
+local componentConfig = {
+  [PV_COMP_BERD] = {label = 'Mask'             , bone = SKEL_Head       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_HAIR] = {label = 'Hair'             , bone = SKEL_Head       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_UPPR] = {label = 'Arms'             , bone = RB_R_ArmRoll    , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_LOWR] = {label = 'Legs'             , bone = MH_R_Knee       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_HAND] = {label = 'Bag / Parachute'  , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_FEET] = {label = 'Shoes'            , bone = PH_R_Foot       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_TEEF] = {label = 'Accessories'      , bone = SKEL_R_Clavicle , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_ACCS] = {label = 'Undershirt'       , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_TASK] = {label = 'Body armor'       , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_DECL] = {label = 'Decals'           , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_JBIB] = {label = 'Torso / Top'      , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
 }
 
 local componentOrder = {
@@ -62,7 +62,7 @@ function SkinEditor:constructor(ped)
   self.currentMenu         = nil
   self.ped                 = ped
   self.camIsActive         = false
-  self.camRadius           = 1.5
+  self.camRadius           = 1.25
   self.camCoords           = vector3(0.0, 0.0, 0.0)
   self.camPolarAngle       = 0.0
   self.camAzimuthAngle     = 0.0
@@ -71,9 +71,20 @@ function SkinEditor:constructor(ped)
   self.timestamp           = utils.time.timestamp()
   self.modelTimeout        = nil
 
+  self:bindEvents()
   self:ensurePed()
 
-  self.canEnforceComponents = self.isPedFreemode
+end
+
+function SkinEditor:destructor()
+
+  self:unbindEvents()
+
+  self.super:destructor()
+
+end
+
+function SkinEditor:bindEvents()
 
   self.onMouseMoveOffest = on('mouse:move:offset', function(offsetX, offsetY, data)
 
@@ -106,11 +117,28 @@ function SkinEditor:constructor(ped)
 
   end)
 
+  self.onMouseWheel = on('mouse:wheel', function(delta)
+    
+    if not self.currentMenu.mouseIn then
+
+      self.camRadius = self.camRadius + delta * -0.25
+      
+      if self.camRadius < 0.75 then
+        self.camRadius = 0.75
+      elseif self.camRadius > 2.5 then
+        self.camRadius = 2.5
+      end
+
+    end
+
+  end)
+
 end
 
-function SkinEditor:destructor()
+function SkinEditor:unbindEvents()
 
   off('mouse:move:offset', self.onMouseMoveOffest)
+  off('mouse:move:wheel',  self.onMouseWheel)
 
 end
 
@@ -125,12 +153,13 @@ function SkinEditor:ensurePed()
 
   if ped ~= self._ped then
 
-    self._ped          = ped
-    self.pedModel      = GetEntityModel(ped)
-    self.isPedPlayer   = IsPedAPlayer(ped)
-    self.isPedHuman    = utils.game.isHumanModel(self.pedModel)
-    self.isPedFreemode = self.isPedHuman and utils.game.isFreemodeModel(self.pedModel)
-    
+    self._ped                 = ped
+    self.pedModel             = GetEntityModel(ped)
+    self.isPedPlayer          = IsPedAPlayer(ped)
+    self.isPedHuman           = utils.game.isHumanModel(self.pedModel)
+    self.isPedFreemode        = self.isPedHuman and utils.game.isFreemodeModel(self.pedModel)
+    self.canEnforceComponents = self.isPedFreemode
+
     if self.isPedPlayer then
       
       self.player = NetworkGetPlayerIndexFromPed(self._ped)
@@ -202,7 +231,7 @@ function SkinEditor:enableCam()
   local pedCoords = GetEntityCoords(ped)
   local forward   = GetEntityForwardVector(ped)
 
-  self.camRadius                           = 1.5
+  self.camRadius                           = 1.25
   self.camCoords                           = pedCoords + forward * self.camRadius
   self.camPolarAngle, self.camAzimuthAngle = utils.math.world3DtoPolar3D(pedCoords, self.camCoords)
 
@@ -233,10 +262,10 @@ end
 function SkinEditor:onTick()
 
   -- cam
-  local ped       = self:getPed()
-  local pedCoords = GetEntityCoords(ped)
+  local ped    = self:getPed()
+  local coords = GetPedBoneCoords(ped, self.camTargetBone, self.camTargetBoneOffset.x, self.camTargetBoneOffset.y, self.camTargetBoneOffset.z)
 
-  self.camCoords = utils.math.polar3DToWorld3D(pedCoords, self.camPolarAngle, self.camAzimuthAngle, self.camRadius)
+  self.camCoords = utils.math.polar3DToWorld3D(coords, self.camPolarAngle, self.camAzimuthAngle, self.camRadius)
 
   SetCamCoord(self.cam, self.camCoords.x, self.camCoords.y, self.camCoords.z)
 
@@ -265,7 +294,7 @@ function SkinEditor:openMenu()
   for i=1, #componentOrder, 1 do
 
     local comp  = componentOrder[i]
-    local label = componentLabels[comp]
+    local label = componentConfig[comp].label
 
     items[#items + 1] = {type= 'button', name = 'component.' .. GetEnumKey(PED_COMPONENTS, comp), component = comp, label = label}
 
@@ -375,8 +404,14 @@ end
 
 function SkinEditor:openComponentMenu(comp)
 
+  local cfg = componentConfig[comp]
+
+  self.camRadius = cfg.radius
+  
+  self:pointBone(cfg.bone, cfg.offset)
+
   local items = {}
-  local label = componentLabels[comp]
+  local label = cfg.label
 
   local drawable    = GetPedDrawableVariation(self._ped, comp)
   local texture     = GetPedTextureVariation(self._ped, comp)
@@ -435,18 +470,22 @@ function SkinEditor:openComponentMenu(comp)
       local byName = menu:by('name')
 
       if item.name == 'drawable' then
+        
         drawable   = val
         texture    = 0
         textureMax = GetNumberOfPedTextureVariations(self._ped, comp, drawable)
+
+        byName['drawable'].label = getDrawableLabel(drawable)
+        byName['texture' ].max   = textureMax
+        byName['texture' ].value = texture
+
       elseif item.name == 'texture' then
         texture = val
+        byName['texture' ].label = getTextureLabel(texture)
       end
+      
 
-      byName['drawable'].label = getDrawableLabel(drawable)
-      byName['texture' ].label = getTextureLabel(texture)
-      byName['texture' ].max   = textureMax
-
-      self:setComponentVariation(comp, val)
+      self:setComponentVariation(comp, val, texture)
 
     end
 
@@ -455,9 +494,23 @@ function SkinEditor:openComponentMenu(comp)
   menu:on('item.click', function(item, index)
     
     if item.name == 'submit' then
+      
       menu:destroy()
+      
       self.currentMenu = self.mainMenu
+
       self.mainMenu:focus()
+      
+      local ped       = self:getPed()
+      local pedCoords = GetEntityCoords(ped)
+      local forward   = GetEntityForwardVector(ped)
+
+      self.camRadius                           = 1.25
+      self.camCoords                           = pedCoords + forward * self.camRadius
+      self.camPolarAngle, self.camAzimuthAngle = utils.math.world3DtoPolar3D(pedCoords, self.camCoords)
+
+      self:pointBone(SKEL_ROOT)
+
     end
 
   end)

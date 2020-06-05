@@ -22,7 +22,7 @@
       window.addEventListener('keyup',       e => this.onKeyUp(e));
       window.addEventListener('mouseup',     e => this.onMouseUp(e));
       window.addEventListener('mousedown',   e => this.onMouseDown(e));
-      window.addEventListener('mousemove',   e => this.onMouseMove(e));
+      // window.addEventListener('mousemove',   e => this.onMouseMove(e)); We'll spam GetNuiCursorPosition() instead
       window.addEventListener('mousewheel',  e => this.onMouseWheel(e));
       window.addEventListener('contextmenu', e => this.onContextMenu(e));
 

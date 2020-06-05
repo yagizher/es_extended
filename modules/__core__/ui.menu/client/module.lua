@@ -120,6 +120,10 @@ function Menu:constructor(name, data, focus)
 
   end)
 
+  self.frame:on('internal', function(action, ...)
+    self:emit(action, ...)
+  end)
+
   self.frame:on('mouse:move:offset', function(offsetX, offsetY, data)
     self:emit('mouse:move:offset', offsetX, offsetY, data)
   end)

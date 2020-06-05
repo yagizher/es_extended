@@ -12,9 +12,10 @@
 
 M('events')
 
-module.Ready        = false
-module.Frames       = {}
+module.Ready      = false
+module.Frames     = {}
 module.FocusOrder = {}
+module.CursorPos  = {x = 0, y = 0}
 
 local ensureReady = function(fn)
 
@@ -125,6 +126,7 @@ function Frame:constructor(name, url, visible)
   end)
 
   self:on('internal', function(action, ...)
+    emit(action, ...)
     self:emit(action, ...)
   end)
 
@@ -174,6 +176,9 @@ end
 
 function Frame:focus(cursor)
 
+  self.hasFocus  = true
+  self.hasCursor = cursor
+
   local newFocusOrder = {}
 
   for i=1, #module.FocusOrder, 1 do
@@ -188,8 +193,7 @@ function Frame:focus(cursor)
 
   newFocusOrder[#newFocusOrder + 1] = self
 
-  self.hasFocus  = true
-  self.hasCursor = cursor
+  module.FocusOrder = newFocusOrder
 
   focusFrame(self.name, self.hasCursor)
 
@@ -217,6 +221,8 @@ function Frame:unfocus()
   else
     SetNuiFocus(false, false)
   end
+
+  module.FocusOrder = newFocusOrder
 
   self:emit('unfocus')
 
