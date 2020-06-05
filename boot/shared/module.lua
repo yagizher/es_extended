@@ -248,7 +248,7 @@ module.CreateModuleEnv = function(name, group)
   env.__GROUP__    = group
   env.__RESOURCE__ = resName
   env.__DIR__      = 'modules/__' .. group .. '__/' .. name
-  env.run          = function(file, _env) return ESX.EvalFile(env.__RESOURCE__, env.__DIR__ .. '/' .. file, _env) end
+  env.run          = function(file, _env) return ESX.EvalFile(env.__RESOURCE__, env.__DIR__ .. '/' .. file, _env or env) end
   env.module       = {}
   env.M            = module.LoadModule
 
