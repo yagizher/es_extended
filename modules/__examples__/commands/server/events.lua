@@ -11,9 +11,3 @@
 --   This copyright should appear in every part of the project code
 
 M('events')
-
-on('esx:player:load', function(player)
-  for i,roleName in ipairs(player.roles) do
-    ExecuteCommand(("add_principal identifier.%s group.%s"):format(player.identifier, roleName))
-  end
-end)

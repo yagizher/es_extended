@@ -22,8 +22,8 @@ Command = Extends(EventEmitter, 'Command')
 function Command:constructor(name, group, description)
 
   -- ensure name and group arn't nil
-  if not(name) or not(group) then
-    error("A name and a group are required for a Command.")
+  if not(name) then
+    error("A name is required for a Command.")
   end
 
   local doesCommandNameExists = table.find(module.RegisteredCommands, function(command) return command.name == name end)
@@ -158,12 +158,15 @@ function Command:register()
     self.handler(sourcePlayer, parsedArgs, args)
   end
 
-  RegisterCommand(self.name, genericHandler, false)
+  RegisterCommand(self.name, genericHandler, self.group ~= nil)
 
   emitClient('chat:addSuggestion', -1, ('/%s'):format(self.name), self.description, self:getSuggestion())
 
-  -- allow this command to be executed by the provided group
-  ExecuteCommand(('add_ace group.%s command.%s allow'):format(group, name))
+  if (self.group ~= nil) then
+    -- allow this command to be executed by the provided group
+    ExecuteCommand(('remove_aces_for_object command.%s'):format(self.name))
+    ExecuteCommand(('add_ace group.%s command.%s allow'):format(self.group, self.name))
+  end
 
   self.registered = true
 end
