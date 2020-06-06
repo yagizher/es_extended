@@ -74,9 +74,7 @@ on('esx:player:load', function(player)
 
       Identity.all[playerIdentityId] = instance
       player:setIdentityId(playerIdentityId)
-      -- TODO: Fix this line, if I uncomment, I have the 90sec svMain loop block or something
-      -- maybe call field two time with meta table cause server blocking ? No clue !
-      -- player:field('identity', instance)
+      player:field('identity', instance)
     end)
   end
 end)
