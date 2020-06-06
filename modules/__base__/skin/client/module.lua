@@ -428,7 +428,7 @@ function SkinEditor:setComponentVariation(component, drawableId, textureId, pale
 end
 
 function SkinEditor:setModel(model)
-  self.skin[model] = model
+  self.skin['model'] = model
 end
 
 function SkinEditor:setSkinComponentDrawable(componentId, drawableId)
@@ -624,31 +624,43 @@ module.init = function()
   request("skin:getIdentitySkin", function(skin)
 
     if not(skin) then
-      -- We pass PlayerPedId function so we alwys have fresh ped
-      local editor = SkinEditor(PlayerPedId)
-      local model  = GetHashKey('mp_m_freemode_01')
-    
-      utils.game.requestModel(model, function()
-    
-        SetPlayerModel(PlayerId(), model)
-        editor:setModel('mp_m_freemode_01')
-
-        SetPedDefaultComponentVariation(GetPlayerPed(-1))
-
-        for k,v in pairs(componentsConfig) do
-          SetPedComponentVariation(GetPlayerPed(-1), k, v.default or 0, 0, 0)
-          editor:setSkinComponentDrawable(k, v.default)
-          editor:setSkinComponentTexture(k, 0)
-        end
-    
-        SetModelAsNoLongerNeeded(model)
-    
-        editor:start()
-    
-      end)
-
+      module.askOpenEditor()
     else
       module.loadPlayerSkin(skin)
     end
+  end)
+end
+
+module.askOpenEditor = function(skin)
+  -- We pass PlayerPedId function so we alwys have fresh ped
+  local editor = SkinEditor(PlayerPedId)
+  local model  = GetHashKey(skin and skin["model"] or 'mp_m_freemode_01')
+
+  utils.game.requestModel(model, function()
+    SetPlayerModel(PlayerId(), model)
+    editor:setModel(skin and skin["model"] or 'mp_m_freemode_01')
+
+    if (skin == nil) then
+      for k,v in pairs(componentsConfig) do
+        SetPedComponentVariation(GetPlayerPed(-1), k, v.default or 0, 0, 0)
+        editor:setSkinComponentDrawable(k, v.default)
+        editor:setSkinComponentTexture(k, 0)
+      end
+    else
+      for componentIdentifier,components in pairs(skin) do
+        local componentId = getComponentNumberFromIdentifier(componentIdentifier)
+        local drawableId = components.drawable
+        local textureId = components.texture
+
+        SetPedComponentVariation(GetPlayerPed(-1), componentId, drawableId, textureId, 0)
+        editor:setSkinComponentDrawable(componentId, drawableId)
+        editor:setSkinComponentTexture(componentId, textureId)
+      end
+    end
+  
+    SetModelAsNoLongerNeeded(model)
+
+    editor:start()
+
   end)
 end

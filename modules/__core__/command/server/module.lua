@@ -123,35 +123,41 @@ function Command:register()
       local commandArgument = v
       local givenArgument = args[i]
 
-      -- if the command argument is a number, let's ensure the user type a number
-      if commandArgument.type == "number" then
-        if not(string.onlyContainsDigit(givenArgument)) then
-          emitClient('chat:addMessage', source, {
-            color = { 255, 0, 0 },
-            multiline = true,
-            args = {("%s Command"):format(self.name), ('[^1Error^7] Argument %s needs to be a %s, %s given.'):format(commandArgument.name, commandArgument.type, givenArgument)}
-          })
-          return
-        end
-        parsedArgs[commandArgument.name] = tonumber(givenArgument)
+      -- TODO compare to see if it's a required argument or no
+      if (not(givenArgument == nil)) then
 
-      -- if the command argument is a player, let's ensure player exists with provided source
-      elseif commandArgument.type == "player" then
-        local requestedPlayer = Player.fromId(givenArgument)
+        -- if the command argument is a number, let's ensure the user type a number
+        if commandArgument.type == "number" then
 
-        if not(requestedPlayer) then
-          emitClient('chat:addMessage', source, {
-            color = { 255, 0, 0 },
-            multiline = true,
-            args = {("%s Command"):format(self.name), ('[^1Error^7] Argument %s needs an existing player, player %s not found.'):format(commandArgument.name, givenArgument)}
-          })
-          return
+          if not(string.onlyContainsDigit(givenArgument)) then
+            emitClient('chat:addMessage', source, {
+              color = { 255, 0, 0 },
+              multiline = true,
+              args = {("%s Command"):format(self.name), ('[^1Error^7] Argument %s needs to be a %s, %s given.'):format(commandArgument.name, commandArgument.type, givenArgument)}
+            })
+            return
+          end
+          parsedArgs[commandArgument.name] = tonumber(givenArgument)
+
+        -- if the command argument is a player, let's ensure player exists with provided source
+        elseif commandArgument.type == "player" then
+
+          local requestedPlayer = Player.fromId(givenArgument)
+
+          if not(requestedPlayer) then
+            emitClient('chat:addMessage', source, {
+              color = { 255, 0, 0 },
+              multiline = true,
+              args = {("%s Command"):format(self.name), ('[^1Error^7] Argument %s needs an existing player, player %s not found.'):format(commandArgument.name, givenArgument)}
+            })
+            return
+          end
+          parsedArgs[commandArgument.name] = requestedPlayer
+        
+        -- if the command argument is a string, just pass 
+        else
+          parsedArgs[commandArgument.name] = givenArgument
         end
-        parsedArgs[commandArgument.name] = requestedPlayer
-      
-      -- if the command argument is a string, just pass 
-      else
-        parsedArgs[commandArgument.name] = givenArgument
       end
     end
 

@@ -32,10 +32,11 @@ module.findSkin = function(player, cb)
   {
     ['@identityId'] = player:getIdentityId()
   }, function(skin)
-    print(json.encode(skin))
+
     if (skin) then
       return cb(json.decode(skin))
     end
+    
     return cb(nil)
   end)
 end

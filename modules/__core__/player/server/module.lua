@@ -81,14 +81,14 @@ Player.onJoin = function(source)
 
           -- update ACL
           player:on('role.add', function(roleName)
-            ExecuteCommand(("add_principal identifier.%s group.%s"):format(player.identifier, roleName))
+            ExecuteCommand(("add_principal identifier.license:%s group.%s"):format(player.identifier, roleName))
           end)
           player:on('role.remove', function(roleName)
-            ExecuteCommand(("remove_principal identifier.%s group.%s"):format(player.identifier, roleName))
+            ExecuteCommand(("remove_principal identifier.license:%s group.%s"):format(player.identifier, roleName))
           end)
 
           for i,roleName in ipairs(player.roles) do
-            ExecuteCommand(("add_principal identifier.%s group.%s"):format(player.identifier, roleName))
+            ExecuteCommand(("add_principal identifier.license:%s group.%s"):format(player.identifier, roleName))
           end
 
           -- add the player to the global list

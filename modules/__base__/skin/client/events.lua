@@ -13,3 +13,5 @@
 on('esx:ready', function()
   module.init()
 end)
+
+onServer("esx:skin:openEditor", module.askOpenEditor)
