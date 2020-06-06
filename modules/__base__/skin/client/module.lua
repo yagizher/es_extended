@@ -88,7 +88,8 @@ function SkinEditor:bindEvents()
 
   self.onMouseMoveOffest = on('mouse:move:offset', function(offsetX, offsetY, data)
 
-    if not self.currentMenu.mouseIn then -- not self.currentMenu.mouseIn => Mouse not inside menu
+    -- Mouse not inside menu
+    if not self.currentMenu.mouseIn then
       
       if data.down[0] then
 
@@ -481,10 +482,10 @@ function SkinEditor:openComponentMenu(comp)
 
       elseif item.name == 'texture' then
         texture = val
-        byName['texture' ].label = getTextureLabel(texture)
       end
-      
 
+      byName['texture' ].label = getTextureLabel(texture)
+    
       self:setComponentVariation(comp, val, texture)
 
     end
@@ -519,7 +520,8 @@ end
 
 on('esx:ready', function()
 
-  local editor = SkinEditor(PlayerPedId)  -- We pass PlayerPedId function so we alwys have fresh ped
+  -- We pass PlayerPedId function so we alwys have fresh ped
+  local editor = SkinEditor(PlayerPedId)
   local model  = GetHashKey('mp_m_freemode_01')
 
   utils.game.requestModel(model, function()
