@@ -14,11 +14,15 @@ local Command = M("events")
 
 onRequest("skin:save", function(source, cb, skin)
   local player = Player.fromId(source)
+  player:field('skin', skin)
   module.saveSkin(player, skin, cb)
 end)
 
 onRequest("skin:getIdentitySkin", function(source, cb)
   local player = Player.fromId(source)
 
-  module.findSkin(player, cb)
+  module.findSkin(player, function(skin)
+    player:field('skin', skin)  
+    cb(skin)
+  end)
 end)

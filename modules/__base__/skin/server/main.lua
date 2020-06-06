@@ -23,7 +23,8 @@ skinCommand:setHandler(function(player, args, baseArgs)
 
   local targetPlayer = args.player or player
 
-  emitClient("esx:skin:openEditor", player.source)
+  emitClient("esx:skin:openEditor", player.source, player.skin or nil)
+
 end)
 
 skinCommand:register()

@@ -19,6 +19,7 @@ local humans     = table.concat({MP_M_FREEMODE_01, MP_F_FREEMODE_01}, table.filt
 local animals    = table.clone(PED_MODELS_ANIMALS)
 
 local componentsConfig = {
+  [PV_COMP_HEAD] = {id = "head",        default = 0,  label = 'Face'             , bone = SKEL_Head       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
   [PV_COMP_BERD] = {id = "mask",        default = 0,  label = 'Mask'             , bone = SKEL_Head       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
   [PV_COMP_HAIR] = {id = "hair",        default = 4,  label = 'Hair'             , bone = SKEL_Head       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
   [PV_COMP_UPPR] = {id = "arms",        default = 14,  label = 'Arms'             , bone = RB_R_ArmRoll    , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
@@ -33,6 +34,7 @@ local componentsConfig = {
 }
 
 local componentOrder = {
+  PV_COMP_HEAD,
   PV_COMP_BERD,
   PV_COMP_HAIR,
   PV_COMP_UPPR,
@@ -47,6 +49,9 @@ local componentOrder = {
 }
 
 local getComponentIdentifierFromNumber = function(num)
+  if (num == nil) then
+    error("nil value passed to getComponentIdentifierFromNumber")
+  end
   return componentsConfig[num].id
 end
 
@@ -93,7 +98,8 @@ function SkinEditor:destructor()
   self:disableCam()
   self.mainMenu:destroy()
 
-  self.super:destructor()
+  -- TODO : Fix this, field super is nil ?
+  -- self.super:destructor()
 
 end
 
@@ -307,7 +313,7 @@ end
 function SkinEditor:openMenu()
 
   local items = {
-    {name = 'model',   label = self:getModelLabel(0),         type = 'slider', max   = #self.models - 1, visible = self.isPedPlayer},
+    {name = 'model',   label = self:getModelLabelByIndex(0),         type = 'slider', max   = #self.models - 1, visible = self.isPedPlayer},
     {name = 'enforce', label = 'Enforce compatible elements', type = 'check',  value = false,            visible = self.canEnforceComponents},
   }
 
@@ -353,7 +359,7 @@ function SkinEditor:onItemChanged(item, prop, val, index)
 
     if item.name == 'model' then
 
-      item.label = self:getModelLabel(val)
+      item.label = self:getModelLabelByIndex(val)
 
       -- Ensure not spamming model changes
       if self.modelTimeout ~= nil then
@@ -365,12 +371,14 @@ function SkinEditor:onItemChanged(item, prop, val, index)
         local model  = self.models[val + 1]
         local ped    = self:getPed()
   
+        
         utils.game.requestModel(model, function()
           
           local byName = self.mainMenu:by('name')
 
           SetPlayerModel(self.player, model)
-          editor:setModel(self:getModelLabel(model))
+          local modelLabel = self:getModelLabelByIndex(val)
+          self:setModel(modelLabel)
   
           ped = self:getPed()
           
@@ -395,7 +403,7 @@ function SkinEditor:onItemChanged(item, prop, val, index)
 
 end
 
-function SkinEditor:getModelLabel(value)
+function SkinEditor:getModelLabelByIndex(value)
   return 'Model (' .. PED_MODELS_BY_HASH[self.models[value + 1]] .. ')'
 end
 
@@ -433,19 +441,34 @@ end
 
 function SkinEditor:setSkinComponentDrawable(componentId, drawableId)
   local textureId = self:getSkinComponentTexture(componentId) or 0
+  local paletteId = self:getSkinComponentPalette(componentId) or 0
 
   self.skin[getComponentIdentifierFromNumber(componentId)] = {
     drawable = drawableId,
     texture = textureId,
+    palette = paletteId
   }
 end
 
-function SkinEditor:setSkinComponentTexture(componentId, textureId)
+function SkinEditor:setSkinComponentPalette(componentId, paletteId)
+  local textureId = self:getSkinComponentTexture(componentId) or 0
   local drawableId = self:getSkinComponentDrawable(componentId) or 0
 
   self.skin[getComponentIdentifierFromNumber(componentId)] = {
     drawable = drawableId,
     texture = textureId,
+    palette = paletteId
+  }
+end
+
+function SkinEditor:setSkinComponentTexture(componentId, textureId)
+  local drawableId = self:getSkinComponentDrawable(componentId) or 0
+  local paletteId = self:getSkinComponentPalette(componentId) or 0
+
+  self.skin[getComponentIdentifierFromNumber(componentId)] = {
+    drawable = drawableId,
+    texture = textureId,
+    palette = paletteId
   }
 end
 
@@ -483,6 +506,23 @@ function SkinEditor:getSkinComponentTexture(component)
   end
 end
 
+-- either by componentId or component identifier (mask)
+function SkinEditor:getSkinComponentPalette(component)
+  if type(component) == 'number' then
+    if (self.skin[getComponentIdentifierFromNumber(component)]) then
+      return self.skin[getComponentIdentifierFromNumber(component)].palette or 0
+    else
+      return 0
+    end
+  else
+    if (self.skin[getComponentNumberFromIdentifier(component)]) then
+      return self.skin[getComponentIdentifierFromNumber(component)].palette or 0
+    else
+      return 0
+    end
+  end
+end
+
 function SkinEditor:openComponentMenu(comp)
 
   local cfg = componentsConfig[comp]
@@ -496,9 +536,11 @@ function SkinEditor:openComponentMenu(comp)
 
   local drawable = self:getSkinComponentDrawable(comp)
   local texture = self:getSkinComponentTexture(comp)
+  local palette = self:getSkinComponentPalette(comp)
 
   self:setSkinComponentDrawable(comp, drawable)
   self:setSkinComponentTexture(comp, texture)
+  self:setSkinComponentPalette(comp, palette)
 
   local getDrawableLabel = function(drawable)
     local currentDrawable = self:getSkinComponentDrawable(comp)
@@ -508,8 +550,13 @@ function SkinEditor:openComponentMenu(comp)
   local getTextureLabel = function(texture)
     local currentDrawable = self:getSkinComponentDrawable(comp)
     local currentTexture = self:getSkinComponentTexture(comp)
-    return 'Variant (' .. (currentTexture + 1) .. ' / ' .. (GetNumberOfPedTextureVariations(self._ped, comp, currentDrawable) + 1) .. ')'
+    return 'Variant (' .. (currentTexture + 1) .. ' / ' .. (GetNumberOfPedTextureVariations(self._ped, comp, currentDrawable)) .. ')'
   end
+
+  local getPaletteLabel = function(palette)
+    local currentPalette = self:getSkinComponentPalette(comp)
+    return 'Color Playing (' .. (currentPalette + 1) .. ' / ' .. 4 .. ')'
+  end 
 
   items[#items + 1] = {
     name  = 'drawable',
@@ -525,8 +572,17 @@ function SkinEditor:openComponentMenu(comp)
     label = getTextureLabel(texture),
     type  = 'slider',
     min   = 0,
-    max   = GetNumberOfPedTextureVariations(self._ped, comp, GetPedDrawableVariation(self._ped, comp)),
+    max   = GetNumberOfPedTextureVariations(self._ped, comp, GetPedDrawableVariation(self._ped, comp)) - 1,
     value = texture,
+  }
+
+  items[#items + 1] = {
+    name  = 'palette',
+    label = getPaletteLabel(palette),
+    type  = 'slider',
+    min   = 0,
+    max   = 3,
+    value = palette,
   }
 
   items[#items + 1] = {name = 'submit', label = '>> apply <<', type = 'button'}
@@ -557,22 +613,28 @@ function SkinEditor:openComponentMenu(comp)
       if item.name == 'drawable' then
         self:setSkinComponentDrawable(comp, val)
         self:setSkinComponentTexture(comp, 0)
+        self:setSkinComponentPalette(comp, 0)
         textureMax = GetNumberOfPedTextureVariations(self._ped, comp, self:getSkinComponentDrawable(comp))
 
         byName['drawable'].label = getDrawableLabel(self:getSkinComponentDrawable(comp))
-        byName['texture' ].max   = textureMax
-        byName['texture' ].value = 0
+        byName['texture'].max    = textureMax
+        byName['texture'].value  = 0
+        byName['palette'].value  = 0
 
       elseif item.name == 'texture' then
         self:setSkinComponentTexture(comp, val)
+      elseif item.name == 'palette' then
+        self:setSkinComponentPalette(comp, val)
       end
 
+      local currentPalette  = self:getSkinComponentPalette(comp)
       local currentTexture  = self:getSkinComponentTexture(comp)
       local currentDrawable = self:getSkinComponentDrawable(comp)
 
-      byName['texture' ].label = getTextureLabel()
-    
-      self:setComponentVariation(comp, currentDrawable, currentTexture)
+      byName['texture'].label = getTextureLabel()
+      byName['palette'].label = getPaletteLabel()
+
+      self:setComponentVariation(comp, currentDrawable, currentTexture, currentPalette)
     end
 
   end)
@@ -610,16 +672,20 @@ module.loadPlayerSkin = function(skin)
 
   local playerPed = GetPlayerPed(-1)
 
-  for componentId, componentConfig in pairs(componentsConfig) do
-    local skinComponent = skin[componentConfig.id]
-    local drawableId = skinComponent.drawable
-    local textureId = skinComponent.texture
+  for componentIdentifier,component in pairs(skin) do
+    if not(componentIdentifier == "model") then
+      local componentId = getComponentNumberFromIdentifier(componentIdentifier)
+      local drawableId = component.drawable
+      local textureId = component.texture
+      local paletteId = component.palette
 
-    SetPedComponentVariation(playerPed, componentId, drawableId, textureId, 0)
+      SetPedComponentVariation(GetPlayerPed(-1), componentId, drawableId, textureId, paletteId)
+    end
   end
 end
 
 module.init = function()
+  SetNuiFocus(0, 0)
   -- check if the player already has a skin
   request("skin:getIdentitySkin", function(skin)
 
@@ -641,21 +707,30 @@ module.askOpenEditor = function(skin)
     editor:setModel(skin and skin["model"] or 'mp_m_freemode_01')
 
     if (skin == nil) then
+
       for k,v in pairs(componentsConfig) do
         SetPedComponentVariation(GetPlayerPed(-1), k, v.default or 0, 0, 0)
         editor:setSkinComponentDrawable(k, v.default)
         editor:setSkinComponentTexture(k, 0)
+        editor:setSkinComponentPalette(k, 0)
       end
-    else
-      for componentIdentifier,components in pairs(skin) do
-        local componentId = getComponentNumberFromIdentifier(componentIdentifier)
-        local drawableId = components.drawable
-        local textureId = components.texture
 
-        SetPedComponentVariation(GetPlayerPed(-1), componentId, drawableId, textureId, 0)
-        editor:setSkinComponentDrawable(componentId, drawableId)
-        editor:setSkinComponentTexture(componentId, textureId)
+    else
+
+      for componentIdentifier,component in pairs(skin) do
+        if not(componentIdentifier == "model") then
+          local componentId = getComponentNumberFromIdentifier(componentIdentifier)
+          local drawableId = component.drawable
+          local textureId = component.texture
+          local paletteId = component.palette
+
+          SetPedComponentVariation(GetPlayerPed(-1), componentId, drawableId, textureId, paletteId)
+          editor:setSkinComponentDrawable(componentId, drawableId)
+          editor:setSkinComponentTexture(componentId, textureId)
+          editor:setSkinComponentPalette(componentId, paletteId)
+        end
       end
+
     end
   
     SetModelAsNoLongerNeeded(model)
