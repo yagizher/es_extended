@@ -25,3 +25,17 @@ module.saveSkin = function(player, skin, cb)
     end
   end)
 end
+
+module.findSkin = function(player, cb)
+  -- TODO: use ORM to prepare de query
+  MySQL.Async.fetchScalar('SELECT skin FROM identities WHERE id = @identityId',
+  {
+    ['@identityId'] = player:getIdentityId()
+  }, function(skin)
+    print(json.encode(skin))
+    if (skin) then
+      return cb(json.decode(skin))
+    end
+    return cb(nil)
+  end)
+end

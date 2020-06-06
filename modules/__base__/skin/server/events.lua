@@ -16,3 +16,9 @@ onRequest("skin:save", function(source, cb, skin)
   local player = Player.fromId(source)
   module.saveSkin(player, skin, cb)
 end)
+
+onRequest("skin:getIdentitySkin", function(source, cb)
+  local player = Player.fromId(source)
+
+  module.findSkin(player, cb)
+end)

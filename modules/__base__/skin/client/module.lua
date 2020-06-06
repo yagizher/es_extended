@@ -10,10 +10,6 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-M('constants')
-M('events')
-M('ui.menu')
-
 local utils = M('utils')
 
 module.Editor = Extends(EventEmitter, 'SkinEditor')
@@ -22,7 +18,7 @@ local SkinEditor = module.Editor
 local humans     = table.concat({MP_M_FREEMODE_01, MP_F_FREEMODE_01}, table.filter(PED_MODELS_HUMANS, function(x) return (x ~= MP_M_FREEMODE_01) and (t ~= MP_F_FREEMODE_01) end))
 local animals    = table.clone(PED_MODELS_ANIMALS)
 
-local componentConfig = {
+local componentsConfig = {
   [PV_COMP_BERD] = {id = "mask",        default = 0,  label = 'Mask'             , bone = SKEL_Head       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
   [PV_COMP_HAIR] = {id = "hair",        default = 4,  label = 'Hair'             , bone = SKEL_Head       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
   [PV_COMP_UPPR] = {id = "arms",        default = 14,  label = 'Arms'             , bone = RB_R_ArmRoll    , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
@@ -51,11 +47,11 @@ local componentOrder = {
 }
 
 local getComponentIdentifierFromNumber = function(num)
-  return componentConfig[num].id
+  return componentsConfig[num].id
 end
 
 local getComponentNumberFromIdentifier = function(id)
-  for k,v in pairs(componentConfig) do
+  for k,v in pairs(componentsConfig) do
     if (v.id == id) then
       return k
     end
@@ -318,7 +314,7 @@ function SkinEditor:openMenu()
   for i=1, #componentOrder, 1 do
 
     local comp  = componentOrder[i]
-    local label = componentConfig[comp].label
+    local label = componentsConfig[comp].label
 
     items[#items + 1] = {type= 'button', name = 'component.' .. GetEnumKey(PED_COMPONENTS, comp), component = comp, label = label}
 
@@ -374,6 +370,7 @@ function SkinEditor:onItemChanged(item, prop, val, index)
           local byName = self.mainMenu:by('name')
 
           SetPlayerModel(self.player, model)
+          editor:setModel(self:getModelLabel(model))
   
           ped = self:getPed()
           
@@ -430,6 +427,10 @@ function SkinEditor:setComponentVariation(component, drawableId, textureId, pale
   end
 end
 
+function SkinEditor:setModel(model)
+  self.skin[model] = model
+end
+
 function SkinEditor:setSkinComponentDrawable(componentId, drawableId)
   local textureId = self:getSkinComponentTexture(componentId) or 0
 
@@ -484,7 +485,7 @@ end
 
 function SkinEditor:openComponentMenu(comp)
 
-  local cfg = componentConfig[comp]
+  local cfg = componentsConfig[comp]
 
   self.camRadius = cfg.radius
   
@@ -602,28 +603,52 @@ function SkinEditor:openComponentMenu(comp)
 
 end
 
-on('esx:ready', function()
+module.loadPlayerSkin = function(skin)
 
-  -- We pass PlayerPedId function so we alwys have fresh ped
-  local editor = SkinEditor(PlayerPedId)
-  local model  = GetHashKey('mp_m_freemode_01')
+  local model  = GetHashKey(skin['model'])
+  SetPlayerModel(PlayerId(), model)
 
-  utils.game.requestModel(model, function()
+  local playerPed = GetPlayerPed(-1)
 
-    SetPlayerModel(PlayerId(), model)
+  for componentId, componentConfig in pairs(componentsConfig) do
+    local skinComponent = skin[componentConfig.id]
+    local drawableId = skinComponent.drawable
+    local textureId = skinComponent.texture
+
+    SetPedComponentVariation(playerPed, componentId, drawableId, textureId, 0)
+  end
+end
+
+module.init = function()
+  -- check if the player already has a skin
+  request("skin:getIdentitySkin", function(skin)
+
+    if not(skin) then
+      -- We pass PlayerPedId function so we alwys have fresh ped
+      local editor = SkinEditor(PlayerPedId)
+      local model  = GetHashKey('mp_m_freemode_01')
     
-    SetPedDefaultComponentVariation(GetPlayerPed(-1))
-    for k,v in pairs(componentConfig) do
-      SetPedComponentVariation(GetPlayerPed(-1), k, v.default or 0, 0, 0)
-      editor:setSkinComponentDrawable(k, v.default)
-      editor:setSkinComponentTexture(k, 0)
+      utils.game.requestModel(model, function()
+    
+        SetPlayerModel(PlayerId(), model)
+        editor:setModel('mp_m_freemode_01')
+
+        SetPedDefaultComponentVariation(GetPlayerPed(-1))
+
+        for k,v in pairs(componentsConfig) do
+          SetPedComponentVariation(GetPlayerPed(-1), k, v.default or 0, 0, 0)
+          editor:setSkinComponentDrawable(k, v.default)
+          editor:setSkinComponentTexture(k, 0)
+        end
+    
+        SetModelAsNoLongerNeeded(model)
+    
+        editor:start()
+    
+      end)
+
+    else
+      module.loadPlayerSkin(skin)
     end
-
-    SetModelAsNoLongerNeeded(model)
-
-    editor:start()
-
   end)
-
-end)
-
+end

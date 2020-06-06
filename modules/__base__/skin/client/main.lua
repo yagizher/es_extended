@@ -10,6 +10,9 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 local utils = M("utils")
+M('constants')
+M('events')
+M('ui.menu')
 
 --[[
 module.Init()
