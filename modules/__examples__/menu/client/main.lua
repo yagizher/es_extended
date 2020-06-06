@@ -13,5 +13,8 @@
 -- The main file contains imports and logic of the module
 M('ui.menu') -- This module provides global Menu factory method
 M('events') -- This module provides easy ways to receive/send event
+local input = M('input')
 
 module.init()
+
+input.On('released', input.Groups.MOVE, input.Controls.SAVE_REPLAY_CLIP, module.onMenuOpenRequested)

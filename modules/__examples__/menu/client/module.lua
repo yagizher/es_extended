@@ -11,18 +11,14 @@
 --   This copyright should appear in every part of the project code
 
 -- The module file contains every module specific methods
-local utils = M("utils")
-local Input = M('input')
+local utils = M('utils')
+local input = M('input')
 
 module.init = function()
-    module.registerControls()
+    input.RegisterControl(input.Groups.MOVE, input.Controls.SAVE_REPLAY_CLIP)
 end
 
-module.isMenuOpened = function()
-    return module.menu ~= nil
-end
-
-module.openMenu = function()
+module.onMenuOpenRequested = function()
     -- we instanciate a new menu with name ' test_menu ' and title ' Test Menu '
     module.menu = Menu('test_menu', {
         title = 'Test menu',
@@ -72,12 +68,10 @@ module.onItemChanged = function(item, prop, val, index)
 end
 
 module.onItemClicked = function(item, index)
-  print('index', index)
-
-  if (item.name == 'superSumbitButton') then
-    module.menu:destroy()
-    module.menu = nil
-  end
+    if (item.name == "superSumbitButton") then
+        module.menu:destroy()
+        module.menu = nil
+    end
 end
 
 module.registerControls = function()
