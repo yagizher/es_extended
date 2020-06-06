@@ -87,8 +87,14 @@ Player.onJoin = function(source)
             ExecuteCommand(("remove_principal identifier.%s group.%s"):format(player.identifier, roleName))
           end)
 
+          for i,roleName in ipairs(player.roles) do
+            ExecuteCommand(("add_principal identifier.%s group.%s"):format(player.identifier, roleName))
+          end
+
+          -- add the player to the global list
           Player.all[source] = player
 
+          -- propagate the information
           emit('esx:player:load', player)
           emitClient('esx:player:load', source, source)
 
