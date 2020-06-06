@@ -38,6 +38,8 @@ end)
 
 onRequest('esx:cache:identity:get', function(source, cb, id)
 
+  local player = Player.fromId(source)
+
   local instance = Identity.all[id]
 
   if instance then
@@ -59,4 +61,22 @@ onRequest('esx:cache:identity:get', function(source, cb, id)
 
   end
 
+end)
+
+on('esx:player:load', function(player)
+  local playerIdentityId = player:getIdentityId()
+
+  if (playerIdentityId ~= nil) then
+    Identity.findOne({id = playerIdentityId}, function(instance)
+      if instance == nil then
+        return
+      end
+
+      Identity.all[playerIdentityId] = instance
+      player:setIdentityId(playerIdentityId)
+      -- TODO: Fix this line, if I uncomment, I have the 90sec svMain loop block or something
+      -- maybe call field two time with meta table cause server blocking ? No clue !
+      -- player:field('identity', instance)
+    end)
+  end
 end)

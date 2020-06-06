@@ -10,4 +10,18 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-
+-- maybe change this with a class skin that inherit perstistance
+-- so we can have utils functions to save/retrieve datas if we map player and skin ?
+-- cb is optional
+module.saveSkin = function(player, skin, cb)
+  -- TODO: use ORM to prepare de query
+  MySQL.Async.execute('UPDATE identities SET skin = @skin WHERE id = @identityId',
+  {
+    ['@skin'] = json.encode(skin),
+    ['@identityId'] = player:getIdentityId()
+  }, function(affectedRows)
+    if (cb) then
+      cb(skin)
+    end
+  end)
+end

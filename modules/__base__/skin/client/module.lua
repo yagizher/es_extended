@@ -23,17 +23,17 @@ local humans     = table.concat({MP_M_FREEMODE_01, MP_F_FREEMODE_01}, table.filt
 local animals    = table.clone(PED_MODELS_ANIMALS)
 
 local componentConfig = {
-  [PV_COMP_BERD] = {label = 'Mask'             , bone = SKEL_Head       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_HAIR] = {label = 'Hair'             , bone = SKEL_Head       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_UPPR] = {label = 'Arms'             , bone = RB_R_ArmRoll    , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_LOWR] = {label = 'Legs'             , bone = MH_R_Knee       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_HAND] = {label = 'Bag / Parachute'  , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_FEET] = {label = 'Shoes'            , bone = PH_R_Foot       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_TEEF] = {label = 'Accessories'      , bone = SKEL_R_Clavicle , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_ACCS] = {label = 'Undershirt'       , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_TASK] = {label = 'Body armor'       , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_DECL] = {label = 'Decals'           , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_JBIB] = {label = 'Torso / Top'      , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_BERD] = {id = "mask",        default = 0,  label = 'Mask'             , bone = SKEL_Head       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_HAIR] = {id = "hair",        default = 4,  label = 'Hair'             , bone = SKEL_Head       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_UPPR] = {id = "arms",        default = 14,  label = 'Arms'             , bone = RB_R_ArmRoll    , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_LOWR] = {id = "legs",        default = 28,  label = 'Legs'             , bone = MH_R_Knee       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_HAND] = {id = "holdable",    default = 0,  label = 'Bag / Parachute'  , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_FEET] = {id = "shoes",       default = 12,  label = 'Shoes'            , bone = PH_R_Foot       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_TEEF] = {id = "accessories", default = 10,  label = 'Accessories'      , bone = SKEL_R_Clavicle , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_ACCS] = {id = "undershirt",  default = 13,  label = 'Undershirt'       , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_TASK] = {id = "armor",       default = 0,  label = 'Body armor'       , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_DECL] = {id = "decals",      default = 1,  label = 'Decals'           , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_JBIB] = {id = "torso",       default = 24,  label = 'Torso / Top'      , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
 }
 
 local componentOrder = {
@@ -49,6 +49,19 @@ local componentOrder = {
   PV_COMP_DECL,
   PV_COMP_JBIB,
 }
+
+local getComponentIdentifierFromNumber = function(num)
+  return componentConfig[num].id
+end
+
+local getComponentNumberFromIdentifier = function(id)
+  for k,v in pairs(componentConfig) do
+    if (v.id == id) then
+      return k
+    end
+  end
+  return nil
+end
 
 function SkinEditor:constructor(ped)
 
@@ -71,6 +84,8 @@ function SkinEditor:constructor(ped)
   self.timestamp           = utils.time.timestamp()
   self.modelTimeout        = nil
 
+  self.skin                = {}
+
   self:bindEvents()
   self:ensurePed()
 
@@ -79,9 +94,17 @@ end
 function SkinEditor:destructor()
 
   self:unbindEvents()
+  self:disableCam()
+  self.mainMenu:destroy()
 
   self.super:destructor()
 
+end
+
+function SkinEditor:save()
+  request('skin:save', function()
+    self:destructor()
+  end, self.skin)
 end
 
 function SkinEditor:bindEvents()
@@ -301,6 +324,9 @@ function SkinEditor:openMenu()
 
   end
 
+  items[#items + 1] = {name = 'sep', label = ""}
+  items[#items + 1] = {type= 'button', name = 'save', label = "💾 Save 💾"}
+
   self.mainMenu = Menu('skin', {
     title = 'Character',
     float = 'top|left', -- not needed, default value
@@ -317,6 +343,8 @@ function SkinEditor:openMenu()
     
     if item.component ~= nil then
       self:openComponentMenu(item.component)
+    elseif item.name == 'save' then
+      self:save()
     end
 
   end)
@@ -400,7 +428,58 @@ function SkinEditor:setComponentVariation(component, drawableId, textureId, pale
   else
     SetPedComponentVariation(ped, component, drawableId, textureId, paletteId)
   end
+end
 
+function SkinEditor:setSkinComponentDrawable(componentId, drawableId)
+  local textureId = self:getSkinComponentTexture(componentId) or 0
+
+  self.skin[getComponentIdentifierFromNumber(componentId)] = {
+    drawable = drawableId,
+    texture = textureId,
+  }
+end
+
+function SkinEditor:setSkinComponentTexture(componentId, textureId)
+  local drawableId = self:getSkinComponentDrawable(componentId) or 0
+
+  self.skin[getComponentIdentifierFromNumber(componentId)] = {
+    drawable = drawableId,
+    texture = textureId,
+  }
+end
+
+-- either by componentId or component identifier (mask)
+function SkinEditor:getSkinComponentDrawable(component)
+  if type(component) == 'number' then
+    if (self.skin[getComponentIdentifierFromNumber(component)]) then
+      return self.skin[getComponentIdentifierFromNumber(component)].drawable or 0
+    else
+      return 0
+    end
+  else
+    if (self.skin[getComponentNumberFromIdentifier(component)]) then
+      return self.skin[getComponentIdentifierFromNumber(component)].drawable or 0
+    else
+      return 0
+    end
+  end
+end
+
+-- either by componentId or component identifier (mask)
+function SkinEditor:getSkinComponentTexture(component)
+  if type(component) == 'number' then
+    if (self.skin[getComponentIdentifierFromNumber(component)]) then
+      return self.skin[getComponentIdentifierFromNumber(component)].texture or 0
+    else
+      return 0
+    end
+  else
+    if (self.skin[getComponentNumberFromIdentifier(component)]) then
+      return self.skin[getComponentIdentifierFromNumber(component)].texture or 0
+    else
+      return 0
+    end
+  end
 end
 
 function SkinEditor:openComponentMenu(comp)
@@ -414,17 +493,21 @@ function SkinEditor:openComponentMenu(comp)
   local items = {}
   local label = cfg.label
 
-  local drawable    = GetPedDrawableVariation(self._ped, comp)
-  local texture     = GetPedTextureVariation(self._ped, comp)
-  local drawableMax = GetNumberOfPedDrawableVariations(self._ped, comp)
-  local textureMax  = GetNumberOfPedTextureVariations(self._ped, comp, drawable)
+  local drawable = self:getSkinComponentDrawable(comp)
+  local texture = self:getSkinComponentTexture(comp)
+
+  self:setSkinComponentDrawable(comp, drawable)
+  self:setSkinComponentTexture(comp, texture)
 
   local getDrawableLabel = function(drawable)
-    return 'Model (' .. (drawable + 1) .. ' / ' .. (drawableMax + 1) .. ')'
+    local currentDrawable = self:getSkinComponentDrawable(comp)
+    return 'Model (' .. (currentDrawable + 1) .. ' / ' .. (GetNumberOfPedDrawableVariations(self._ped, comp)) .. ')'
   end
 
   local getTextureLabel = function(texture)
-    return 'Variant (' .. (texture + 1) .. ' / ' .. (textureMax + 1) .. ')'
+    local currentDrawable = self:getSkinComponentDrawable(comp)
+    local currentTexture = self:getSkinComponentTexture(comp)
+    return 'Variant (' .. (currentTexture + 1) .. ' / ' .. (GetNumberOfPedTextureVariations(self._ped, comp, currentDrawable) + 1) .. ')'
   end
 
   items[#items + 1] = {
@@ -471,23 +554,24 @@ function SkinEditor:openComponentMenu(comp)
       local byName = menu:by('name')
 
       if item.name == 'drawable' then
-        
-        drawable   = val
-        texture    = 0
-        textureMax = GetNumberOfPedTextureVariations(self._ped, comp, drawable)
+        self:setSkinComponentDrawable(comp, val)
+        self:setSkinComponentTexture(comp, 0)
+        textureMax = GetNumberOfPedTextureVariations(self._ped, comp, self:getSkinComponentDrawable(comp))
 
-        byName['drawable'].label = getDrawableLabel(drawable)
+        byName['drawable'].label = getDrawableLabel(self:getSkinComponentDrawable(comp))
         byName['texture' ].max   = textureMax
-        byName['texture' ].value = texture
+        byName['texture' ].value = 0
 
       elseif item.name == 'texture' then
-        texture = val
+        self:setSkinComponentTexture(comp, val)
       end
 
-      byName['texture' ].label = getTextureLabel(texture)
-    
-      self:setComponentVariation(comp, val, texture)
+      local currentTexture  = self:getSkinComponentTexture(comp)
+      local currentDrawable = self:getSkinComponentDrawable(comp)
 
+      byName['texture' ].label = getTextureLabel()
+    
+      self:setComponentVariation(comp, currentDrawable, currentTexture)
     end
 
   end)
@@ -527,7 +611,14 @@ on('esx:ready', function()
   utils.game.requestModel(model, function()
 
     SetPlayerModel(PlayerId(), model)
-    SetPedDefaultComponentVariation(PlayerPedId())
+    
+    SetPedDefaultComponentVariation(GetPlayerPed(-1))
+    for k,v in pairs(componentConfig) do
+      SetPedComponentVariation(GetPlayerPed(-1), k, v.default or 0, 0, 0)
+      editor:setSkinComponentDrawable(k, v.default)
+      editor:setSkinComponentTexture(k, 0)
+    end
+
     SetModelAsNoLongerNeeded(model)
 
     editor:start()
