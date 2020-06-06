@@ -378,7 +378,7 @@ function SkinEditor:onItemChanged(item, prop, val, index)
 
           SetPlayerModel(self.player, model)
           local modelLabel = self:getModelLabelByIndex(val)
-          self:setModel(modelLabel)
+          self:setModel(PED_MODELS_BY_HASH[self.models[val + 1]])
   
           ped = self:getPed()
           
