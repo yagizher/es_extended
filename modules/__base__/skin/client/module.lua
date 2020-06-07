@@ -248,6 +248,9 @@ function Camera:stop()
 end
 
 function Camera:destroy()
+
+  self:stop()
+
   off('mouse:move:offset', self.onMouseMoveOffest)
   off('mouse:move:wheel',  self.onMouseWheel)
 
@@ -310,8 +313,7 @@ end
 
 function SkinEditor:destructor()
 
-  self:unbindEvents()
-  self.cam:disable()
+  self.cam:destroy()
   self.mainMenu:destroy()
 
   -- TODO : Fix this, field super is nil ?
@@ -322,7 +324,7 @@ function SkinEditor:start()
   self.cam:start()
   self:openMenu()
 
-  self.cam:pointToBone(SKEL_ROOT)
+  self:mainCameraScene()
 
   self.skin:apply()
 
@@ -398,6 +400,11 @@ function SkinEditor:openMenu()
   self.mainMenu:on('item.click', function(item, index)
     
     if item.component ~= nil then
+
+      if (item.name == 'component.PV_COMP_HAIR') then
+        return self:openHairMenu(item.component)
+      end
+
       self:openComponentMenu(item.component)
     elseif item.name == 'save' then
       self:save()
@@ -470,23 +477,33 @@ function SkinEditor:onItemChanged(item, prop, val, index)
 end
 
 function SkinEditor:getBlendFaceLabel()
-  return "Face ( " .. self.skin:getBlend()[1] .. " / " .. 45 .. " )"
+  return "Face ( " .. (self.skin:getBlend()[1] + 1) .. " / " .. 45 .. " )"
 end
 
 function SkinEditor:getBlendSkinToneLabel()
-  return "Skin Tone ( " .. self.skin:getBlend()[2] .. " / " .. 45 .. " )"
+  return "Skin Tone ( " .. (self.skin:getBlend()[2] + 1) .. " / " .. 45 .. " )"
 end
 
 function SkinEditor:getComponentDrawableLabel(componentId)
-  return "Model ( " .. (self.skin:getComponent(componentId)[1] + 1) .. " / " .. GetNumberOfPedDrawableVariations(self._ped, componentId) .. " )"
+  return "Model ( " .. (self.skin:getComponent(componentId)[1] + 1) .. " / " .. GetNumberOfPedDrawableVariations(GetPlayerPed(-1), componentId) .. " )"
 end
 
 function SkinEditor:getComponentTextureLabel(componentId)
-  return "Variant ( " .. (self.skin:getComponent(componentId)[2] + 1) .. " / " .. GetNumberOfPedTextureVariations(self._ped, componentId, self.skin:getComponent(componentId)[1]) .. " )"
+  return "Variant ( " .. (self.skin:getComponent(componentId)[2] + 1) .. " / " .. GetNumberOfPedTextureVariations(GetPlayerPed(-1), componentId, self.skin:getComponent(componentId)[1]) .. " )"
+end
+
+function SkinEditor:getHairColor1Label()
+  return "Color 1 ( " .. (self.skin:getHairColor()[1] + 1) .. " / " .. GetNumHairColors() .. " )"
+end
+
+function SkinEditor:getHairColor2Label()
+  return "Color 2 ( " .. (self.skin:getHairColor()[2] + 1) .. " / " .. GetNumHairColors() .. " )"
 end
 
 -- TODO: refactor this so split into either a different class or another file
 function SkinEditor:openComponentMenu(comp)
+
+  self:ensurePed()
 
   local cfg = Config.componentsConfig[comp]
 
@@ -567,21 +584,119 @@ function SkinEditor:openComponentMenu(comp)
       self.currentMenu = self.mainMenu
 
       self.mainMenu:focus()
-      
-      local ped       = self:getPed()
-      local pedCoords = GetEntityCoords(ped)
-      local forward   = GetEntityForwardVector(ped)
-
-      self.cam:setRadius(1.25)
-      self.cam:setCoords(pedCoords + forward * 1.25)
-      self.cam:setPolarAzimuthAngle(utils.math.world3DtoPolar3D(pedCoords, self.camCoords))
-
-      self.cam:pointToBone(SKEL_ROOT)
-
+      self:mainCameraScene()
     end
 
   end)
 
+end
+
+-- TODO: refactor this so split into either a different class or another file
+function SkinEditor:openHairMenu(comp)
+
+  self:ensurePed()
+
+  self.cam:setRadius(1.25)
+  
+  self.cam:pointToBone(SKEL_Head, vector3(0.0,0.0,0.0))
+
+  local items = {}
+
+  items[#items + 1] = {
+    name  = 'drawable',
+    label = self:getComponentDrawableLabel(PV_COMP_HAIR),
+    type  = 'slider',
+    min   = 0,
+    max   = GetNumberOfPedDrawableVariations(self._ped, PV_COMP_HAIR) - 1,
+    value = self.skin:getComponent(comp)[1],
+  }
+
+  items[#items + 1] = {
+    name  = 'hair_color_1',
+    label = self:getHairColor1Label(),
+    type  = 'slider',
+    min   = 0,
+    max   = GetNumHairColors(),
+    value = self.skin:getHairColor()[1],
+  }
+
+  items[#items + 1] = {
+    name  = 'hair_color_2',
+    label = self:getHairColor2Label(),
+    type  = 'slider',
+    min   = 0,
+    max   = GetNumHairColors(),
+    value = self.skin:getHairColor()[2],
+  }
+
+  items[#items + 1] = {name = 'submit', label = '>> apply <<', type = 'button'}
+  
+  if self.mainMenu.visible then
+    self.mainMenu:hide()
+  end
+
+  local menu = Menu('skin.hair', {
+    title = label,
+    float = 'top|left', -- not needed, default value
+    items = items
+  })
+
+  self.currentMenu = menu
+
+  menu:on('destroy', function()
+    self.mainMenu:show()
+  end)
+
+  menu:on('item.change', function(item, prop, val, index)
+
+    if prop == 'value' then
+
+      local byName = menu:by('name')
+
+      if item.name == 'drawable' then
+        self.skin:setComponentDrawable(comp, val)
+
+        byName['drawable'].label = self:getComponentDrawableLabel(comp, val)
+
+      elseif item.name == 'hair_color_1' then
+        self.skin:setHairColor1(val)
+        byName['hair_color_1'].label = self:getHairColor1Label()
+      elseif item.name == 'hair_color_2' then
+        self.skin:setHairColor2(val)
+        byName['hair_color_2'].label = self:getHairColor2Label()
+      end
+
+      self.skin:apply()
+    end
+
+  end)
+
+  menu:on('item.click', function(item, index)
+    
+    if item.name == 'submit' then
+      
+      menu:destroy()
+      
+      self.currentMenu = self.mainMenu
+
+      self.mainMenu:focus()
+      self:mainCameraScene()
+    end
+
+  end)
+
+end
+
+function SkinEditor:mainCameraScene()
+  local ped       = GetPlayerPed(-1)
+  local pedCoords = GetEntityCoords(ped)
+  local forward   = GetEntityForwardVector(ped)
+
+  self.cam:setRadius(1.25)
+  self.cam:setCoords(pedCoords + forward * 1.25)
+  self.cam:setPolarAzimuthAngle(utils.math.world3DtoPolar3D(pedCoords, pedCoords + forward * 1.25))
+
+  self.cam:pointToBone(SKEL_ROOT, vector3(0.0,0.0,0.0))
 end
 
 function SkinEditor:getModelLabelByIndex(value)
@@ -602,7 +717,7 @@ end
 module.init = function()
   -- check if the player already has a skin
   request("skin:getIdentitySkin", function(skinContent)
-    if not(skin) then
+    if skinContent == nil then
       module.askOpenEditor()
     else
       module.loadPlayerSkin(skinContent)
