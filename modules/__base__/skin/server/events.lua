@@ -11,6 +11,11 @@
 --   This copyright should appear in every part of the project code
 
 local Command = M("events")
+local migrate = M('migrate')
+
+on("esx:db:ready", function()
+  migrate.Ensure("skin", "base")
+end)
 
 onRequest("skin:save", function(source, cb, skin)
   local player = Player.fromId(source)

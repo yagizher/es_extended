@@ -12,10 +12,6 @@
 
 M('command')
 
-local migrate = M('migrate')
-
-migrate.Ensure("skin", "base")
-
 local skinCommand = Command("skin", "admin", "Open the skin editor for you or someone else")
 skinCommand:addArgument("player", "player", "The player to open the skin editor", true)
 
