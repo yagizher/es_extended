@@ -13,50 +13,23 @@
 local utils = M('utils')
 
 module.Editor = Extends(EventEmitter, 'SkinEditor')
+module.Skin   = Extends(EventEmitter, 'Skin')
+-- TODO: move to another module
+module.Camera = Extends(EventEmitter, 'Camera')
 
 local SkinEditor = module.Editor
-local humans     = table.concat({MP_M_FREEMODE_01, MP_F_FREEMODE_01}, table.filter(PED_MODELS_HUMANS, function(x) return (x ~= MP_M_FREEMODE_01) and (t ~= MP_F_FREEMODE_01) end))
-local animals    = table.clone(PED_MODELS_ANIMALS)
-
-local componentsConfig = {
-  [PV_COMP_HEAD] = {id = "head",        default = 0,  label = 'Face'             , bone = SKEL_Head       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_BERD] = {id = "mask",        default = 0,  label = 'Mask'             , bone = SKEL_Head       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_HAIR] = {id = "hair",        default = 4,  label = 'Hair'             , bone = SKEL_Head       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_UPPR] = {id = "arms",        default = 14,  label = 'Arms'             , bone = RB_R_ArmRoll    , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_LOWR] = {id = "legs",        default = 28,  label = 'Legs'             , bone = MH_R_Knee       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_HAND] = {id = "holdable",    default = 0,  label = 'Bag / Parachute'  , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_FEET] = {id = "shoes",       default = 12,  label = 'Shoes'            , bone = PH_R_Foot       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_TEEF] = {id = "accessories", default = 10,  label = 'Accessories'      , bone = SKEL_R_Clavicle , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_ACCS] = {id = "undershirt",  default = 13,  label = 'Undershirt'       , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_TASK] = {id = "armor",       default = 0,  label = 'Body armor'       , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_DECL] = {id = "decals",      default = 1,  label = 'Decals'           , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_JBIB] = {id = "torso",       default = 24,  label = 'Torso / Top'      , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-}
-
-local componentOrder = {
-  PV_COMP_HEAD,
-  PV_COMP_BERD,
-  PV_COMP_HAIR,
-  PV_COMP_UPPR,
-  PV_COMP_LOWR,
-  PV_COMP_HAND,
-  PV_COMP_FEET,
-  PV_COMP_TEEF,
-  PV_COMP_ACCS,
-  PV_COMP_TASK,
-  PV_COMP_DECL,
-  PV_COMP_JBIB,
-}
+local Skin = module.Skin
+local Camera = module.Camera
 
 local getComponentIdentifierFromNumber = function(num)
   if (num == nil) then
     error("nil value passed to getComponentIdentifierFromNumber")
   end
-  return componentsConfig[num].id
+  return Config.componentsConfig[num].id
 end
 
 local getComponentNumberFromIdentifier = function(id)
-  for k,v in pairs(componentsConfig) do
+  for k,v in pairs(Config.componentsConfig) do
     if (v.id == id) then
       return k
     end
@@ -64,17 +37,117 @@ local getComponentNumberFromIdentifier = function(id)
   return nil
 end
 
-function SkinEditor:constructor(ped)
-
+function Skin:constructor(config)
   self.super:ctor()
 
-  self._ped = 0
+  self.model = config and config.model or "mp_m_freemode_01"
+  self.components = config and config.components or self:getDefaultComponents()
+  self.blend = config and config.blend or self:getDefaultBlend()
+  self.hairColor = config and config.hair_color or self:getDefaultHairColor()
+end
 
-  self.tick                = nil
-  self.cam                 = nil
-  self.mainMenu            = nil
-  self.currentMenu         = nil
-  self.ped                 = ped
+function Skin:getDefaultComponents()
+  local _components = {}
+  for k,v in pairs(Config.componentsConfig) do
+    _components[k] = v.default or {0, 0}
+  end
+
+  return _components
+end
+
+function Skin:getDefaultBlend()
+  return Config.defaultBlend
+end
+
+function Skin:getDefaultHairColor()
+  return Config.defaultHairColor
+end
+
+function Skin:getComponent(idOrName)
+  if (type(idOrName) == "number") then
+    return self.components[idOrName]
+  else
+    return self.components[getComponentNumberFromIdentifier(idOrName)]
+  end
+end
+
+function Skin:getBlend()
+  return self.blend
+end
+
+function Skin:getHairColor()
+  return self.hairColor
+end
+
+function Skin:getModel()
+  return self.model
+end
+
+function Skin:setComponentDrawable(componentIdOrName, drawableId)
+  local component = self:getComponent(componentIdOrName)
+  component[1] = drawableId
+end
+
+function Skin:setComponentTexture(componentIdOrName, textureId)
+  local component = self:getComponent(componentIdOrName)
+  component[2] = textureId
+end
+
+function Skin:setSkinTone(skinTone)
+  self.blend[2] = skinTone
+end
+
+function Skin:setFace(face)
+  self.blend[1] = face
+end
+
+function Skin:setHairColor1(hairColor1)
+  self.hairColor[1] = hairColor1
+end
+
+function Skin:setHairColor2(hairColor2)
+  self.hairColor[2] = hairColor2
+end
+
+function Skin:setModel(model)
+  self.model = model
+  return self
+end
+
+function Skin:apply()
+  local modelHash = GetHashKey(self:getModel())
+  
+  utils.game.requestModel(modelHash, function()
+    SetPlayerModel(PlayerId(), modelHash)
+
+    local ped = GetPlayerPed(-1)
+
+    local blend = self:getBlend()
+    SetPedHeadBlendData(ped, blend[1], blend[1], blend[1], blend[2], blend[2], blend[2], 1.0, 1.0, 1.0, true)
+
+    for componentId,component in pairs(self.components) do
+      SetPedComponentVariation(ped, componentId, component[1], component[2], 1)
+    end
+
+    local hairColor = self:getHairColor()
+    SetPedHairColor(ped, hairColor[1], hairColor[2])
+
+    SetModelAsNoLongerNeeded(modelHash)
+  end)
+  
+end
+
+function Skin:serialize()
+  return {
+    components = self.components,
+    blend = self.blend,
+    hair_color = self.hairColor
+  }
+end
+
+function Camera:constructor(shouldMoveCam)
+  self.super:ctor()
+
   self.camIsActive         = false
   self.camRadius           = 1.25
   self.camCoords           = vector3(0.0, 0.0, 0.0)
@@ -82,39 +155,19 @@ function SkinEditor:constructor(ped)
   self.camAzimuthAngle     = 0.0
   self.camTargetBone       = SKEL_ROOT
   self.camTargetBoneOffset = vector3(0.0, 0.0, 0.0)
-  self.timestamp           = utils.time.timestamp()
-  self.modelTimeout        = nil
-
-  self.skin                = {}
-
-  self:bindEvents()
-  self:ensurePed()
-
+  self.timestamp = utils.time.timestamp()
+  self.shouldMoveCam       = shouldMoveCam
+  self.cameraId            = nil
+  self.tick                = nil
 end
 
-function SkinEditor:destructor()
-
-  self:unbindEvents()
-  self:disableCam()
-  self.mainMenu:destroy()
-
-  -- TODO : Fix this, field super is nil ?
-  -- self.super:destructor()
-
-end
-
-function SkinEditor:save()
-  request('skin:save', function()
-    self:destructor()
-  end, self.skin)
-end
-
-function SkinEditor:bindEvents()
-
+-- TODO: split this into multiple pieces
+-- and make it re-usable (extends camera so it could be use for anything)
+function Camera:start()
   self.onMouseMoveOffest = on('mouse:move:offset', function(offsetX, offsetY, data)
 
     -- Mouse not inside menu
-    if not self.currentMenu.mouseIn then
+    if self.shouldMoveCam() then
       
       if data.down[0] then
 
@@ -144,8 +197,8 @@ function SkinEditor:bindEvents()
   end)
 
   self.onMouseWheel = on('mouse:wheel', function(delta)
-    
-    if not self.currentMenu.mouseIn then
+
+    if self.shouldMoveCam() then
 
       self.camRadius = self.camRadius + delta * -0.25
       
@@ -159,12 +212,147 @@ function SkinEditor:bindEvents()
 
   end)
 
+  local ped = GetPlayerPed(-1)
+  local pedCoords = GetEntityCoords(ped)
+  local forward   = GetEntityForwardVector(ped)
+
+  self.camRadius                           = 1.25
+  self.camCoords                           = pedCoords + forward * self.camRadius
+  self.camPolarAngle, self.camAzimuthAngle = utils.math.world3DtoPolar3D(pedCoords, self.camCoords)
+
+  if not DoesCamExist(self.cameraId) then
+    self.cameraId = CreateCam('DEFAULT_SCRIPTED_CAMERA', true)
+  end
+
+  SetCamActive(self.cameraId, true)
+  RenderScriptCams(true, false, 500, true, true)
+
+  SetCamCoord(self.cameraId, self.camCoords.x, self.camCoords.y, self.camCoords.z)
+
+  self.camIsActive = true
+
+  self:emit('cam.enable')
+
+  self.tick = ESX.SetTick(function()
+    self:onTick()
+  end)
 end
 
-function SkinEditor:unbindEvents()
+function Camera:stop()
+  SetCamActive(self.cameraId, false)
+  RenderScriptCams(false, true, 500, true, true)
 
+  self.camIsActive = false
+
+  self:emit('cam.disable')
+end
+
+function Camera:destroy()
   off('mouse:move:offset', self.onMouseMoveOffest)
   off('mouse:move:wheel',  self.onMouseWheel)
+
+  ESX.ClearTick(self.tick)
+
+  DestroyCam(self.cameraId, false)
+  self.cameraId = nil
+
+  self:emit('destoyed')
+end
+
+function Camera:pointToBone(boneIndex, offset)
+  self.camTargetBone       = boneIndex
+  self.camTargetBoneOffset = offset or vector3(0.0, 0.0, 0.0)
+
+  PointCamAtPedBone(self.cameraId, GetPlayerPed(-1), self.camTargetBone, self.camTargetBoneOffset.x, self.camTargetBoneOffset, self.camTargetBoneOffset.z, 0)
+end
+
+function Camera:onTick()
+  local coords = GetPedBoneCoords(GetPlayerPed(-1), self.camTargetBone, self.camTargetBoneOffset.x, self.camTargetBoneOffset.y, self.camTargetBoneOffset.z)
+
+  self.camCoords = utils.math.polar3DToWorld3D(coords, self.camPolarAngle, self.camAzimuthAngle, self.camRadius)
+
+  SetCamCoord(self.cameraId, self.camCoords.x, self.camCoords.y, self.camCoords.z)
+
+  -- time
+  local w, d, h, m, s = utils.time.fromTimestamp(self.timestamp)
+  NetworkOverrideClockTime(h, m, s)
+end
+
+function Camera:setRadius(radius)
+  self.camRadius = radius
+end
+
+function Camera:setCoords(coords)
+  self.camCoords = coords
+end
+
+function Camera:setPolarAzimuthAngle(polarAngle, azimuthAngle)
+  self.camPolarAngle = polarAngle
+  self.camAzimuthAngle = azimuthAngle
+end
+
+function SkinEditor:constructor(skinContent)
+  self.super:ctor()
+
+  self.skin = Skin(skinContent)
+  self._ped = 0
+  self.tick = nil
+  self.mainMenu = nil
+  self.currentMenu = nil
+  self.modelTimeout = nil
+
+  self.cam = Camera(function()
+    return not self.currentMenu.mouseIn
+  end)
+
+  self:ensurePed()
+end
+
+function SkinEditor:destructor()
+
+  self:unbindEvents()
+  self.cam:disable()
+  self.mainMenu:destroy()
+
+  -- TODO : Fix this, field super is nil ?
+  -- self.super:destructor()
+end
+
+function SkinEditor:start()
+  self.cam:start()
+  self:openMenu()
+
+  self.cam:pointToBone(SKEL_ROOT)
+
+  self.skin:apply()
+
+  self:emit('start')
+end
+
+function SkinEditor:ensurePed()
+  local ped = GetPlayerPed(-1)
+  self._ped                 = ped
+  self.pedModel             = GetEntityModel(ped)
+  self.isPedPlayer          = IsPedAPlayer(ped)
+  self.isPedHuman           = utils.game.isHumanModel(self.pedModel)
+  self.isPedFreemode        = self.isPedHuman and utils.game.isFreemodeModel(self.pedModel)
+  self.canEnforceComponents = self.isPedFreemode
+
+  if self.isPedPlayer then
+    
+    self.player = NetworkGetPlayerIndexFromPed(self._ped)
+
+    if self.player ~= PlayerId() then
+      error('Editing other player is forbidden')
+    end
+
+  end
+
+  if self.isPedHuman then
+    self.models = Config.humans
+  else
+    self.models = Config.animals
+  end
 
 end
 
@@ -173,154 +361,20 @@ function SkinEditor:getPed()
   return self._ped
 end
 
-function SkinEditor:ensurePed()
-
-  local ped = type(self.ped) == 'function' and self.ped() or self.ped
-
-  if ped ~= self._ped then
-
-    self._ped                 = ped
-    self.pedModel             = GetEntityModel(ped)
-    self.isPedPlayer          = IsPedAPlayer(ped)
-    self.isPedHuman           = utils.game.isHumanModel(self.pedModel)
-    self.isPedFreemode        = self.isPedHuman and utils.game.isFreemodeModel(self.pedModel)
-    self.canEnforceComponents = self.isPedFreemode
-
-    if self.isPedPlayer then
-      
-      self.player = NetworkGetPlayerIndexFromPed(self._ped)
-
-      if self.player ~= PlayerId() then
-        error('Editing other player is forbidden')
-      end
-
-    end
-
-    if self.isPedHuman then
-      self.models = humans
-    else
-      self.models = animals
-    end
-
-  end
-
-end
-
-function SkinEditor:start()
-
-  self:enableCam()
-  self:openMenu()
-
-  self.tick = ESX.SetTick(function()
-    self:onTick()
-  end)
-
-  self:pointBone(SKEL_ROOT)
-
-  self:emit('start')
-
-end
-
-function SkinEditor:stop()
-
-  ESX.ClearTick(self.tick)
-
-  self:destroyCam()
-  self:destroyMenu()
-
-  self:emit('stop')
-
-end
-
-function SkinEditor:ensureCam()
-
-  if not DoesCamExist(self.cam) then
-    self.cam = CreateCam('DEFAULT_SCRIPTED_CAMERA', true)
-  end
-
-end
-
-function SkinEditor:destroyCam()
-  self:disableCam()
-  DestroyCam(self.cam, false)
-  self.cam = nil
-end
-
-function SkinEditor:destroyMenu()
-  self.mainMenu:destroy()
-  self.mainMenu = nil
-end
-
-function SkinEditor:enableCam()
-
-  local ped       = self:getPed()
-  local pedCoords = GetEntityCoords(ped)
-  local forward   = GetEntityForwardVector(ped)
-
-  self.camRadius                           = 1.25
-  self.camCoords                           = pedCoords + forward * self.camRadius
-  self.camPolarAngle, self.camAzimuthAngle = utils.math.world3DtoPolar3D(pedCoords, self.camCoords)
-
-  self:ensureCam()
-
-  SetCamActive(self.cam, true)
-  RenderScriptCams(true, false, 500, true, true)
-
-  SetCamCoord(self.cam, self.camCoords.x, self.camCoords.y, self.camCoords.z)
-
-  self.camIsActive = true
-
-  self:emit('cam.enable')
-
-end
-
-function SkinEditor:disableCam()
-
-  SetCamActive(module.cam, false)
-  RenderScriptCams(false, true, 500, true, true)
-
-  self.camIsActive = false
-
-  self:emit('cam.disable')
-
-end
-
-function SkinEditor:onTick()
-
-  -- cam
-  local ped    = self:getPed()
-  local coords = GetPedBoneCoords(ped, self.camTargetBone, self.camTargetBoneOffset.x, self.camTargetBoneOffset.y, self.camTargetBoneOffset.z)
-
-  self.camCoords = utils.math.polar3DToWorld3D(coords, self.camPolarAngle, self.camAzimuthAngle, self.camRadius)
-
-  SetCamCoord(self.cam, self.camCoords.x, self.camCoords.y, self.camCoords.z)
-
-  -- time
-  local w, d, h, m, s = utils.time.fromTimestamp(self.timestamp)
-  NetworkOverrideClockTime(h, m, s)
-
-end
-
-function SkinEditor:pointBone(boneIndex, offset)
-
-  self.camTargetBone       = boneIndex
-  self.camTargetBoneOffset = offset or vector3(0.0, 0.0, 0.0)
-
-  PointCamAtPedBone(self.cam, self:getPed(), self.camTargetBone, self.camTargetBoneOffset.x, self.camTargetBoneOffset, self.camTargetBoneOffset.z, 0)
-
-end
-
 function SkinEditor:openMenu()
 
   local items = {
     {name = 'model',   label = self:getModelLabelByIndex(0),         type = 'slider', max   = #self.models - 1, visible = self.isPedPlayer},
-    {name = 'enforce', label = 'Enforce compatible elements', type = 'check',  value = false,            visible = self.canEnforceComponents},
+    {name = 'enforce', label = 'Enforce compatible elements (WIP)', type = 'check',  value = false,            visible = self.canEnforceComponents},
   }
 
-  for i=1, #componentOrder, 1 do
+  items[#items + 1] = {type= 'slider', name = 'blend.face', max   = 45, value = self.skin:getBlend()[1], label = self:getBlendFaceLabel()}
+  items[#items + 1] = {type= 'slider', name = 'blend.skin', max   = 45, value = self.skin:getBlend()[2], label = self:getBlendSkinToneLabel()}
 
-    local comp  = componentOrder[i]
-    local label = componentsConfig[comp].label
+  for i=1, #Config.componentOrder, 1 do
+
+    local comp  = Config.componentOrder[i]
+    local label = Config.componentsConfig[comp].label
 
     items[#items + 1] = {type= 'button', name = 'component.' .. GetEnumKey(PED_COMPONENTS, comp), component = comp, label = label}
 
@@ -353,6 +407,7 @@ function SkinEditor:openMenu()
 
 end
 
+
 function SkinEditor:onItemChanged(item, prop, val, index)
   
   if prop == 'value' then
@@ -360,7 +415,6 @@ function SkinEditor:onItemChanged(item, prop, val, index)
     if item.name == 'model' then
 
       item.label = self:getModelLabelByIndex(val)
-
       -- Ensure not spamming model changes
       if self.modelTimeout ~= nil then
         ESX.ClearTimeout(self.modelTimeout)
@@ -370,24 +424,22 @@ function SkinEditor:onItemChanged(item, prop, val, index)
 
         local model  = self.models[val + 1]
         local ped    = self:getPed()
-  
-        
+
         utils.game.requestModel(model, function()
-          
+
           local byName = self.mainMenu:by('name')
 
-          SetPlayerModel(self.player, model)
+          self.skin:setModel(PED_MODELS_BY_HASH[self.models[val + 1]]):apply()
           local modelLabel = self:getModelLabelByIndex(val)
-          self:setModel(PED_MODELS_BY_HASH[self.models[val + 1]])
-  
+
           ped = self:getPed()
-          
+
           byName['enforce'].visible = self.isPedFreemode
 
           SetPedDefaultComponentVariation(ped)
           SetModelAsNoLongerNeeded(model)
 
-          self:pointBone(self.camTargetBone, self.camTargetBoneOffset)
+          self.cam:pointToBone(SKEL_ROOT)
   
         end)
 
@@ -397,216 +449,70 @@ function SkinEditor:onItemChanged(item, prop, val, index)
     
       self.canEnforceComponents = val
 
+    elseif item.name == 'blend.face' then
+
+      self.skin:setFace(val)
+      self.skin:apply()
+
+      item.label = self:getBlendFaceLabel()
+      
+    elseif item.name == 'blend.skin' then
+
+      self.skin:setSkinTone(val)
+      self.skin:apply()
+
+      item.label = self:getBlendSkinToneLabel()
+
     end
   
   end
 
 end
 
-function SkinEditor:getModelLabelByIndex(value)
-  return 'Model (' .. PED_MODELS_BY_HASH[self.models[value + 1]] .. ')'
+function SkinEditor:getBlendFaceLabel()
+  return "Face ( " .. self.skin:getBlend()[1] .. " / " .. 45 .. " )"
 end
 
-function SkinEditor:setComponentVariation(component, drawableId, textureId, paletteId)
-
-  local cfg = componentsConfig[component]
-
-  textureId = textureId or 0
-  paletteId = paletteId or 0
-
-  local ped = self._ped
-
-  -- if self.canEnforceComponents then
-
-  --   local byComponent = self.mainMenu:by('component')
-  --   local enforced    = utils.game.setEnforcedPedComponentVariation(ped, component, drawableId, textureId, paletteId)
-
-  --   for k,v in pairs(enforced) do
-    
-  --     local compId = tonumber(k)
-  
-  --     for i=1, #v, 1 do
-  --       local forcedComponent     = v[i]
-  --       byComponent[compId].value = forcedComponent[2]
-  --     end
-  
-  --   end
-    
-  -- else
-
-  if (cfg.id == "hair") then
-    print("SetPedComponentVariation : " .. drawableId .. " " .. textureId)
-    print(paletteId)
-    SetPedHairColor(ped, paletteId, paletteId)
-    SetPedComponentVariation(ped, component, drawableId, textureId, 2)
-    -- SetPedComponentVariation(ped, component, drawableId, 1, 1)
-    -- print("SetPedHairColor : " .. paletteId)
-    -- SetPedHairColor(ped, math.random(1,63), math.random(1,63))
-  else
-    SetPedComponentVariation(ped, component, drawableId, textureId, paletteId)
-  end
-  -- end
+function SkinEditor:getBlendSkinToneLabel()
+  return "Skin Tone ( " .. self.skin:getBlend()[2] .. " / " .. 45 .. " )"
 end
 
-function SkinEditor:setModel(model)
-  self.skin['model'] = model
+function SkinEditor:getComponentDrawableLabel(componentId)
+  return "Model ( " .. (self.skin:getComponent(componentId)[1] + 1) .. " / " .. GetNumberOfPedDrawableVariations(self._ped, componentId) .. " )"
 end
 
-function SkinEditor:setSkinComponentDrawable(componentId, drawableId)
-  local textureId = self:getSkinComponentTexture(componentId) or 0
-  local paletteId = self:getSkinComponentPalette(componentId) or 0
-
-  self.skin[getComponentIdentifierFromNumber(componentId)] = {
-    drawable = drawableId,
-    texture = textureId,
-    palette = paletteId
-  }
-end
-
-function SkinEditor:setSkinComponentPalette(componentId, paletteId)
-  local textureId = self:getSkinComponentTexture(componentId) or 0
-  local drawableId = self:getSkinComponentDrawable(componentId) or 0
-
-  self.skin[getComponentIdentifierFromNumber(componentId)] = {
-    drawable = drawableId,
-    texture = textureId,
-    palette = paletteId
-  }
-end
-
-function SkinEditor:setSkinComponentTexture(componentId, textureId)
-  local drawableId = self:getSkinComponentDrawable(componentId) or 0
-  local paletteId = self:getSkinComponentPalette(componentId) or 0
-
-  self.skin[getComponentIdentifierFromNumber(componentId)] = {
-    drawable = drawableId,
-    texture = textureId,
-    palette = paletteId
-  }
-end
-
--- either by componentId or component identifier (mask)
-function SkinEditor:getSkinComponentDrawable(component)
-  if type(component) == 'number' then
-    if (self.skin[getComponentIdentifierFromNumber(component)]) then
-      return self.skin[getComponentIdentifierFromNumber(component)].drawable or 0
-    else
-      return 0
-    end
-  else
-    if (self.skin[getComponentNumberFromIdentifier(component)]) then
-      return self.skin[getComponentIdentifierFromNumber(component)].drawable or 0
-    else
-      return 0
-    end
-  end
-end
-
--- either by componentId or component identifier (mask)
-function SkinEditor:getSkinComponentTexture(component)
-  if type(component) == 'number' then
-    if (self.skin[getComponentIdentifierFromNumber(component)]) then
-      return self.skin[getComponentIdentifierFromNumber(component)].texture or 0
-    else
-      return 0
-    end
-  else
-    if (self.skin[getComponentNumberFromIdentifier(component)]) then
-      return self.skin[getComponentIdentifierFromNumber(component)].texture or 0
-    else
-      return 0
-    end
-  end
-end
-
--- either by componentId or component identifier (mask)
-function SkinEditor:getSkinComponentPalette(component)
-  if type(component) == 'number' then
-    if (self.skin[getComponentIdentifierFromNumber(component)]) then
-      return self.skin[getComponentIdentifierFromNumber(component)].palette or 0
-    else
-      return 0
-    end
-  else
-    if (self.skin[getComponentNumberFromIdentifier(component)]) then
-      return self.skin[getComponentIdentifierFromNumber(component)].palette or 0
-    else
-      return 0
-    end
-  end
+function SkinEditor:getComponentTextureLabel(componentId)
+  return "Variant ( " .. (self.skin:getComponent(componentId)[2] + 1) .. " / " .. GetNumberOfPedTextureVariations(self._ped, componentId, self.skin:getComponent(componentId)[1]) .. " )"
 end
 
 -- TODO: refactor this so split into either a different class or another file
 function SkinEditor:openComponentMenu(comp)
 
-  local cfg = componentsConfig[comp]
+  local cfg = Config.componentsConfig[comp]
 
-  self.camRadius = cfg.radius
+  self.cam:setRadius(cfg.radius)
   
-  self:pointBone(cfg.bone, cfg.offset)
+  self.cam:pointToBone(cfg.bone, cfg.offset)
 
   local items = {}
   local label = cfg.label
 
-  local drawable = self:getSkinComponentDrawable(comp)
-  local texture = self:getSkinComponentTexture(comp)
-  local palette = self:getSkinComponentPalette(comp)
-
-  self:setSkinComponentDrawable(comp, drawable)
-  self:setSkinComponentTexture(comp, texture)
-  self:setSkinComponentPalette(comp, palette)
-
-  local maxDrawableVariation = GetNumberOfPedDrawableVariations(self._ped, comp)
-  local maxTextureVariation = GetNumberOfPedTextureVariations(self._ped, comp, drawable)
-  local maxPaletteVariation = 4
-
-  if (cfg.id == "hair") then
-    maxPaletteVariation = 64
-  end
-
-  local getDrawableLabel = function(drawable)
-    local currentDrawable = self:getSkinComponentDrawable(comp)
-    return 'Model (' .. (currentDrawable + 1) .. ' / ' .. GetNumberOfPedDrawableVariations(self._ped, comp) .. ')'
-  end
-
-  local getTextureLabel = function(texture)
-    local currentDrawable = self:getSkinComponentDrawable(comp)
-    local currentTexture = self:getSkinComponentTexture(comp)
-
-    return 'Variant (' .. (currentTexture + 1) .. ' / ' .. (GetNumberOfPedTextureVariations(self._ped, comp, drawable)) .. ')'
-  end
-
-  local getPaletteLabel = function(palette)
-    local currentPalette = self:getSkinComponentPalette(comp)
-
-    return 'Color Playing (' .. (currentPalette + 1) .. ' / ' .. maxPaletteVariation .. ')'
-  end 
-
   items[#items + 1] = {
     name  = 'drawable',
-    label = getDrawableLabel(drawable),
+    label = self:getComponentDrawableLabel(comp),
     type  = 'slider',
     min   = 0,
     max   = GetNumberOfPedDrawableVariations(self._ped, comp) - 1,
-    value = drawable,
+    value = self.skin:getComponent(comp)[1],
   }
 
   items[#items + 1] = {
     name  = 'texture',
-    label = getTextureLabel(texture),
+    label = self:getComponentTextureLabel(comp),
     type  = 'slider',
     min   = 0,
-    max   = GetNumberOfPedTextureVariations(self._ped, comp, drawable) - 1,
-    value = texture,
-  }
-
-  items[#items + 1] = {
-    name  = 'palette',
-    label = getPaletteLabel(palette),
-    type  = 'slider',
-    min   = 0,
-    max   = maxPaletteVariation - 1,
-    value = palette,
+    max   = GetNumberOfPedTextureVariations(self._ped, comp, self.skin:getComponent(comp)[1]) - 1,
+    value = self.skin:getComponent(comp)[2],
   }
 
   items[#items + 1] = {name = 'submit', label = '>> apply <<', type = 'button'}
@@ -628,36 +534,26 @@ function SkinEditor:openComponentMenu(comp)
   end)
 
   menu:on('item.change', function(item, prop, val, index)
-    
+
     if prop == 'value' then
 
       local byName = menu:by('name')
 
       if item.name == 'drawable' then
-        self:setSkinComponentDrawable(comp, val)
-        self:setSkinComponentTexture(comp, 0)
-        self:setSkinComponentPalette(comp, 0)
-        textureMax = GetNumberOfPedTextureVariations(self._ped, comp, self:getSkinComponentDrawable(comp))
+        self.skin:setComponentDrawable(comp, val)
+        self.skin:setComponentTexture(comp, 0)
 
-        byName['drawable'].label = getDrawableLabel(self:getSkinComponentDrawable(comp))
-        byName['texture'].max    = textureMax
+        byName['drawable'].label = self:getComponentDrawableLabel(comp, val)
+        byName['texture'].max    = GetNumberOfPedTextureVariations(self._ped, comp, val)
         byName['texture'].value  = 0
-        byName['palette'].value  = 0
 
       elseif item.name == 'texture' then
-        self:setSkinComponentTexture(comp, val)
-      elseif item.name == 'palette' then
-        self:setSkinComponentPalette(comp, val)
+        self.skin:setComponentTexture(comp, val)
       end
 
-      local currentPalette  = self:getSkinComponentPalette(comp)
-      local currentTexture  = self:getSkinComponentTexture(comp)
-      local currentDrawable = self:getSkinComponentDrawable(comp)
+      byName['texture'].label = self:getComponentTextureLabel(comp)
 
-      byName['texture'].label = getTextureLabel()
-      byName['palette'].label = getPaletteLabel()
-
-      self:setComponentVariation(comp, currentDrawable, currentTexture, currentPalette)
+      self.skin:apply()
     end
 
   end)
@@ -676,11 +572,11 @@ function SkinEditor:openComponentMenu(comp)
       local pedCoords = GetEntityCoords(ped)
       local forward   = GetEntityForwardVector(ped)
 
-      self.camRadius                           = 1.25
-      self.camCoords                           = pedCoords + forward * self.camRadius
-      self.camPolarAngle, self.camAzimuthAngle = utils.math.world3DtoPolar3D(pedCoords, self.camCoords)
+      self.cam:setRadius(1.25)
+      self.cam:setCoords(pedCoords + forward * 1.25)
+      self.cam:setPolarAzimuthAngle(utils.math.world3DtoPolar3D(pedCoords, self.camCoords))
 
-      self:pointBone(SKEL_ROOT)
+      self.cam:pointToBone(SKEL_ROOT)
 
     end
 
@@ -688,77 +584,39 @@ function SkinEditor:openComponentMenu(comp)
 
 end
 
-module.loadPlayerSkin = function(skin)
+function SkinEditor:getModelLabelByIndex(value)
+  return 'Model (' .. PED_MODELS_BY_HASH[self.models[value + 1]] .. ')'
+end
 
-  local model  = GetHashKey(skin['model'])
-  SetPlayerModel(PlayerId(), model)
+function SkinEditor:save()
+  request('skin:save', function()
+    self:destructor()
+  end, self.skin:serialize())
+end
 
-  local playerPed = GetPlayerPed(-1)
-
-  for componentIdentifier,component in pairs(skin) do
-    if not(componentIdentifier == "model") then
-      local componentId = getComponentNumberFromIdentifier(componentIdentifier)
-      local drawableId = component.drawable
-      local textureId = component.texture
-      local paletteId = component.palette
-
-      SetPedComponentVariation(GetPlayerPed(-1), componentId, drawableId, textureId, paletteId)
-    end
-  end
+function SkinEditor:destroyMenu()
+  self.mainMenu:destroy()
+  self.mainMenu = nil
 end
 
 module.init = function()
-  SetNuiFocus(0, 0)
   -- check if the player already has a skin
-  request("skin:getIdentitySkin", function(skin)
-
+  request("skin:getIdentitySkin", function(skinContent)
     if not(skin) then
       module.askOpenEditor()
     else
-      module.loadPlayerSkin(skin)
+      module.loadPlayerSkin(skinContent)
     end
   end)
 end
 
-module.askOpenEditor = function(skin)
-  -- We pass PlayerPedId function so we alwys have fresh ped
-  local editor = SkinEditor(PlayerPedId)
-  local model  = GetHashKey(skin and skin["model"] or 'mp_m_freemode_01')
+module.loadPlayerSkin = function(skinContent)
+  local skin = Skin(skinContent)
+  skin:apply()
+end
 
-  utils.game.requestModel(model, function()
-    SetPlayerModel(PlayerId(), model)
-    editor:setModel(skin and skin["model"] or 'mp_m_freemode_01')
+module.askOpenEditor = function(skinContent)
+  local editor = SkinEditor(skinContent)
 
-    if (skin == nil) then
-
-      for k,v in pairs(componentsConfig) do
-        SetPedComponentVariation(GetPlayerPed(-1), k, v.default or 0, 0, 0)
-        editor:setSkinComponentDrawable(k, v.default)
-        editor:setSkinComponentTexture(k, 0)
-        editor:setSkinComponentPalette(k, 0)
-      end
-
-    else
-
-      for componentIdentifier,component in pairs(skin) do
-        if not(componentIdentifier == "model") then
-          local componentId = getComponentNumberFromIdentifier(componentIdentifier)
-          local drawableId = component.drawable
-          local textureId = component.texture
-          local paletteId = component.palette
-
-          SetPedComponentVariation(GetPlayerPed(-1), componentId, drawableId, textureId, paletteId)
-          editor:setSkinComponentDrawable(componentId, drawableId)
-          editor:setSkinComponentTexture(componentId, textureId)
-          editor:setSkinComponentPalette(componentId, paletteId)
-        end
-      end
-
-    end
-  
-    SetModelAsNoLongerNeeded(model)
-
-    editor:start()
-
-  end)
+  editor:start()
 end
