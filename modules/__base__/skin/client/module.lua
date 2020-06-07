@@ -409,30 +409,43 @@ end
 
 function SkinEditor:setComponentVariation(component, drawableId, textureId, paletteId)
 
+  local cfg = componentsConfig[component]
+
   textureId = textureId or 0
   paletteId = paletteId or 0
 
-  local ped = self:getPed()
+  local ped = self._ped
 
-  if self.canEnforceComponents then
+  -- if self.canEnforceComponents then
 
-    local byComponent = self.mainMenu:by('component')
-    local enforced    = utils.game.setEnforcedPedComponentVariation(ped, component, drawableId, textureId, paletteId)
+  --   local byComponent = self.mainMenu:by('component')
+  --   local enforced    = utils.game.setEnforcedPedComponentVariation(ped, component, drawableId, textureId, paletteId)
 
-    for k,v in pairs(enforced) do
+  --   for k,v in pairs(enforced) do
     
-      local compId = tonumber(k)
+  --     local compId = tonumber(k)
   
-      for i=1, #v, 1 do
-        local forcedComponent     = v[i]
-        byComponent[compId].value = forcedComponent[2]
-      end
+  --     for i=1, #v, 1 do
+  --       local forcedComponent     = v[i]
+  --       byComponent[compId].value = forcedComponent[2]
+  --     end
   
-    end
+  --   end
     
+  -- else
+
+  if (cfg.id == "hair") then
+    print("SetPedComponentVariation : " .. drawableId .. " " .. textureId)
+    print(paletteId)
+    SetPedHairColor(ped, paletteId, paletteId)
+    SetPedComponentVariation(ped, component, drawableId, textureId, 2)
+    -- SetPedComponentVariation(ped, component, drawableId, 1, 1)
+    -- print("SetPedHairColor : " .. paletteId)
+    -- SetPedHairColor(ped, math.random(1,63), math.random(1,63))
   else
     SetPedComponentVariation(ped, component, drawableId, textureId, paletteId)
   end
+  -- end
 end
 
 function SkinEditor:setModel(model)
@@ -523,6 +536,7 @@ function SkinEditor:getSkinComponentPalette(component)
   end
 end
 
+-- TODO: refactor this so split into either a different class or another file
 function SkinEditor:openComponentMenu(comp)
 
   local cfg = componentsConfig[comp]
@@ -542,20 +556,30 @@ function SkinEditor:openComponentMenu(comp)
   self:setSkinComponentTexture(comp, texture)
   self:setSkinComponentPalette(comp, palette)
 
+  local maxDrawableVariation = GetNumberOfPedDrawableVariations(self._ped, comp)
+  local maxTextureVariation = GetNumberOfPedTextureVariations(self._ped, comp, drawable)
+  local maxPaletteVariation = 4
+
+  if (cfg.id == "hair") then
+    maxPaletteVariation = 64
+  end
+
   local getDrawableLabel = function(drawable)
     local currentDrawable = self:getSkinComponentDrawable(comp)
-    return 'Model (' .. (currentDrawable + 1) .. ' / ' .. (GetNumberOfPedDrawableVariations(self._ped, comp)) .. ')'
+    return 'Model (' .. (currentDrawable + 1) .. ' / ' .. GetNumberOfPedDrawableVariations(self._ped, comp) .. ')'
   end
 
   local getTextureLabel = function(texture)
     local currentDrawable = self:getSkinComponentDrawable(comp)
     local currentTexture = self:getSkinComponentTexture(comp)
-    return 'Variant (' .. (currentTexture + 1) .. ' / ' .. (GetNumberOfPedTextureVariations(self._ped, comp, currentDrawable)) .. ')'
+
+    return 'Variant (' .. (currentTexture + 1) .. ' / ' .. (GetNumberOfPedTextureVariations(self._ped, comp, drawable)) .. ')'
   end
 
   local getPaletteLabel = function(palette)
     local currentPalette = self:getSkinComponentPalette(comp)
-    return 'Color Playing (' .. (currentPalette + 1) .. ' / ' .. 4 .. ')'
+
+    return 'Color Playing (' .. (currentPalette + 1) .. ' / ' .. maxPaletteVariation .. ')'
   end 
 
   items[#items + 1] = {
@@ -563,7 +587,7 @@ function SkinEditor:openComponentMenu(comp)
     label = getDrawableLabel(drawable),
     type  = 'slider',
     min   = 0,
-    max   = GetNumberOfPedDrawableVariations(self._ped, comp),
+    max   = GetNumberOfPedDrawableVariations(self._ped, comp) - 1,
     value = drawable,
   }
 
@@ -572,7 +596,7 @@ function SkinEditor:openComponentMenu(comp)
     label = getTextureLabel(texture),
     type  = 'slider',
     min   = 0,
-    max   = GetNumberOfPedTextureVariations(self._ped, comp, GetPedDrawableVariation(self._ped, comp)) - 1,
+    max   = GetNumberOfPedTextureVariations(self._ped, comp, drawable) - 1,
     value = texture,
   }
 
@@ -581,7 +605,7 @@ function SkinEditor:openComponentMenu(comp)
     label = getPaletteLabel(palette),
     type  = 'slider',
     min   = 0,
-    max   = 3,
+    max   = maxPaletteVariation - 1,
     value = palette,
   }
 
@@ -591,7 +615,6 @@ function SkinEditor:openComponentMenu(comp)
     self.mainMenu:hide()
   end
 
-  
   local menu = Menu('skin.component.' .. GetEnumKey(PED_COMPONENTS, comp), {
     title = label,
     float = 'top|left', -- not needed, default value
