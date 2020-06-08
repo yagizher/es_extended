@@ -16,27 +16,27 @@ M('ui.menu')
 
 -- TODO: move to a config file when it gets added to FxManifest
 Config.componentsConfig = {
-  [PV_COMP_BERD] = {id = "mask",        default = {0, 0},  label = 'Mask'             , bone = SKEL_Head       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_HAIR] = {id = "hair",        default = {4, 0},  label = 'Hair'             , bone = SKEL_Head       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_UPPR] = {id = "arms",        default = {14, 0},  label = 'Arms'             , bone = RB_R_ArmRoll    , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_LOWR] = {id = "legs",        default = {28, 0},  label = 'Legs'             , bone = MH_R_Knee       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_HAND] = {id = "holdable",    default = {0, 0},  label = 'Bag / Parachute'  , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_FEET] = {id = "shoes",       default = {12, 0},  label = 'Shoes'            , bone = PH_R_Foot       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_TEEF] = {id = "accessories", default = {10, 0},  label = 'Accessories'      , bone = SKEL_R_Clavicle , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_ACCS] = {id = "undershirt",  default = {13, 0},  label = 'Undershirt'       , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_TASK] = {id = "armor",       default = {0, 0},  label = 'Body armor'       , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_DECL] = {id = "decals",      default = {1, 0},  label = 'Decals'           , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
-  [PV_COMP_JBIB] = {id = "torso",       default = {24, 0},  label = 'Torso / Top'      , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_BERD] = {id = "mask",        default = {0, 0},   label = 'Mask',            bone = SKEL_Head      , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_HAIR] = {id = "hair",        default = {4, 0},   label = 'Hair',            bone = SKEL_Head      , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_UPPR] = {id = "arms",        default = {14, 0},  label = 'Arms',            bone = RB_R_ArmRoll   , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_LOWR] = {id = "legs",        default = {28, 0},  label = 'Legs',            bone = MH_R_Knee      , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_HAND] = {id = "holdable",    default = {0, 0},   label = 'Bag / Parachute', bone = SKEL_ROOT      , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_FEET] = {id = "shoes",       default = {12, 0},  label = 'Shoes',           bone = PH_R_Foot      , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_TEEF] = {id = "accessories", default = {10, 0},  label = 'Accessories',     bone = SKEL_R_Clavicle, offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_ACCS] = {id = "undershirt",  default = {13, 0},  label = 'Undershirt',      bone = SKEL_ROOT      , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_TASK] = {id = "armor",       default = {0, 0},   label = 'Body armor',      bone = SKEL_ROOT      , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_DECL] = {id = "decals",      default = {1, 0},   label = 'Decals',          bone = SKEL_ROOT      , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
+  [PV_COMP_JBIB] = {id = "torso",       default = {24, 0},  label = 'Torso / Top',     bone = SKEL_ROOT      , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
 }
 
-Config.defaultBlend = {45, 45, 45, 45, 45, 45}
-Config.defaultBlendFaceMix = 5
-Config.defaultBlendSkinMix = 5
-Config.defaultBlendOverrideMix = 5
-Config.defaultHairColor = {1, 1}
+Config.defaultBlend            = {0, 0, 0, 0, 0, 0}
+Config.defaultBlendFaceMix     = 0
+Config.defaultBlendSkinMix     = 0
+Config.defaultBlendOverrideMix = 0
+Config.defaultHairColor        = {1, 1}
 
-Config.humans     = table.concat({MP_M_FREEMODE_01, MP_F_FREEMODE_01}, table.filter(PED_MODELS_HUMANS, function(x) return (x ~= MP_M_FREEMODE_01) and (t ~= MP_F_FREEMODE_01) end))
-Config.animals    = table.clone(PED_MODELS_ANIMALS)
+Config.humans                  = table.concat({MP_M_FREEMODE_01, MP_F_FREEMODE_01}, table.filter(PED_MODELS_HUMANS, function(x) return (x ~= MP_M_FREEMODE_01) and (t ~= MP_F_FREEMODE_01) end))
+Config.animals                 = table.clone(PED_MODELS_ANIMALS)
 
 Config.componentOrder = {
   PV_COMP_BERD,
