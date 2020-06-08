@@ -29,7 +29,10 @@ Config.componentsConfig = {
   [PV_COMP_JBIB] = {id = "torso",       default = {24, 0},  label = 'Torso / Top'      , bone = SKEL_ROOT       , offset = vector3(0.0, 0.0, 0.0), radius = 1.25},
 }
 
-Config.defaultBlend = {45, 45}
+Config.defaultBlend = {45, 45, 45, 45, 45, 45}
+Config.defaultBlendFaceMix = 5
+Config.defaultBlendSkinMix = 5
+Config.defaultBlendOverrideMix = 5
 Config.defaultHairColor = {1, 1}
 
 Config.humans     = table.concat({MP_M_FREEMODE_01, MP_F_FREEMODE_01}, table.filter(PED_MODELS_HUMANS, function(x) return (x ~= MP_M_FREEMODE_01) and (t ~= MP_F_FREEMODE_01) end))

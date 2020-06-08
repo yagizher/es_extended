@@ -20,7 +20,7 @@
 - [Cron script by ESX-Org](https://github.com/ESX-Org/cron)
 - [SkinChanger script by ESX-Org](https://github.com/ESX-Org/skinchanger)
 - [MySQL-Async by brouznouf](https://github.com/brouznouf/fivem-mysql-async)
-- [Node.Js 8+](https://nodejs.org/en/)
+- [Node.Js 10+](https://nodejs.org/en/)
 
 ### How to Install:
 * Grab the resource, install it as usual (place it in the `/resource` subfolder of your FxServer).
