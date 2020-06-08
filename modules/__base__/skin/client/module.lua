@@ -40,13 +40,13 @@ end
 function Skin:constructor(config)
   self.super:ctor()
 
-  self.model = config and config.model or "mp_m_freemode_01"
-  self.components = config and config.components or self:getDefaultComponents()
-  self.blend = config and config.blend or self:getDefaultBlend()
-  self.blendFaceMix = config and config.blendFaceMix or self:getDefaultBlendFaceMix()
-  self.blendSkinMix = config and config.blendSkinMix or self:getDefaultBlendSkinMix()
-  self.blendOverrideMix = config and config.blendOverrideMix or self:getDefaultBlendOverrideMix()
-  self.hairColor = config and config.hair_color or self:getDefaultHairColor()
+  self.model                = config and config.model or "mp_m_freemode_01"
+  self.components           = config and config.components or self:getDefaultComponents()
+  self.blend                = config and config.blend or self:getDefaultBlend()
+  self.blendFaceMix         = config and config.blendFaceMix or self:getDefaultBlendFaceMix()
+  self.blendSkinMix         = config and config.blendSkinMix or self:getDefaultBlendSkinMix()
+  self.blendOverrideMix     = config and config.blendOverrideMix or self:getDefaultBlendOverrideMix()
+  self.hairColor            = config and config.hair_color or self:getDefaultHairColor()
   self.transactionalChanges = {
     components = {}
   }
@@ -178,22 +178,22 @@ function Skin:setSkinToneOverride(skinTone)
 end
 
 function Skin:setFaceMix(mix)
-  self.blendFaceMix = mix / 10.0
-  self.transactionalChanges.blendFaceMix = mix / 10.0
+  self.blendFaceMix = mix / 100
+  self.transactionalChanges.blendFaceMix = mix / 100
   
   return self
 end
 
 function Skin:setSkinMix(mix)
-  self.blendSkinMix = mix / 10.0
-  self.transactionalChanges.blendSkinMix = mix / 10.0
+  self.blendSkinMix = mix / 100
+  self.transactionalChanges.blendSkinMix = mix / 100
   
   return self
 end
 
 function Skin:setOverrideMix(mix)
-  self.blendOverrideMix = mix / 10.0
-  self.transactionalChanges.blendOverrideMix = mix / 10.0
+  self.blendOverrideMix = mix / 100
+  self.transactionalChanges.blendOverrideMix = mix / 100
 
   return self
 end
@@ -228,11 +228,10 @@ function Skin:applyAll(cb)
   utils.game.requestModel(modelHash, function()
     SetPlayerModel(PlayerId(), modelHash)
 
-    local ped = GetPlayerPed(-1)
-
-    local blend = self:getBlend()
-    local blendFaceMix = self:getBlendFaceMix()
-    local blendSkinMix = self:getBlendSkinMix()
+    local ped              = GetPlayerPed(-1)
+    local blend            = self:getBlend()
+    local blendFaceMix     = self:getBlendFaceMix()
+    local blendSkinMix     = self:getBlendSkinMix()
     local blendOverrideMix = self:getBlendOverrideMix()
 
     SetPedHeadBlendData(ped, blend[1], blend[2], blend[3], blend[4], blend[5], blend[6], blendFaceMix, blendSkinMix, blendOverrideMix, true)
@@ -275,9 +274,9 @@ function Skin:commit()
 
       local ped = GetPlayerPed(-1)
 
-      local blend = self:getBlend()
-      local blendFaceMix = self:getBlendFaceMix()
-      local blendSkinMix = self:getBlendSkinMix()
+      local blend            = self:getBlend()
+      local blendFaceMix     = self:getBlendFaceMix()
+      local blendSkinMix     = self:getBlendSkinMix()
       local blendOverrideMix = self:getBlendOverrideMix()
   
       SetPedHeadBlendData(ped, blend[1], blend[2], blend[3], blend[4], blend[5], blend[6], blendFaceMix, blendSkinMix, blendOverrideMix, true)
@@ -323,12 +322,12 @@ end
 
 function Skin:serialize()
   return {
-    components = self.components,
-    blend = self.blend,
-    blendFaceMix = self.blendFaceMix,
-    blendSkinMix = self.blendSkinMix,
+    components       = self.components,
+    blend            = self.blend,
+    blendFaceMix     = self.blendFaceMix,
+    blendSkinMix     = self.blendSkinMix,
     blendOverrideMix = self.blendOverrideMix,
-    hair_color = self.hairColor
+    hair_color       = self.hairColor
   }
 end
 
@@ -342,7 +341,7 @@ function Camera:constructor(shouldMoveCam)
   self.camAzimuthAngle     = 0.0
   self.camTargetBone       = SKEL_ROOT
   self.camTargetBoneOffset = vector3(0.0, 0.0, 0.0)
-  self.timestamp = utils.time.timestamp()
+  self.timestamp           = utils.time.timestamp()
   self.shouldMoveCam       = shouldMoveCam
   self.cameraId            = nil
   self.tick                = nil
@@ -531,7 +530,7 @@ function SkinEditor:ensurePed()
     self.player = NetworkGetPlayerIndexFromPed(self._ped)
 
     if self.player ~= PlayerId() then
-      error('Editing other player is forbidden')
+      error('Editing other players is forbidden')
     end
 
   end
@@ -553,7 +552,7 @@ function SkinEditor:openMenu()
 
   local items = {
     {name = 'model',   label = self:getModelLabelByIndex(0),         type = 'slider', max   = #self.models - 1, visible = self.isPedPlayer},
-    {name = 'enforce', label = 'Enforce compatible elements (WIP)', type = 'check',  value = false,            visible = self.canEnforceComponents},
+    {name = 'enforce', label = 'Enforce compatible elements (WIP)',  type = 'check',  value = false,            visible = self.canEnforceComponents},
   }
 
   items[#items + 1] = {type= 'button', name = 'component.PV_SKINTONE', label = "Skin Tone / Face"}
@@ -622,6 +621,7 @@ function SkinEditor:onItemChanged(item, prop, val, index)
 
         self.skin = nil
         self.skin = Skin({model = PED_MODELS_BY_HASH[self.models[val + 1]]})
+
         self.skin:applyAll(function()
           
           local byName = self.mainMenu:by('name')
@@ -660,27 +660,27 @@ function SkinEditor:onItemChanged(item, prop, val, index)
 end
 
 function SkinEditor:getBlendFaceFatherLabel()
-  return "Father's Face ( " .. (self.skin:getBlend()[1] + 1) .. " / " .. 45 .. " )"
+  return "Face One ( " .. (self.skin:getBlend()[1] + 1) .. " / " .. 46 .. " )"
 end
 
 function SkinEditor:getBlendFaceMotherLabel()
-  return "Mother's Face ( " .. (self.skin:getBlend()[2] + 1) .. " / " .. 45 .. " )"
+  return "Face Two ( " .. (self.skin:getBlend()[2] + 1) .. " / " .. 46 .. " )"
 end
 
 function SkinEditor:getBlendFaceOverrideLabel()
-  return "Face Override ( " .. (self.skin:getBlend()[3] + 1) .. " / " .. 45 .. " )"
+  return "Face Override ( " .. (self.skin:getBlend()[3] + 1) .. " / " .. 46 .. " )"
 end
 
 function SkinEditor:getBlendSkinToneFatherLabel()
-  return "Father's Skin Tone ( " .. (self.skin:getBlend()[4] + 1) .. " / " .. 45 .. " )"
+  return "Skin One ( " .. (self.skin:getBlend()[4] + 1) .. " / " .. 46 .. " )"
 end
 
 function SkinEditor:getBlendSkinToneMotherLabel()
-  return "Mother's Skin Tone ( " .. (self.skin:getBlend()[5] + 1) .. " / " .. 45 .. " )"
+  return "Skin Two ( " .. (self.skin:getBlend()[5] + 1) .. " / " .. 46 .. " )"
 end
 
 function SkinEditor:getBlendSkinToneOverrideLabel()
-  return "Skin Tone Override ( " .. (self.skin:getBlend()[6] + 1) .. " / " .. 45 .. " )"
+  return "Skin Override ( " .. (self.skin:getBlend()[6] + 1) .. " / " .. 46 .. " )"
 end
 
 function SkinEditor:getBlendFaceMixLabel()
@@ -909,15 +909,15 @@ function SkinEditor:openSkintoneMenu(comp)
 
   local items = {}
 
-  items[#items + 1] = {type= 'slider', name = 'blend.face.father', max   = 45, value = self.skin:getBlend()[1], label = self:getBlendFaceFatherLabel()}
-  items[#items + 1] = {type= 'slider', name = 'blend.face.mother', max   = 45, value = self.skin:getBlend()[2], label = self:getBlendFaceMotherLabel()}
-  items[#items + 1] = {type= 'slider', name = 'blend.face.override', max   = 45, value = self.skin:getBlend()[3], label = self:getBlendFaceOverrideLabel()}
-  items[#items + 1] = {type= 'slider', name = 'blend.skin.father', max   = 45, value = self.skin:getBlend()[4], label = self:getBlendSkinToneFatherLabel()}
-  items[#items + 1] = {type= 'slider', name = 'blend.skin.mother', max   = 45, value = self.skin:getBlend()[5], label = self:getBlendSkinToneMotherLabel()}
-  items[#items + 1] = {type= 'slider', name = 'blend.skin.override', max   = 45, value = self.skin:getBlend()[6], label = self:getBlendSkinToneOverrideLabel()}
-  items[#items + 1] = {type= 'slider', name = 'blend.face.mix', max   = 10, value = self.skin:getBlendFaceMix(), label = self:getBlendFaceMixLabel()}
-  items[#items + 1] = {type= 'slider', name = 'blend.skin.mix', max   = 10, value = self.skin:getBlendSkinMix(), label = self:getBlendSkinMixLabel()}
-  items[#items + 1] = {type= 'slider', name = 'blend.override.mix', max   = 10, value = self.skin:getBlendOverrideMix(), label = self:getBlendOverrideMixLabel()}
+  items[#items + 1] = {type= 'slider', name = 'blend.face.father',   max   = 45,  value = self.skin:getBlend()[1],         label = self:getBlendFaceFatherLabel()}
+  items[#items + 1] = {type= 'slider', name = 'blend.face.mother',   max   = 45,  value = self.skin:getBlend()[2],         label = self:getBlendFaceMotherLabel()}
+  items[#items + 1] = {type= 'slider', name = 'blend.face.override', max   = 45,  value = self.skin:getBlend()[3],         label = self:getBlendFaceOverrideLabel()}
+  items[#items + 1] = {type= 'slider', name = 'blend.skin.father',   max   = 45,  value = self.skin:getBlend()[4],         label = self:getBlendSkinToneFatherLabel()}
+  items[#items + 1] = {type= 'slider', name = 'blend.skin.mother',   max   = 45,  value = self.skin:getBlend()[5],         label = self:getBlendSkinToneMotherLabel()}
+  items[#items + 1] = {type= 'slider', name = 'blend.skin.override', max   = 45,  value = self.skin:getBlend()[6],         label = self:getBlendSkinToneOverrideLabel()}
+  items[#items + 1] = {type= 'slider', name = 'blend.face.mix',      max   = 100, value = self.skin:getBlendFaceMix(),     label = self:getBlendFaceMixLabel()}
+  items[#items + 1] = {type= 'slider', name = 'blend.skin.mix',      max   = 100, value = self.skin:getBlendSkinMix(),     label = self:getBlendSkinMixLabel()}
+  items[#items + 1] = {type= 'slider', name = 'blend.override.mix',  max   = 100, value = self.skin:getBlendOverrideMix(), label = self:getBlendOverrideMixLabel()}
 
   items[#items + 1] = {name = 'submit', label = '>> apply <<', type = 'button'}
   
