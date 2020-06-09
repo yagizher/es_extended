@@ -30,7 +30,7 @@ module.onMenuOpenRequested = function()
             {name = 'superSecretBind', label = 'I\'m changing if you type upper and check the box', type = 'text'},
             {name = 'superDefaultType', label = 'What\'s my type'}, -- type will be default
             {name = 'superColor', label = 'What fancy color ?', type = 'color'},
-            {name = 'superSumbitButton', label = '>> Submit <<', type = 'button'}
+            {name = 'superSubmitButton', label = '>> Submit <<', type = 'button'}
         }
     })
 
@@ -68,7 +68,7 @@ module.onItemChanged = function(item, prop, val, index)
 end
 
 module.onItemClicked = function(item, index)
-    if (item.name == "superSumbitButton") then
+    if (item.name == "superSubmitButton") then
         module.menu:destroy()
         module.menu = nil
     end
