@@ -15,7 +15,7 @@
 
 ### Requirements:
 
-- An installed MariaDB server (MySQL not supported for now).
+- An installed MariaDB server (we will not support MySQL).
 - [Async script by ESX-Org](https://github.com/ESX-Org/async)
 - [Cron script by ESX-Org](https://github.com/ESX-Org/cron)
 - [SkinChanger script by ESX-Org](https://github.com/ESX-Org/skinchanger)
