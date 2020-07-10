@@ -131,6 +131,9 @@ files {
   'modules/__base__/accessories/client/events.lua',
   'modules/__base__/accessories/client/main.lua',
   'modules/__base__/accessories/client/module.lua',
+  'modules/__base__/rpchat/client/events.lua',
+  'modules/__base__/rpchat/client/main.lua',
+  'modules/__base__/rpchat/client/module.lua',
   'modules/__base__/skin/client/events.lua',
   'modules/__base__/skin/client/main.lua',
   'modules/__base__/skin/client/module.lua',
@@ -175,10 +178,7 @@ files {
   'modules/__core__/utils/client/module.lua',
   'modules/__examples__/menu/client/events.lua',
   'modules/__examples__/menu/client/main.lua',
-  'modules/__examples__/menu/client/module.lua',
-  'modules/__examples__/ping_command/client/events.lua',
-  'modules/__examples__/ping_command/client/main.lua',
-  'modules/__examples__/ping_command/client/module.lua'
+  'modules/__examples__/menu/client/module.lua'
 }
 
 server_scripts {

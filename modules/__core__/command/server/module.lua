@@ -39,6 +39,7 @@ function Command:constructor(name, group, description)
   self.description = description
   self.arguments = {}
   self.handler = nil
+  self.rconAllowed = false
 end
 
 function Command:addArgument(name, argumentType, description, isOptional)
@@ -101,6 +102,14 @@ function Command:getSuggestion()
   return commandParametersHelp
 end
 
+function Command:setRconAllowed(value)
+  if (type(value) ~= 'boolean') then
+    error("Expect value to be boolean.")
+  end
+
+  self.rconAllowed = value
+end
+
 function Command:register()
   if not(self.handler) then
     error(("Cannot register command %s, you need to set a command handler with command:setHandler."):format(self.name))
@@ -113,8 +122,8 @@ function Command:register()
   local genericHandler = function(source, args, rawCommand)
     local sourcePlayer = Player.fromId(source)
 
-    if not(sourcePlayer) then
-      error(("Cannot retrieve sourcePlayer in Command handler %s, source : %s."):format(self.name, source))
+    if not(sourcePlayer) and not(self.rconAllowed) then
+      error(("Cannot retrieve sourcePlayer in Command handler %s, source : %s. Rcon isn't allowed for this command."):format(self.name, source))
     end
 
     -- for each arguments let's try to map them with given arguments
