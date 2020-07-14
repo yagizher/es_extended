@@ -16,9 +16,7 @@
 ### Requirements:
 
 - An installed MariaDB server (we will not support MySQL).
-- [Async script by ESX-Org](https://github.com/ESX-Org/async)
 - [Cron script by ESX-Org](https://github.com/ESX-Org/cron)
-- [SkinChanger script by ESX-Org](https://github.com/ESX-Org/skinchanger)
 - [MySQL-Async by brouznouf](https://github.com/brouznouf/fivem-mysql-async)
 - [Node.Js 10+](https://nodejs.org/en/)
 
