@@ -10,10 +10,6 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-Config = {}
-
-Config.Locale = 'en'
-
-Config.BackpackWeight = {
-	[40] = 16, [41] = 20, [44] = 25, [45] = 23
+Translations = {
+  ['shop_menu'] = 'Press ~INPUT_CONTEXT~ to access the vehicle shop.'
 }
