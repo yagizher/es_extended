@@ -113,9 +113,11 @@ function Menu:constructor(name, data, focus)
     elseif msg.action == 'item.click' then
       self:emit('internal:item.click', msg.index + 1)
     elseif msg.action == 'mouse.in' then
+      self:mouseChange(true)
       self.mouseIn  = true
     elseif msg.action == 'mouse.out' then
-      self.mouseIn  = false
+      self:mouseChange(false)
+      self.mouseIn = false
     end
 
   end)
@@ -165,8 +167,11 @@ function Menu:constructor(name, data, focus)
   self:on('internal:item.click', function(index)
     self:emit('item.click', self.items[index], index)
   end)
-  
 
+end
+
+function Menu:mouseChange(value)
+  emit('ui.menu.mouseChange', value)
 end
 
 function Menu:focus()
