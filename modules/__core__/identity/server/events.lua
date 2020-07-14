@@ -63,6 +63,36 @@ onRequest('esx:cache:identity:get', function(source, cb, id)
 
 end)
 
+onRequest('esx:identity:getSavedPosition', function(source, cb, id)
+  local player = Player.fromId(source)
+
+  MySQL.Async.fetchAll('SELECT position FROM identities WHERE id = @identityId AND owner = @owner', {
+    ['@identityId'] = player:getIdentityId(),
+    ['@owner']      = player.identifier
+  }, function(result)
+    if result then
+      if result[1] then
+        local pos = json.decode(result[1].position)
+        cb(pos)
+      else
+        cb(false)
+      end
+    else
+      cb(false)
+    end
+  end)
+end)
+
+onClient('esx:identity:updatePosition', function(position)
+  local player = Player.fromId(source)
+
+  MySQL.Async.execute('UPDATE identities SET position = @position WHERE id = @id AND owner = @owner', {
+    ['@position'] = json.encode(position),
+    ['@id']       = player:getIdentityId(),
+    ['@owner']    = player.identifier
+  })
+end)
+
 on('esx:player:load', function(player)
   local playerIdentityId = player:getIdentityId()
 

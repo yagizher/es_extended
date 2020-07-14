@@ -97,13 +97,11 @@ module.DoSpawn = function(data, cb)
 end
 
 module.Init = function(id)
-
   if id == nil then
     error('Identity is not defined')
   end
 
   Cache.identity:resolve(id, function(exists, identity)
-
     if not exists then
       error('Identity not found')
     end
@@ -123,11 +121,15 @@ module.Init = function(id)
 
     ESX.Ready = true
 
+    
     emitServer('esx:client:ready')
     emit('esx:ready')
 
-  end)
+    Citizen.Wait(2000)
 
+    ShutdownLoadingScreen()
+    ShutdownLoadingScreenNui()
+  end)
 end
 
 module.EnsureIdentity = function()
@@ -164,18 +166,35 @@ module.EnsureIdentity = function()
 
         local position = identity:getPosition()
 
-        module.DoSpawn({
+        request('esx:identity:getSavedPosition', function(savedPos)
+          if savedPos then
+            module.DoSpawn({
 
-          x        = position.x,
-          y        = position.y,
-          z        = position.z,
-          heading  = position.heading,
-          model    = 'mp_m_freemode_01',
-          skipFade = false
+              x        = savedPos.x,
+              y        = savedPos.y,
+              z        = savedPos.z,
+              heading  = savedPos.heading,
+              model    = 'mp_m_freemode_01',
+              skipFade = false
 
-        }, function()
-          module.Init(identityId)
-        end)
+            }, function()
+              module.Init(identityId)
+            end)
+          else
+            module.DoSpawn({
+
+              x        = position.x,
+              y        = position.y,
+              z        = position.z,
+              heading  = position.heading,
+              model    = 'mp_m_freemode_01',
+              skipFade = false
+
+            }, function()
+              module.Init(identityId)
+            end)
+          end
+        end, id)
 
       else
 
@@ -202,3 +221,18 @@ module.LoadHUD = function()
   end)
 
 end
+
+module.SavePosition = ESX.SetInterval(60000, function()
+  if NetworkIsPlayerActive(PlayerId()) then
+    local playerCoords = GetEntityCoords(PlayerPedId())
+    local heading      = GetEntityHeading(PlayerPedId())
+    local position     = {
+      x       = math.round(playerCoords.x, 1),
+      y       = math.round(playerCoords.y, 1),
+      z       = math.round(playerCoords.z, 1),
+      heading = math.round(heading, 1)
+    }
+
+    emitServer('esx:identity:updatePosition', position)
+  end
+end)
