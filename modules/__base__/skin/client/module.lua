@@ -1979,7 +1979,6 @@ function SkinEditor:openMenu()
 
   self.mainMenu = Menu('skin', {
     title = 'Character',
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -2035,7 +2034,6 @@ function SkinEditor:openBaseMenu(comp)
 
   self.baseMenu = Menu('skin.base', {
     title = "Base",
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -2098,7 +2096,6 @@ function SkinEditor:openStyleMenu(comp)
 
   self.styleMenu = Menu('skin.style', {
     title = "Style",
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -2155,7 +2152,6 @@ function SkinEditor:openClothesMenu()
 
   self.clothesMenu = Menu('skin.clothes', {
     title = 'Clothes',
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -2216,7 +2212,6 @@ function SkinEditor:openParentsMenu(comp)
 
   local menu = Menu('skin.base.parents', {
     title = "Parents",
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -2301,7 +2296,6 @@ function SkinEditor:openEyesMenu(comp)
 
   local menu = Menu('skin.base.eyes', {
     title = "Eyes",
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -2381,7 +2375,6 @@ function SkinEditor:openNoseMenu(comp)
 
   local menu = Menu('skin.base.nose', {
     title = "Nose",
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -2455,7 +2448,6 @@ function SkinEditor:openChinMenu(comp)
 
   local menu = Menu('skin.base.chin', {
     title = "Chin",
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -2526,7 +2518,6 @@ function SkinEditor:openCheeksMenu(comp)
 
   local menu = Menu('skin.base.cheeks', {
     title = "Cheeks",
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -2586,7 +2577,6 @@ function SkinEditor:openLipsMenu(comp)
 
   local menu = Menu('skin.base.lips', {
     title = "Lips",
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -2640,7 +2630,6 @@ function SkinEditor:openNeckMenu(comp)
 
   local menu = Menu('skin.base.neck', {
     title = "Lips",
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -2699,7 +2688,6 @@ function SkinEditor:openFaceMenu(comp)
 
   local menu = Menu('skin.style.face', {
     title = "Face",
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -2771,7 +2759,6 @@ function SkinEditor:openMarkingsMenu(comp)
 
   local menu = Menu('skin.style.markings', {
     title = "markings",
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -2836,7 +2823,6 @@ function SkinEditor:openHairMenu(comp)
 
   local menu = Menu('skin.style.hair', {
     title = "Hair",
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -2899,7 +2885,6 @@ function SkinEditor:openBeardMenu(comp)
 
   local menu = Menu('skin.style.beard', {
     title = "Beard",
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -2966,7 +2951,6 @@ function SkinEditor:openMakeupMenu(comp)
 
   local menu = Menu('skin.style.beard', {
     title = "Beard",
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -3033,7 +3017,6 @@ function SkinEditor:openAgingMenu(comp)
 
   local menu = Menu('skin.style.aging', {
     title = "Aging",
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -3092,7 +3075,6 @@ function SkinEditor:openChestMenu(comp)
 
   local menu = Menu('skin.style.chest', {
     title = "Chest",
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -3157,7 +3139,6 @@ function SkinEditor:openBodyMenu(comp)
 
   local menu = Menu('skin.style.body', {
     title = "Body",
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
@@ -3579,7 +3560,6 @@ function SkinEditor:openComponentMenu(comp)
 
   local menu = Menu('skin.component.' .. GetEnumKey(PED_COMPONENTS, comp), {
     title = label,
-    float = 'top|left', -- not needed, default value
     items = items
   })
 
