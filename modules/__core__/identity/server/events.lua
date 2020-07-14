@@ -44,17 +44,22 @@ onRequest('esx:cache:identity:get', function(source, cb, id)
 
   if instance then
 
-    cb(true, instance:serialize())
+    cb(true, {instance:serialize()})
 
   else
 
-    Identity.findOne({id = id}, function(instance)
+    Identity.find({owner = player:getIdentifier()}, function(instances)
 
-      if instance == nil then
+      if instances == nil then
         cb(false, nil)
       else
-        Identity.all[id] = instance
-        cb(true, instance:serialize())
+        local serializedInstances = table.map(instances, function(instance)
+          Identity.all[instance:getId()] = instance
+
+          return instance:serialize()
+        end)
+        
+        cb(true, serializedInstances)
       end
 
     end)

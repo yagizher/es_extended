@@ -14,6 +14,7 @@ M('events')
 M('serializable')
 M('cache')
 M('ui.menu')
+M('table')
 
 local HUD   = M('game.hud')
 local utils = M("utils")
@@ -30,8 +31,14 @@ IdentityCacheConsumer = Extends(CacheConsumer, 'IdentityCacheConsumer')
 
 function IdentityCacheConsumer:provide(key, cb)
 
-  request('esx:cache:identity:get', function(exists, data)
-    cb(exists, exists and Identity(data) or nil)
+  request('esx:cache:identity:get', function(exists, identities)
+    local instancedIdentities = nil
+    if exists then
+      instancedIdentities = table.map(identities, function(identity)
+        return Identity(identity)
+      end)
+    end
+    cb(exists, exists and instancedIdentities or nil)
   end, key)
 
 end
@@ -101,10 +108,12 @@ module.Init = function(id)
     error('Identity is not defined')
   end
 
-  Cache.identity:resolve(id, function(exists, identity)
+  Cache.identity:resolve(id, function(exists, identities)
     if not exists then
       error('Identity not found')
     end
+
+    local identity = identities[1]
 
     ESX.Player:field('identity', identity)
 
@@ -160,9 +169,12 @@ module.EnsureIdentity = function()
 
   else
 
-    Cache.identity:fetch(identityId, function(exists, identity)
+    -- fetch identities/identity for player
+    Cache.identity:fetch(identityId, function(exists, identities)
 
       if exists then
+
+        local identity = identities[1]
 
         local position = identity:getPosition()
 

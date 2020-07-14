@@ -127,6 +127,10 @@ Persist = function(schema, pk, ...)
 
     MySQL.Async.fetchAll(sql, data, function(rows)
 
+      if (rows[1] == nil) then
+        return cb(nil)
+      end
+
       cb(table.map(rows, function(e)
 
         local row  = e
