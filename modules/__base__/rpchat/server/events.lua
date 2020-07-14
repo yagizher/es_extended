@@ -10,17 +10,14 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-M('command')
+AddEventHandler('chatMessage', function(playerId, playerName, message)
+  if string.sub(message, 1, string.len('/')) ~= '/' then
+    CancelEvent()
 
-local skinCommand = Command("skin", "admin", "Open the skin editor for you or someone else")
-skinCommand:addArgument("player", "player", "The player to open the skin editor", true)
+    local player = Player.fromId(playerId):getIdentity()
+    local firstname = player:getFirstName()
+    local lastname = player:getLastName()
 
-skinCommand:setHandler(function(player, args, baseArgs)
-
-  local targetPlayer = args.player or player
-
-  emitClient("esx:skin:openEditor", player.source, player.skin or nil)
-
+    emitClient('chat:addMessage', -1, {args = {'OOC | ' .. firstname .. ' ' .. lastname, message}, color = {128, 128, 128}})
+  end
 end)
-
-skinCommand:register()

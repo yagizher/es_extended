@@ -135,8 +135,7 @@ module.EnsureIdentity = function()
   local player     = ESX.Player
   local identityId = player:getIdentityId()
 
-  if identityId == nil then
-
+  local requestRegistration = function()
     module.DoSpawn({
 
       x        = spawn.x,
@@ -151,6 +150,11 @@ module.EnsureIdentity = function()
       module.OpenMenu(module.Init)
 
     end)
+  end
+
+  if identityId == nil then
+
+    requestRegistration()
 
   else
 
@@ -175,18 +179,7 @@ module.EnsureIdentity = function()
 
       else
 
-        module.DoSpawn({
-
-          x        = spawn.x,
-          y        = spawn.y,
-          z        = spawn.z,
-          heading  = spawn.heading,
-          model    = 'mp_m_freemode_01',
-          skipFade = false
-
-        }, function()
-          module.OpenMenu(module.Init)
-        end)
+        requestRegistration()
 
       end
 

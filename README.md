@@ -20,7 +20,7 @@
 - [Cron script by ESX-Org](https://github.com/ESX-Org/cron)
 - [SkinChanger script by ESX-Org](https://github.com/ESX-Org/skinchanger)
 - [MySQL-Async by brouznouf](https://github.com/brouznouf/fivem-mysql-async)
-- [Node.Js 8+](https://nodejs.org/en/)
+- [Node.Js 10+](https://nodejs.org/en/)
 
 ### How to Install:
 * Grab the resource, install it as usual (place it in the `/resource` subfolder of your FxServer).
@@ -53,6 +53,16 @@ ensure es_extended # Will now auto-generate fxmanifest.lua to prevent platform-d
 
 # stop es_extended
 # start es_extended
+
+# REQUIRED
+# Add permission for es_extended to execute ACL commands
+add_ace resource.es_extended command.add_ace allow
+add_ace resource.es_extended command.remove_principal allow
+add_ace resource.es_extended command.add_principal allow
+add_ace resource.es_extended command.remove_ace allow
+add_ace resource.es_extended command.list_aces allow
+add_ace resource.es_extended command.list_principals allow
+add_ace resource.es_extended command.remove_aces_for_object allow
 ```
 
 ## Modules <a name="modules"></a>
@@ -113,6 +123,6 @@ Another thing is the performance, so far, it's more optimized to work this way.
 
 ![Menu](https://i.snipboard.io/tF8AcT.jpg)
 
-### [How to create basic command <a name="examples-command"></a>](https://github.com/ESX-Org/es_extended/tree/develop/modules/__examples__/ping_command/)
+### [How to create basic command <a name="examples-command"></a>](https://github.com/ESX-Org/es_extended/tree/develop/modules/__examples__/commands/)
 
 ### More to come...

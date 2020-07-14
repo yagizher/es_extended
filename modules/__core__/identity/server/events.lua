@@ -38,6 +38,8 @@ end)
 
 onRequest('esx:cache:identity:get', function(source, cb, id)
 
+  local player = Player.fromId(source)
+
   local instance = Identity.all[id]
 
   if instance then
@@ -59,4 +61,20 @@ onRequest('esx:cache:identity:get', function(source, cb, id)
 
   end
 
+end)
+
+on('esx:player:load', function(player)
+  local playerIdentityId = player:getIdentityId()
+
+  if (playerIdentityId ~= nil) then
+    Identity.findOne({id = playerIdentityId}, function(instance)
+      if instance == nil then
+        return
+      end
+
+      Identity.all[playerIdentityId] = instance
+      player:setIdentityId(playerIdentityId)
+      player:field('identity', instance)
+    end)
+  end
 end)

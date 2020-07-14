@@ -1,3 +1,4 @@
+
 -- Copyright (c) Jérémie N'gadi
 --
 -- All rights reserved.
@@ -10,17 +11,15 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-M('command')
+onServer('rpchat:sendLifeInvaderMessage', function(playerId, message, name)
 
-local skinCommand = Command("skin", "admin", "Open the skin editor for you or someone else")
-skinCommand:addArgument("player", "player", "The player to open the skin editor", true)
-
-skinCommand:setHandler(function(player, args, baseArgs)
-
-  local targetPlayer = args.player or player
-
-  emitClient("esx:skin:openEditor", player.source, player.skin or nil)
+  module.SendLifeInvaderMessage(playerId, message, name)
 
 end)
 
-skinCommand:register()
+onServer('rpchat:sendMe', function(playerId, message)
+
+  local targetPed = GetPlayerPed(GetPlayerFromServerId(playerId))
+  module.Draw3DTextOverheadWithTimeout(targetPed,'~b~*~w~'..message..'~b~*',1,0) 
+
+end)

@@ -11,9 +11,14 @@
 --   This copyright should appear in every part of the project code
 
 -- The module file contains every module specific methods
-local utils = M("utils")
+local utils = M('utils')
+local input = M('input')
 
-module.onNuiReady = function()
+module.init = function()
+    input.RegisterControl(input.Groups.MOVE, input.Controls.SAVE_REPLAY_CLIP)
+end
+
+module.onMenuOpenRequested = function()
     -- we instanciate a new menu with name ' test_menu ' and title ' Test Menu '
     module.menu = Menu('test_menu', {
         title = 'Test menu',
@@ -25,7 +30,7 @@ module.onNuiReady = function()
             {name = 'superSecretBind', label = 'I\'m changing if you type upper and check the box', type = 'text'},
             {name = 'superDefaultType', label = 'What\'s my type'}, -- type will be default
             {name = 'superColor', label = 'What fancy color ?', type = 'color'},
-            {name = 'superSumbitButton', label = '>> Submit <<', type = 'button'}
+            {name = 'superSubmitButton', label = '>> Submit <<', type = 'button'}
         }
     })
 
@@ -63,5 +68,12 @@ module.onItemChanged = function(item, prop, val, index)
 end
 
 module.onItemClicked = function(item, index)
-  print('index', index)
+    if (item.name == "superSubmitButton") then
+        module.menu:destroy()
+        module.menu = nil
+    end
+end
+
+module.registerControls = function()
+    Input.RegisterControl(Input.Groups.MOVE, Input.Controls.SAVE_REPLAY_CLIP)
 end

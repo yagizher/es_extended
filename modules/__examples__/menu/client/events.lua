@@ -11,4 +11,15 @@
 --   This copyright should appear in every part of the project code
 
 -- the Events file contains event handlers
+local Input = M('input')
+
 on('esx:nui:ready', module.onNuiReady)
+
+-- Key Controls
+Input.On('released', Input.Groups.MOVE, Input.Controls.SAVE_REPLAY_CLIP, function(lastPressed)
+
+  if not ESX.IsDead then
+    module.openMenu()
+  end
+
+end)

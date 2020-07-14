@@ -22,8 +22,8 @@ Command = Extends(EventEmitter, 'Command')
 function Command:constructor(name, group, description)
 
   -- ensure name and group arn't nil
-  if not(name) or not(group) then
-    error("A name and a group are required for a Command.")
+  if not(name) then
+    error("A name is required for a Command.")
   end
 
   local doesCommandNameExists = table.find(module.RegisteredCommands, function(command) return command.name == name end)
@@ -39,6 +39,7 @@ function Command:constructor(name, group, description)
   self.description = description
   self.arguments = {}
   self.handler = nil
+  self.rconAllowed = false
 end
 
 function Command:addArgument(name, argumentType, description, isOptional)
@@ -101,6 +102,14 @@ function Command:getSuggestion()
   return commandParametersHelp
 end
 
+function Command:setRconAllowed(value)
+  if (type(value) ~= 'boolean') then
+    error("Expect value to be boolean.")
+  end
+
+  self.rconAllowed = value
+end
+
 function Command:register()
   if not(self.handler) then
     error(("Cannot register command %s, you need to set a command handler with command:setHandler."):format(self.name))
@@ -113,8 +122,8 @@ function Command:register()
   local genericHandler = function(source, args, rawCommand)
     local sourcePlayer = Player.fromId(source)
 
-    if not(sourcePlayer) then
-      error(("Cannot retrieve sourcePlayer in Command handler %s, source : %s."):format(self.name, source))
+    if not(sourcePlayer) and not(self.rconAllowed) then
+      error(("Cannot retrieve sourcePlayer in Command handler %s, source : %s. Rcon isn't allowed for this command."):format(self.name, source))
     end
 
     -- for each arguments let's try to map them with given arguments
@@ -123,47 +132,56 @@ function Command:register()
       local commandArgument = v
       local givenArgument = args[i]
 
-      -- if the command argument is a number, let's ensure the user type a number
-      if commandArgument.type == "number" then
-        if not(string.onlyContainsDigit(givenArgument)) then
-          emitClient('chat:addMessage', source, {
-            color = { 255, 0, 0 },
-            multiline = true,
-            args = {("%s Command"):format(self.name), ('[^1Error^7] Argument %s needs to be a %s, %s given.'):format(commandArgument.name, commandArgument.type, givenArgument)}
-          })
-          return
-        end
-        parsedArgs[commandArgument.name] = tonumber(givenArgument)
+      -- TODO compare to see if it's a required argument or no
+      if (not(givenArgument == nil)) then
 
-      -- if the command argument is a player, let's ensure player exists with provided source
-      elseif commandArgument.type == "player" then
-        local requestedPlayer = Player.fromId(givenArgument)
+        -- if the command argument is a number, let's ensure the user type a number
+        if commandArgument.type == "number" then
 
-        if not(requestedPlayer) then
-          emitClient('chat:addMessage', source, {
-            color = { 255, 0, 0 },
-            multiline = true,
-            args = {("%s Command"):format(self.name), ('[^1Error^7] Argument %s needs an existing player, player %s not found.'):format(commandArgument.name, givenArgument)}
-          })
-          return
+          if not(string.onlyContainsDigit(givenArgument)) then
+            emitClient('chat:addMessage', source, {
+              color = { 255, 0, 0 },
+              multiline = true,
+              args = {("%s Command"):format(self.name), ('[^1Error^7] Argument %s needs to be a %s, %s given.'):format(commandArgument.name, commandArgument.type, givenArgument)}
+            })
+            return
+          end
+          parsedArgs[commandArgument.name] = tonumber(givenArgument)
+
+        -- if the command argument is a player, let's ensure player exists with provided source
+        elseif commandArgument.type == "player" then
+
+          local requestedPlayer = Player.fromId(givenArgument)
+
+          if not(requestedPlayer) then
+            emitClient('chat:addMessage', source, {
+              color = { 255, 0, 0 },
+              multiline = true,
+              args = {("%s Command"):format(self.name), ('[^1Error^7] Argument %s needs an existing player, player %s not found.'):format(commandArgument.name, givenArgument)}
+            })
+            return
+          end
+          parsedArgs[commandArgument.name] = requestedPlayer
+        
+        -- if the command argument is a string, just pass 
+        else
+          parsedArgs[commandArgument.name] = givenArgument
         end
-        parsedArgs[commandArgument.name] = requestedPlayer
-      
-      -- if the command argument is a string, just pass 
-      else
-        parsedArgs[commandArgument.name] = givenArgument
       end
     end
 
     self.handler(sourcePlayer, parsedArgs, args)
   end
 
-  RegisterCommand(self.name, genericHandler, false)
+  RegisterCommand(self.name, genericHandler, self.group ~= nil)
 
   emitClient('chat:addSuggestion', -1, ('/%s'):format(self.name), self.description, self:getSuggestion())
 
-  -- allow this command to be executed by the provided group
-  ExecuteCommand(('add_ace group.%s command.%s allow'):format(group, name))
+  if (self.group ~= nil) then
+    -- allow this command to be executed by the provided group
+    ExecuteCommand(('remove_aces_for_object command.%s'):format(self.name))
+    ExecuteCommand(('add_ace group.%s command.%s allow'):format(self.group, self.name))
+  end
 
   self.registered = true
 end
