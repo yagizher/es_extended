@@ -10,32 +10,6 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-onRequest('esx:identity:register', function(source, cb, data)
-
-  local player = Player.fromId(source)
-
-  local identity = Identity({
-    owner     = player.identifier,
-    firstName = data.firstName,
-    lastName  = data.lastName,
-    DOB       = data.dob,
-    isMale    = data.isMale
-  })
-
-  identity:save(function(id)
-
-    Identity.all[id] = identity
-
-    player:setIdentityId(id)
-    player:field('identity', identity)
-    player:save()
-
-    cb(id)
-
-  end)
-
-end)
-
 onRequest('esx:cache:identity:get', function(source, cb, id)
 
   local player = Player.fromId(source)
@@ -48,21 +22,7 @@ onRequest('esx:cache:identity:get', function(source, cb, id)
 
   else
 
-    Identity.find({owner = player:getIdentifier()}, function(instances)
-
-      if instances == nil then
-        cb(false, nil)
-      else
-        local serializedInstances = table.map(instances, function(instance)
-          Identity.all[instance:getId()] = instance
-
-          return instance:serialize()
-        end)
-        
-        cb(true, serializedInstances)
-      end
-
-    end)
+    Identity.allFromPlayer(player, cb, true)
 
   end
 
@@ -106,6 +66,8 @@ on('esx:player:load', function(player)
       if instance == nil then
         return
       end
+
+      print(json.encode(instance:serialize()))
 
       Identity.all[playerIdentityId] = instance
       player:setIdentityId(playerIdentityId)

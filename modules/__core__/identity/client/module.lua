@@ -13,11 +13,10 @@
 M('events')
 M('serializable')
 M('cache')
-M('ui.menu')
 M('table')
-
+M('ui.menu')
 local HUD   = M('game.hud')
-local utils = M("utils")
+local utils = M('utils')
 
 local spawn = {x = -269.4, y = -955.3, z = 31.2, heading = 205.8}
 
@@ -45,179 +44,49 @@ end
 
 Cache.identity = IdentityCacheConsumer()
 
-module.Menu = nil
-
-module.OpenMenu = function(cb)
-
-  utils.ui.showNotification(_U('identity_register'))
-
-  module.Menu = Menu("identity", {
-    float = "center|middle",
-    title = "Create Character",
-    items = {
-      {name = "firstName", label = "First name",    type = "text", placeholder = "John"},
-      {name = "lastName",  label = "Last name",     type = "text", placeholder = "Smith"},
-      {name = "dob",       label = "Date of birth", type = "text", placeholder = "01/02/1234"},
-      {name = "isMale",    label = "Male",          type = "check", value = true},
-      {name = "submit",    label = "Submit",        type = "button"}
-    }
-  })
-
-  module.Menu:on("item.change", function(item, prop, val, index)
-
-    if (item.name == "isMale") and (prop == "value") then
-      if val then
-        item.label = "Male"
-      else
-        item.label = "Female"
-      end
-    end
-
-  end)
-
-  module.Menu:on("item.click", function(item, index)
-
-    if item.name == "submit" then
-
-      local props = module.Menu:kvp()
-
-      if (props.firstName ~= '') and (props.lastName ~= '') and (props.dob ~= '') then
-
-        module.Menu:destroy()
-        module.Menu = nil
-
-        request('esx:identity:register', cb, props)
-
-        utils.ui.showNotification(_U('identity_welcome', props.firstName, props.lastName))
-      else
-        utils.ui.showNotification(_U('identity_fill_in'))
-      end
-
-    end
-
-  end)
-
-end
-
-module.DoSpawn = function(data, cb)
-  exports.spawnmanager:spawnPlayer(data, cb)
-end
-
-module.Init = function(id)
-  if id == nil then
-    error('Identity is not defined')
+-- @TODO: need to first select the identity server-side
+-- then confirm to client (via request), and finally update it client side if confirmeds 
+module.SelectIdentity = function(identity)
+  if identity == nil then
+    error('Expect identity to be defined')
   end
 
-  Cache.identity:resolve(id, function(exists, identities)
-    if not exists then
-      error('Identity not found')
-    end
+  ESX.Player:field('identity', identity)
+  local position = identity:getPosition()
 
-    local identity = identities[1]
+  request('esx:identity:getSavedPosition', function(savedPos)
+      utils.game.doSpawn({
 
-    ESX.Player:field('identity', identity)
+        x        = savedPos and savedPos.x or position.x,
+        y        = savedPos and savedPos.y or position.y,
+        z        = savedPos and savedPos.z or position.z,
+        heading  = savedPos and savedPos.heading or position.heading,
+        model    = 'mp_m_freemode_01',
+        skipFade = false
 
-    local playerPed = PlayerPedId()
+      }, function()
+        local playerPed = PlayerPedId()
 
-    if Config.EnablePvP then
-      SetCanAttackFriendly(playerPed, true, false)
-      NetworkSetFriendlyFireOption(true)
-    end
+        if Config.EnablePvP then
+          SetCanAttackFriendly(playerPed, true, false)
+          NetworkSetFriendlyFireOption(true)
+        end
 
-    if Config.EnableHUD then
-      module.LoadHUD()
-    end
+        if Config.EnableHUD then
+          module.LoadHUD()
+        end
 
-    ESX.Ready = true
+        ESX.Ready = true
 
-    
-    emitServer('esx:client:ready')
-    emit('esx:ready')
+        emitServer('esx:client:ready')
+        emit('esx:ready')
 
-    Citizen.Wait(2000)
+        Citizen.Wait(2000)
 
-    ShutdownLoadingScreen()
-    ShutdownLoadingScreenNui()
-  end)
-end
-
-module.EnsureIdentity = function()
-
-  local player     = ESX.Player
-  local identityId = player:getIdentityId()
-
-  local requestRegistration = function()
-    module.DoSpawn({
-
-      x        = spawn.x,
-      y        = spawn.y,
-      z        = spawn.z,
-      heading  = spawn.heading,
-      model    = 'mp_m_freemode_01',
-      skipFade = false
-
-    }, function()
-
-      module.OpenMenu(module.Init)
-
-    end)
-  end
-
-  if identityId == nil then
-
-    requestRegistration()
-
-  else
-
-    -- fetch identities/identity for player
-    Cache.identity:fetch(identityId, function(exists, identities)
-
-      if exists then
-
-        local identity = identities[1]
-
-        local position = identity:getPosition()
-
-        request('esx:identity:getSavedPosition', function(savedPos)
-          if savedPos then
-            module.DoSpawn({
-
-              x        = savedPos.x,
-              y        = savedPos.y,
-              z        = savedPos.z,
-              heading  = savedPos.heading,
-              model    = 'mp_m_freemode_01',
-              skipFade = false
-
-            }, function()
-              module.Init(identityId)
-            end)
-          else
-            module.DoSpawn({
-
-              x        = position.x,
-              y        = position.y,
-              z        = position.z,
-              heading  = position.heading,
-              model    = 'mp_m_freemode_01',
-              skipFade = false
-
-            }, function()
-              module.Init(identityId)
-            end)
-          end
-        end, id)
-
-      else
-
-        requestRegistration()
-
-      end
-
-    end)
-
-  end
-
+        ShutdownLoadingScreen()
+        ShutdownLoadingScreenNui()
+      end)
+  end, id)
 end
 
 module.LoadHUD = function()

@@ -488,6 +488,10 @@ module.game.setEnforcedPedComponentVariation = function(ped, componentId, drawab
   return module.game.ensureForcedComponents(ped, componentId, drawableId, textureId)
 end
 
+module.game.doSpawn = function(data, cb)
+  exports.spawnmanager:spawnPlayer(data, cb)
+end
+
 -- UI
 module.ui.showNotification = function(msg)
 	SetNotificationTextEntry('STRING')

@@ -38,6 +38,37 @@ Identity.fromId = function(id)
   return Identity.all[id]
 end
 
+function Identity.allFromPlayer(player, cb, doSerialize)
+  if not(player) then
+    error("Expect the player to be defined.")
+  end
+
+  if not(cb) or type(cb) ~= 'function' then
+    error("Expect the cb to be defined and to be a function.")
+  end
+
+  Identity.find({owner = player:getIdentifier()}, function(instances)
+
+    if instances == nil then
+      cb(false, nil)
+    else
+
+      if doSerialize then
+        instances = table.map(instances, function(instance)
+          Identity.all[instance:getId()] = instance
+
+          local serializedInstance = instance:serialize()
+  
+          return serializedInstance
+        end)
+      end
+      
+      cb(true, instances)
+    end
+
+  end)
+end
+
 Identity.parseRole = module.Identity_parseRole
 
 function Identity:constructor(data, source)
