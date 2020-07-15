@@ -122,10 +122,17 @@ Persist = function(schema, pk, ...)
       queryFields[fields[k].data.name] = v
     end
 
-    local keys      = table.map(fields, function(e) return e.data.name end)
+    for k,v in pairs(fields) do
+      keys[#keys + 1] = v.data.name
+    end
+
     local sql, data = db.DBQuery().select(keys).from(schema).where(queryFields).escape().build()
 
     MySQL.Async.fetchAll(sql, data, function(rows)
+
+      if not(rows) then
+        error("A MySQL error occured, this probably isn't on the ESX end.")
+      end
 
       if (rows[1] == nil) then
         return cb(nil)
