@@ -13,13 +13,9 @@
 on('esx:player:load', function(player)
   Identity.allFromPlayer(player, function(hasBeenFound, identities)
     if not(hasBeenFound) then
-      -- request the user to register a new character
-      emitClient("esx:character:request:register", player:getSource())
-      print("we want you to create an ID sir !")
+      emitClient("esx:character:request:select", player:getSource())
     else
-      -- request the user to select between one of the characters
       emitClient("esx:character:request:select", player:getSource(), identities)
-      print("identities has been found.")
     end
   end, true)
 end)
@@ -48,4 +44,21 @@ onRequest('esx:character:creation', function(source, cb, data)
 
   end)
 
+end)
+
+onRequest("esx:character:loadSkin", function(source, cb, id)
+  print("Checking")
+  local player = Player.fromId(source)
+
+  MySQL.Async.fetchScalar('SELECT skin FROM identities WHERE id = @identityId',
+  {
+    ['@identityId'] = id
+  }, function(skin)
+
+    if (skin) then
+      return cb(json.decode(skin))
+    end
+    
+    return cb(nil)
+  end)
 end)

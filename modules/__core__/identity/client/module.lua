@@ -52,10 +52,10 @@ module.SelectIdentity = function(identity)
   end
 
   ESX.Player:field('identity', identity)
-  local position = identity:getPosition()
+  local position = spawn
 
   request('esx:identity:getSavedPosition', function(savedPos)
-      utils.game.doSpawn({
+    module.DoSpawn({
 
         x        = savedPos and savedPos.x or position.x,
         y        = savedPos and savedPos.y or position.y,
@@ -80,11 +80,6 @@ module.SelectIdentity = function(identity)
 
         emitServer('esx:client:ready')
         emit('esx:ready')
-
-        Citizen.Wait(2000)
-
-        ShutdownLoadingScreen()
-        ShutdownLoadingScreenNui()
       end)
   end, id)
 end
@@ -103,6 +98,10 @@ module.LoadHUD = function()
 
 end
 
+module.DoSpawn = function(data, cb)
+  exports.spawnmanager:spawnPlayer(data, cb)
+end
+
 module.SavePosition = ESX.SetInterval(60000, function()
   if NetworkIsPlayerActive(PlayerId()) then
     local playerCoords = GetEntityCoords(PlayerPedId())
@@ -117,3 +116,94 @@ module.SavePosition = ESX.SetInterval(60000, function()
     emitServer('esx:identity:updatePosition', position)
   end
 end)
+
+module.OpenMenu = function(cb)
+
+  utils.ui.showNotification(_U('identity_register'))
+
+  ESX.Player:field('identity', identity)
+  
+  module.Menu = Menu("identity", {
+    float = "center|middle",
+    title = "Create Character",
+    items = {
+      {name = "firstName", label = "First name",    type = "text", placeholder = "John"},
+      {name = "lastName",  label = "Last name",     type = "text", placeholder = "Smith"},
+      {name = "dob",       label = "Date of birth", type = "text", placeholder = "01/02/1234"},
+      {name = "isMale",    label = "Male",          type = "check", value = true},
+      {name = "submit",    label = "Submit",        type = "button"}
+    }
+  })
+
+  module.Menu:on("item.change", function(item, prop, val, index)
+
+    if (item.name == "isMale") and (prop == "value") then
+      if val then
+        item.label = "Male"
+      else
+        item.label = "Female"
+      end
+    end
+
+  end)
+
+  module.Menu:on("item.click", function(item, index)
+
+    if item.name == "submit" then
+
+      local props = module.Menu:kvp()
+
+      if (props.firstName ~= '') and (props.lastName ~= '') and (props.dob ~= '') then
+
+        module.Menu:destroy()
+        module.Menu = nil
+
+        request('esx:identity:register', cb, props)
+
+        utils.ui.showNotification(_U('identity_welcome', props.firstName, props.lastName))
+      else
+        utils.ui.showNotification(_U('identity_fill_in'))
+      end
+
+    end
+
+  end)
+
+end
+
+module.Init = function(id)
+  if id == nil then
+    error('Identity is not defined')
+  end
+
+  Cache.identity:resolve(id, function(exists, identity)
+    if not exists then
+      error('Identity not found')
+    end
+
+    ESX.Player:field('identity', identity)
+
+    local playerPed = PlayerPedId()
+
+    if Config.EnablePvP then
+      SetCanAttackFriendly(playerPed, true, false)
+      NetworkSetFriendlyFireOption(true)
+    end
+
+    if Config.EnableHUD then
+      module.LoadHUD()
+    end
+
+    ESX.Ready = true
+
+    
+    emitServer('esx:client:ready')
+    emit('esx:ready')
+
+    Citizen.Wait(2000)
+
+    ShutdownLoadingScreen()
+    ShutdownLoadingScreenNui()
+  end)
+end
+
