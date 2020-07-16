@@ -11,15 +11,26 @@
 --   This copyright should appear in every part of the project code
 
 M("identity")
+local camera = M("camera")
 
 onServer('esx:character:request:register', function()
   module.RequestRegister()
 end)
 
 onServer('esx:character:request:select', function(identities)
-  local instancedIdentities = table.map(identities, function(identity)
-    return Identity(identity)
-  end)
+  if identities then
+    local instancedIdentities = table.map(identities, function(identity)
+      return Identity(identity)
+    end)
 
-  module.RequestIdentitySelection(instancedIdentities)
+    module.RequestIdentitySelection(instancedIdentities)
+  else
+    module.RequestIdentitySelection()
+  end
+end)
+
+on('ui.menu.mouseChange', function(value)
+	if module.isInMenu then
+		camera.setMouseIn(value)
+	end
 end)

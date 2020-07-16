@@ -10,11 +10,14 @@
 --   If you redistribute this software, you must link to ORIGINAL repository at https://github.com/ESX-Org/es_extended
 --   This copyright should appear in every part of the project code
 
-local utils = M('utils')
-local identityModule = M('identity')
+local utils    = M('utils')
+local identity = M('identity')
+local camera   = M("camera")
 M("table")
 
-module.menu = nil
+local spawn = {x = 402.869, y = -996.5966, z = -99.0003, heading = 180.01846313477}
+
+module.isInMenu = false
 module.selectedIdentity = nil
 
 module.OpenMenu = function(cb)
@@ -70,7 +73,15 @@ module.OpenMenu = function(cb)
 end
 
 module.RequestRegister = function()
-  utils.game.doSpawn({
+  emit("esx:identity:openRegistration")
+end
+
+module.DoSpawn = function(data, cb)
+  exports.spawnmanager:spawnPlayer(data, cb)
+end
+
+module.EnterMenu = function()
+  module.DoSpawn({
 
     x        = spawn.x,
     y        = spawn.y,
@@ -81,48 +92,144 @@ module.RequestRegister = function()
 
   }, function()
 
-    module.OpenMenu()
+    local playerPed = PlayerPedId()
 
   end)
+
+  module.isInMenu = true
+
+  Citizen.Wait(2000)
+
+  ShutdownLoadingScreen()
+  ShutdownLoadingScreenNui()
+end
+
+module.SetCamera = function()
+  camera.start()
+
+  camera.setRadius(1.25)
+end
+
+module.CameraToSkin = function()
+  camera.pointToBone(SKEL_Head, vector3(0.0,0.0,0.0))
 end
 
 module.RequestIdentitySelection = function(identities)
-  local player     = ESX.Player
 
-  local items = table.map(identities, function(identity)
-    return {name = identity:getId(), label = identity:getFirstName() .. " " .. identity:getLastName(), identity = identity:serialize(), type = 'button'}
-  end)
+  module.EnterMenu()
 
-  table.insert(items, {name = "submit", label = "Enter The World", type = "button", shouldDestroyMenu = true})
-  table.insert(items, {name = "register", label = "Or Create a New Identity", type = "button", shouldDestroyMenu = true})
+  module.SetCamera()
 
-  module.menu = Menu('character_selection', {
-      title = 'Choose the identity to play',
+  local player = ESX.Player
+
+  local items = {}
+
+  if identities then
+    items = table.map(identities, function(identity)
+      return {type = 'button', name = identity:getId(), label = identity:getFirstName() .. " " .. identity:getLastName(), identity = identity:serialize()}
+    end)
+
+    table.insert(items, {name = "register", label = ">> Create a New Identity <<", type = "button", shouldDestroyMenu = true})
+  else
+    items = {
+      {name = "register", label = ">> Create a New Identity <<", type = "button", shouldDestroyMenu = true}
+    }
+  end
+
+
+  Citizen.Wait(100)
+
+  module.characterMenu = Menu('character.select', {
+      title = 'Choose An Identity',
       float = 'top|left',
       items = items
   })
 
+  module.currentMenu = module.characterMenu
+
   -- bind item click with module specific method onItemClicked
-  module.menu:on('item.click', function(item)
+  module.characterMenu:on('item.click', function(item)
 
-    if item.shouldDestroyMenu then
-      module.menu:destroy()
-      module.menu = nil
+    if item.name == 'register' then
+      emit("esx:identity:openRegistration")
+      module.characterMenu:destroy()
+      camera.stop()
+      module.currentMenu = nil
+      module.isInMenu = false
+    elseif item.name == "none" then
+
+    else
+      request("esx:character:loadSkin", function(skinContent)
+        if skinContent then
+          emit("esx:skin:loadSkin", skinContent)
+          module.SelectCharacter(item.name, item.label, item.identity)
+        else
+          module.SelectCharacter(item.name, item.label, item.identity)
+        end
+      end, item.name)
     end
 
-    if (item.name == "submit") then
-      return module.SelectIdentity(module.selectedIdentity)
-    end
+    -- if item.shouldDestroyMenu then
+    --   module.characterMenu:destroy()
+    --   module.currentMenu = nil
+    -- end
 
-    if (item.name == "register") then
-      return module.OpenMenu()
-    end
+    -- if (item.name == "submit") then
+    --   return module.SelectIdentity(module.selectedIdentity)
+    -- end
 
-    module.selectedIdentity = Identity(item.identity)
+    -- if (item.name == "register") then
+    --   return module.OpenMenu()
+    -- end
+
+    -- module.selectedIdentity = Identity(item.identity)
   end)
 
 end
 
+module.SelectCharacter = function(name, label, identity)
+
+  module.CameraToSkin()
+
+  local items = {
+    {name = "submit", label = "Start", type = "button"},
+    {name = "back", label = "Go Back", type = "button"}
+  }
+  
+  if module.characterMenu.visible then
+    module.characterMenu:hide()
+  end
+
+  module.confirmMenu = Menu('character.confirm', {
+    title = 'Start with ' .. label .. '?',
+    float = 'top|left',
+    items = items
+  })
+
+  module.currentMenu = module.confirmMenu
+
+  module.confirmMenu:on('destroy', function()
+    module.characterMenu:show()
+  end)
+
+  module.confirmMenu:on('item.click', function(item, index)
+    if item.name == "submit" then
+      module.SelectIdentity(identity)
+      module.confirmMenu:destroy()
+      module.characterMenu:destroy()
+      camera.stop()
+      module.currentMenu = nil
+      module.isInMenu = false
+    elseif item.name == "back" then
+      module.confirmMenu:destroy()
+      
+      module.currentMenu = module.characterMenu
+
+      module.characterMenu:focus()
+    end
+  end)
+end
+
 module.SelectIdentity = function(identity)
-  identityModule.SelectIdentity(identity)
+  emit("esx:identity:selectIdentity", Identity(identity))
 end
